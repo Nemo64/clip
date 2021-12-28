@@ -1,0 +1,10 @@
+{
+  "conversion": {
+    "title": "Convert file {{name}}."
+  },
+  "upload": {
+    "description": "This tool allows you to quickly convert a video into a format, that maximizes compatibility and reduces sizes as much as possible.",
+    "hint": "Select the file you want to convert.",
+    "title": "Select a video to convert"
+  }
+}

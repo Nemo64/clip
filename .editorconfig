@@ -1,0 +1,9 @@
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 2
+indent_style = space
+insert_final_newline = true
+
+ij_typescript_use_semicolon_after_statement = true
+ij_typescript_enforce_trailing_comma = whenmultiline
