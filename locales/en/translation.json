@@ -1,10 +1,44 @@
 {
   "conversion": {
-    "title": "Convert file {{name}}."
+    "audio_quality": {
+      "bitrate_details": "{{codec}} at {{bitrate, number}} kbit/s; {{expectedSize, number(maximumFractionDigits: 0)}} kB reserved for audio",
+      "bitrate_high": "High quality",
+      "bitrate_implausible": "",
+      "bitrate_low": "Low quality (enough for speech and sound effects)",
+      "label": "Audio",
+      "none": "No audio",
+      "none_details": "Remove the audio track",
+      "none_implausible": ""
+    },
+    "button": {
+      "change": "Select a different file",
+      "start": "Start"
+    },
+    "headline": "Convert file {{name}}.",
+    "progress": "{{progress, number(maximumFractionDigits: 1)}}%",
+    "title": "Convert file {{name}}.",
+    "video_quality": {
+      "crf_1080p": "1080p full HD",
+      "crf_360p": "360p SD",
+      "crf_480p": "480p SD",
+      "crf_720p": "720p HD",
+      "crf_details": "crf {{crf}}; resolution {{width}}x{{height}}@{{fps, number}}; ~{{expectedSize, number(maximumFractionDigits: 0)}} kB (rough estimate)",
+      "crf_implausible": "Resolution not available for that source ",
+      "crf_label": "Resolution focus",
+      "label": "Quality",
+      "size_100mb": "100 Mb (e.g. for Discord Nitro)",
+      "size_16mb": "16 Mb (e.g. for WhatApp)",
+      "size_50mb": "50 Mb (e.g. for Discord Nitro Classic)",
+      "size_8mb": "8 Mb (e.g. for Discord)",
+      "size_details": "2 pass with {{bitrate, number}} kbit/s; Resolution {{width}}x{{height}}@{{fps, number}}",
+      "size_implausible": "Video too long for that file size",
+      "size_label": "File size focus"
+    }
   },
   "upload": {
+    "button": "Select video",
     "description": "This tool allows you to quickly convert a video into a format, that maximizes compatibility and reduces sizes as much as possible.",
-    "hint": "Select the file you want to convert.",
-    "title": "Select a video to convert"
+    "headline": "Select a video to convert",
+    "title": "Video converter"
   }
 }

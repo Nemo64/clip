@@ -7,3 +7,6 @@ insert_final_newline = true
 
 ij_typescript_use_semicolon_after_statement = true
 ij_typescript_enforce_trailing_comma = whenmultiline
+ij_typescript_align_multiline_parameters = false
+ij_typescript_import_sort_module_name = true
+ij_typescript_import_sort_members = true

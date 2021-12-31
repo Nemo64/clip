@@ -8,14 +8,12 @@ export interface LinkAttributes extends LinkProps {
 
   onClick?: (e: MouseEvent<HTMLAnchorElement>) => Promise<void> | void,
   disabled?: boolean; // fixates disabled style
-  active?: boolean; // fixates hover style
 }
 
 // <button> buttons extensions
 export interface ButtonAttributes extends ButtonHTMLAttributes<HTMLButtonElement> {
   onClick?: (e: MouseEvent<HTMLButtonElement>) => Promise<void> | void,
   disabled?: boolean; // fixates disabled attribute and style
-  active?: boolean; // fixates hover style
 }
 
 /**
@@ -32,7 +30,7 @@ export interface ButtonAttributes extends ButtonHTMLAttributes<HTMLButtonElement
  * Don't use this for inline links, use {@see Link} instead.
  */
 export const Button = forwardRef(function Button(
-  {onClick, disabled, active, className, ...props}: LinkAttributes | ButtonAttributes,
+  {onClick, disabled, className, ...props}: LinkAttributes | ButtonAttributes,
   ref: ForwardedRef<HTMLAnchorElement> | ForwardedRef<HTMLButtonElement>,
 ): ReactElement {
 
@@ -54,8 +52,7 @@ export const Button = forwardRef(function Button(
   }
 
   const classes = classNames({
-    'active': active,
-    'disabled': disabledOrBusy,
+    'opacity-75 pointer-events-none cursor-not-allowed': disabledOrBusy,
   }, className);
 
   if ("href" in props) {
