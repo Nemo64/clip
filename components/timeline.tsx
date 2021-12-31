@@ -95,12 +95,12 @@ export function Timeline({frame, limit, value, onChange, onBlur, disabled}: Time
     <label htmlFor="start">start time </label>
     <input type="number" id="start" disabled={disabled} className="w-24"
            value={value.start.toFixed(3)}
-           step={1} min={frame.start} max={frame.start + frame.duration - value.duration}
+           min={frame.start.toFixed(3)} max={(frame.start + frame.duration - value.duration).toFixed(3)}
            onInput={e => onChange?.({start: parseFloat(e.currentTarget.value), duration: value.duration})}/>
     <label htmlFor="duration">duration </label>
     <input type="number" id="duration" disabled={disabled} className="w-24"
            value={value.duration.toFixed(3)}
-           step={1} min={frame.start} max={limit}
+           min={frame.start.toFixed(3)} max={limit.toFixed(3)}
            onInput={e => onChange?.({start: value.start, duration: parseFloat(e.currentTarget.value)})}/>
     <div className="h-8 bg-red-200 relative select-none" ref={wrapperRef}>
       <div className="h-8 bg-red-500 absolute cursor-move" ref={bodyRef}
