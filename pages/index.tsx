@@ -47,8 +47,15 @@ async function selectVideo() {
 }
 
 function SelectPage({setVideo}: { setVideo: (video: Video) => void }) {
+  const [error, setError] = useState<string | undefined>();
+
   const changeVideo = async () => {
-    setVideo(await selectVideo());
+    try {
+      setError(undefined);
+      setVideo(await selectVideo());
+    } catch (e) {
+      setError(String(e));
+    }
   };
 
   return <>
@@ -65,6 +72,11 @@ function SelectPage({setVideo}: { setVideo: (video: Video) => void }) {
       <Button className="mx-auto block px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white text-xl" onClick={changeVideo}>
         {t('upload.button')}
       </Button>
+      {error && (
+        <p className="bg-red-600 py-2 px-4 rounded text-white text-center my-4">
+          {error}
+        </p>
+      )}
     </div>
   </>
 }
