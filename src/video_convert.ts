@@ -20,7 +20,7 @@ export async function convertVideo(
     args.push('-t', String(format.container.duration));
   }
 
-  args.push('-i', `input ${file.name}`);
+  args.push('-i', file.name);
   args.push(...videoArguments(metadata, format));
   args.push(...audioArguments(metadata, format));
   args.push('-sn'); // no subtitles

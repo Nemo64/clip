@@ -28,7 +28,7 @@ export async function createVideo(file: File): Promise<NewVideo> {
   });
 
   await ffmpeg.load();
-  ffmpeg.FS('writeFile', `input ${file.name}`, await fetchFile(file));
+  ffmpeg.FS('writeFile', file.name, await fetchFile(file));
 
   return {status: "new", file, ffmpeg};
 }
