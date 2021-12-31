@@ -14,6 +14,7 @@
       "change": "Select a different file",
       "start": "Start"
     },
+    "download": "Save video",
     "headline": "Convert file {{name}}.",
     "progress": "{{progress, number(maximumFractionDigits: 1)}}%",
     "title": "Convert file {{name}}.",

@@ -1,12 +1,12 @@
+import {fileOpen, fileSave} from "browser-fs-access";
 import Head from "next/head";
 import {useContext, useMemo, useState} from "react";
 import {Controller, useForm} from "react-hook-form";
 import {Button} from "../components/button";
+import {ProgressBar} from "../components/progress";
 import {AudioFormatSelect, VideoFormatSelect} from "../components/selects";
 import {Timeline} from "../components/timeline";
 import {t} from "../src/intl"
-// @ts-ignore
-// import { showOpenFilePicker, showSaveFilePicker } from 'native-file-system-adapter';
 import {
   analyzeVideo,
   convertVideo,
@@ -21,25 +21,77 @@ import {VideoContext} from "./_app";
 
 export default function Start() {
   const [video, setVideo] = useContext(VideoContext);
+  const [progress, setProgress] = useState(-1);
+  const [result, setResult] = useState<File>();
+
+  const start = async (format: Format) => {
+    if (video?.status !== 'known') {
+      throw new Error("Video is not known");
+    }
+
+    try {
+      console.log('convert using format', format);
+      setProgress(0);
+      const convertedVideo = await convertVideo(video, format, setProgress);
+      setResult(convertedVideo.file);
+      console.log('converted video', convertedVideo);
+    } finally {
+      setProgress(-1);
+      try {
+        video.ffmpeg.exit();
+      } catch {
+      }
+    }
+  };
+
+  if (result) {
+    const download = async () => {
+      await fileSave(result, {
+        startIn: "videos",
+        fileName: result.name,
+        mimeTypes: ['video/mp4'],
+        id: 'video-save',
+      });
+      setProgress(-1);
+      setResult(undefined);
+      setVideo(undefined);
+    };
+
+    return (
+      <div className="max-w-md mx-auto">
+        <Button onClick={download} className="block mx-auto my-2 bg-red-600 py-2 px-4 rounded text-white">
+          {t('conversion.download')}
+        </Button>
+      </div>
+    );
+  }
+
+  if (progress >= 0) {
+    return <>
+      <div className="max-w-md mx-auto">
+        <ProgressBar progress={progress}>
+          {t('conversion.progress', {progress})}
+        </ProgressBar>
+      </div>
+    </>;
+  }
 
   if (video?.status === "known") {
-    return <ConvertPage video={video} setVideo={setVideo}/>;
+    return <ConvertPage video={video} setVideo={setVideo} start={start}/>;
   }
 
   return <SelectPage setVideo={setVideo}/>;
 };
 
 async function selectVideo() {
-  const file = await showOpenFilePicker({
-    excludeAcceptAllOption: true,
+  const file = await fileOpen({
+    startIn: "videos",
+    mimeTypes: ['video/*'],
     multiple: false,
-    types: [{
-      description: "Video",
-      accept: {"video/*": [".mp4", ".mov", ".mkv", ".webm", ".avi", ".m4v"]},
-    }],
-  });
+    id: "video-select",
+  })
 
-  const newVideo = await createVideo(await file[0].getFile());
+  const newVideo = await createVideo(file);
   const knownVideo = await analyzeVideo(newVideo);
   console.log('video info', knownVideo);
 
@@ -69,7 +121,8 @@ function SelectPage({setVideo}: { setVideo: (video: Video) => void }) {
       <p className="text-center my-4">
         {t('upload.description')}
       </p>
-      <Button className="mx-auto block px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white text-xl" onClick={changeVideo}>
+      <Button className="mx-auto block relative px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white text-xl" onClick={changeVideo}>
+        <div className="absolute inset-0 -z-50 rounded bg-red-800 animate-ping opacity-20" />
         {t('upload.button')}
       </Button>
       {error && (
@@ -83,7 +136,7 @@ function SelectPage({setVideo}: { setVideo: (video: Video) => void }) {
 
 const MAX_DURATION = 60;
 
-function ConvertPage({video, setVideo}: { video: KnownVideo, setVideo: (video: Video) => void }) {
+function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: (video: Video) => void, start: (format: Format) => Promise<void> }) {
   const initialAudioFormats = useMemo(() => possibleAudioFormats(video.metadata), [video.metadata]);
   const initialVideoFormats = useMemo(() => possibleVideoFormats(video.metadata), [video.metadata]);
 
@@ -114,41 +167,9 @@ function ConvertPage({video, setVideo}: { video: KnownVideo, setVideo: (video: V
     return videoFormats
   }, [video.metadata, currentContainer, currentAudio, getValues, setValue]);
 
-  const [progress, setProgress] = useState(-1);
-  const working = progress >= 0;
-
   const changeVideo = async () => {
     setVideo(await selectVideo())
   };
-
-  const onSubmit = handleSubmit(async format => {
-    try {
-      const handlePromise = showSaveFilePicker({
-        suggestedName: video.file.name.replace(/\.\w{2,4}$|$/, ".mp4"),
-        excludeAcceptAllOption: true,
-        types: [{
-          description: "Video",
-          accept: {"video/*": [".mp4", ".mov", ".mkv", ".webm", ".avi", ".m4v"]},
-        }],
-      });
-
-      console.log('convert using format', format);
-      setProgress(0);
-      const conversion = convertVideo(video, format, setProgress);
-      const [handle, convertedVideo] = await Promise.all([handlePromise, conversion]);
-      console.log('converted video', convertedVideo);
-
-      const writer = await handle.createWritable({keepExistingData: false});
-      await writer.write(convertedVideo.file);
-      await writer.close();
-    } finally {
-      setProgress(-1);
-      try {
-        video.ffmpeg.exit();
-      } catch {
-      }
-    }
-  });
 
   const formatRules = {
     required: true,
@@ -159,7 +180,7 @@ function ConvertPage({video, setVideo}: { video: KnownVideo, setVideo: (video: V
     <Head>
       <title>{t("conversion.title", {name: video.file.name})}</title>
     </Head>
-    <form className="container max-w-lg mx-auto" onSubmit={onSubmit} aria-busy={working}>
+    <form className="container max-w-lg mx-auto" onSubmit={handleSubmit(start)}>
       <h1 className="text-2xl my-4">
         {t('conversion.headline', {name: video.file.name})}
       </h1>
@@ -168,14 +189,14 @@ function ConvertPage({video, setVideo}: { video: KnownVideo, setVideo: (video: V
         <div className="my-4">
           <label htmlFor="video_format">{t('conversion.video_quality.label')}</label>
           <Controller control={control} name="video" rules={formatRules} render={({field: {ref, ...field}}) => (
-            <VideoFormatSelect formats={videoFormats} id="video_format" isDisabled={working} {...field} />
+            <VideoFormatSelect formats={videoFormats} id="video_format" {...field} />
           )}/>
         </div>
 
         <div className="my-4">
           <label htmlFor="audio_format">{t('conversion.audio_quality.label')}</label>
           <Controller control={control} name="audio" rules={formatRules} render={({field: {ref, ...field}}) => (
-            <AudioFormatSelect formats={audioFormats} id="audio_format" isDisabled={working} {...field} />
+            <AudioFormatSelect formats={audioFormats} id="audio_format" {...field} />
           )}/>
         </div>
       </div>
@@ -187,26 +208,14 @@ function ConvertPage({video, setVideo}: { video: KnownVideo, setVideo: (video: V
       </div>
 
       <div className="flex gap-2">
-        <Button className="px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white"
-                disabled={working} type="submit">
+        <Button className="px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white" type="submit">
           {t('conversion.button.start')}
         </Button>
 
-        <Button className="px-4 py-2 rounded bg-slate-800 hover:bg-slate-700 text-white"
-                disabled={working} onClick={changeVideo}>
+        <Button className="px-4 py-2 rounded bg-slate-800 hover:bg-slate-700 text-white" onClick={changeVideo}>
           {t('conversion.button.change')}
         </Button>
       </div>
-
-      {working && (
-        <div role="progressbar" className="block my-3 h-8 bg-red-200 relative"
-             aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
-          <div className="bg-red-500 h-8" style={{width: `${progress}%`}}/>
-          <div className="absolute inset-0 text-white text-center leading-8">
-            {t('conversion.progress', {progress})}
-          </div>
-        </div>
-      )}
     </form>
   </>;
 }
