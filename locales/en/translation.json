@@ -41,6 +41,22 @@
     "button": "Save video",
     "title": "Finished: {{name}}"
   },
+  "footer": {
+    "author": {
+      "github": "GitHub",
+      "headline": "Developed by {{name}}",
+      "twitter": "Twitter"
+    },
+    "contribute": {
+      "check": "Check the code",
+      "headline": "Help this project",
+      "issues": "Report issues"
+    },
+    "used_libraries": {
+      "opensource": "Open-Source projects used",
+      "others": "Other projects used"
+    }
+  },
   "upload": {
     "button": "Select video",
     "description": "This tool allows you to quickly cut a videos length and compress it so you can use it in services like WhatsApp and Discord which impose a file size limit.\n\nThe video will be compressed in within your browser and will never be transmitted to a server. ",

@@ -1,6 +1,9 @@
 import type {AppProps} from 'next/app'
 import Head from "next/head";
 import {createContext, useCallback, useEffect, useState} from "react";
+import {Footer} from "../components/footer";
+import {Link} from "../components/link";
+import {t} from "../src/intl";
 import {analyzeVideo, createVideo, FFMPEG_PATHS, Video} from "../src/video";
 import '../styles/globals.css'
 
@@ -48,6 +51,7 @@ function MyApp({Component, pageProps}: AppProps) {
     <VideoContext.Provider value={[video, setVideoWrapped]}>
       <Component {...pageProps} />
     </VideoContext.Provider>
+    <Footer/>
   </>;
 }
 

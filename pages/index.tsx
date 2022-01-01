@@ -8,7 +8,7 @@ import {ProgressBar} from "../components/progress";
 import {AudioFormatSelect, VideoFormatSelect} from "../components/selects";
 import {Timeline} from "../components/timeline";
 import {t} from "../src/intl"
-import {convertVideo, Format, KnownVideo, NewVideo, possibleAudioFormats, possibleVideoFormats, Video} from "../src/video";
+import {convertVideo, Format, KnownVideo, NewVideo, possibleAudioFormats, possibleVideoFormats} from "../src/video";
 import {VideoContext, VideoState} from "./_app";
 
 export default function Start() {
@@ -81,15 +81,18 @@ function SelectPage({setVideo}: { setVideo: VideoState[1] }) {
     <Head>
       <title>{t('upload.title')}</title>
     </Head>
-    <div className="max-w-sm mx-auto">
+    <div className="max-w-lg mx-auto p-2 sm:my-8">
       <h1 className="text-2xl text-center my-4">
         {t('upload.title')}
       </h1>
       <Markdown className="text-center">
         {t('upload.description')}
       </Markdown>
-      <Button className="mx-auto block relative px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white text-xl" onClick={changeVideo}>
+      <Button onClick={changeVideo} className="mx-auto block relative px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white text-xl">
         <div className="absolute inset-0 -z-50 rounded bg-red-800 animate-ping opacity-20"/>
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block align-text-top mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        </svg>
         {t('upload.button')}
       </Button>
       {error && (
@@ -154,25 +157,23 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
     <Head>
       <title>{t("conversion.title", {name: video.file.name})}</title>
     </Head>
-    <form className="container max-w-lg mx-auto" onSubmit={handleSubmit(start)}>
+    <form className="max-w-lg mx-auto p-2" onSubmit={handleSubmit(start)}>
       <h1 className="text-2xl my-4">
         {t('conversion.title', {name: video.file.name})}
       </h1>
 
-      <div className="max-w-lg">
-        <div className="my-4">
-          <label htmlFor="video_format">{t('conversion.video_quality.label')}</label>
-          <Controller control={control} name="video" rules={formatRules} render={({field: {ref, ...field}}) => (
-            <VideoFormatSelect formats={videoFormats} id="video_format" {...field} />
-          )}/>
-        </div>
+      <div className="my-4">
+        <label htmlFor="video_format">{t('conversion.video_quality.label')}</label>
+        <Controller control={control} name="video" rules={formatRules} render={({field: {ref, ...field}}) => (
+          <VideoFormatSelect formats={videoFormats} id="video_format" {...field} />
+        )}/>
+      </div>
 
-        <div className="my-4">
-          <label htmlFor="audio_format">{t('conversion.audio_quality.label')}</label>
-          <Controller control={control} name="audio" rules={formatRules} render={({field: {ref, ...field}}) => (
-            <AudioFormatSelect formats={audioFormats} id="audio_format" {...field} />
-          )}/>
-        </div>
+      <div className="my-4">
+        <label htmlFor="audio_format">{t('conversion.audio_quality.label')}</label>
+        <Controller control={control} name="audio" rules={formatRules} render={({field: {ref, ...field}}) => (
+          <AudioFormatSelect formats={audioFormats} id="audio_format" {...field} />
+        )}/>
       </div>
 
       <div className="my-4">
@@ -182,12 +183,14 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
       </div>
 
       <div className="flex gap-2">
-        <Button className="px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white" type="submit">
+        <Button type="submit" className="px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block align-bottom mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
           {t('conversion.button.start')}
         </Button>
 
-        <Button className="px-4 py-2 rounded bg-slate-400 hover:bg-slate-500 text-white"
-                onClick={() => setVideo(undefined)}>
+        <Button onClick={() => setVideo(undefined)} className="px-4 py-2 rounded bg-slate-400 hover:bg-slate-500 text-white">
           {t('conversion.button.change')}
         </Button>
       </div>
@@ -200,8 +203,8 @@ function ProgressPage({progress}: { progress: number }) {
     <Head>
       <title>{t('conversion.progress', {progress})}</title>
     </Head>
-    <div className="max-w-md mx-auto">
-      <ProgressBar progress={progress}>
+    <div className="max-w-lg mx-auto p-2">
+      <ProgressBar progress={progress} className="my-8">
         {t('conversion.progress', {progress})}
       </ProgressBar>
     </div>
@@ -215,20 +218,21 @@ function DownloadPage({file, setVideo}: { file: File, setVideo: VideoState[1] })
     <Head>
       <title>{t('download.title', {name: file.name})}</title>
     </Head>
-    <div className="max-w-md mx-auto">
+    <div className="max-w-lg mx-auto p-2">
       <h1 className="text-2xl my-4">
         {t('download.title', {name: file.name})}
       </h1>
 
       <video className="mx-auto my-4" controls autoPlay={true} src={url}/>
 
-      <Button className="mx-auto table my-4 px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white"
-              href={url} download={file.name}>
+      <Button href={url} download={file.name} className="mx-auto table my-4 px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block align-bottom mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
         {t('download.button')}
       </Button>
 
-      <Button className="mx-auto table relative my-4 px-4 py-2 rounded bg-slate-400 hover:bg-slate-500 text-white"
-              onClick={() => setVideo(undefined)}>
+      <Button onClick={() => setVideo(undefined)} className="mx-auto table relative my-4 px-4 py-2 rounded bg-slate-400 hover:bg-slate-500 text-white">
         {t('conversion.button.change')}
       </Button>
     </div>
