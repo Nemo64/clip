@@ -31,7 +31,6 @@ module.exports = {
             value: [
               "default-src 'self' blob:",
 
-              "object-src 'none'",
               "style-src 'unsafe-inline' 'self'",
               `script-src ${PHASE_DEVELOPMENT_SERVER ? "'unsafe-eval'" : ""} 'self' blob:`,
 

@@ -1,7 +1,7 @@
 import type {AppProps} from 'next/app'
 import Head from "next/head";
 import {createContext, useCallback, useEffect, useState} from "react";
-import {analyzeVideo, createVideo, Video} from "../src/video";
+import {analyzeVideo, createVideo, FFMPEG_PATHS, Video} from "../src/video";
 import '../styles/globals.css'
 
 export type VideoState = [Video | undefined, (file: File | undefined) => void];
@@ -41,6 +41,9 @@ function MyApp({Component, pageProps}: AppProps) {
     <Head>
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
       <meta name="robots" content="noindex"/>
+      {Object.values(FFMPEG_PATHS).map(info => (
+        <link key={info.href} {...info}/>
+      ))}
     </Head>
     <VideoContext.Provider value={[video, setVideoWrapped]}>
       <Component {...pageProps} />
