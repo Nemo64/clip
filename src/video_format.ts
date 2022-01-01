@@ -59,7 +59,7 @@ function calculateExpectedSize(width: number, height: number, duration: number, 
   return width * height * duration / 120 / crf; // TODO better calculation
 }
 
-function calculateDimensions({video}: Format, width: number, height: number): { width: number, height: number, expectedWidth: number, expectedHeight: number } {
+export function calculateDimensions({video}: Format, width: number, height: number): { width: number, height: number, expectedWidth: number, expectedHeight: number } {
   const scaleFactor = Math.min(1.0, width / video.width, height / video.height);
   return {
     width: Math.round(video.width * scaleFactor / 2) * 2, // divisible by 2 for yuv420p colorspace

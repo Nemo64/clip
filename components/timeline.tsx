@@ -1,4 +1,6 @@
-import {RefObject, useEffect, useRef} from "react";
+import {RefObject, useEffect, useRef, useState} from "react";
+import {t} from "../src/intl"
+import {Format} from "../src/video";
 
 interface Crop {
   start: number;
@@ -7,14 +9,17 @@ interface Crop {
 
 interface TimelineProps {
   frame: Crop;
+  metadata: Format;
   limit: number;
   value: Crop;
   onChange?: (crop: Crop) => void;
   onBlur?: (crop: Crop) => void;
   disabled?: boolean;
+  picInt?: number;
+  pics?: string[];
 }
 
-export function Timeline({frame, limit, value, onChange, onBlur, disabled}: TimelineProps) {
+export function Timeline({frame, metadata, limit, value, onChange, onBlur, disabled, pics, picInt}: TimelineProps) {
   limit = Math.min(limit, frame.duration);
 
   const wrapperRef = useRef() as RefObject<HTMLDivElement>;
@@ -64,7 +69,11 @@ export function Timeline({frame, limit, value, onChange, onBlur, disabled}: Time
     });
 
     const leftHandler = createDragHandler(({initialValue, valueChange}) => {
-      const limitedChange = clamp(valueChange, limit - initialValue.duration, initialValue.duration);
+      const limitedChange = clamp(
+        valueChange,
+        Math.max(initialValue.duration - limit, -initialValue.start),
+        initialValue.duration,
+      );
       return {
         start: initialValue.start + limitedChange,
         duration: initialValue.duration - limitedChange,
@@ -72,7 +81,11 @@ export function Timeline({frame, limit, value, onChange, onBlur, disabled}: Time
     });
 
     const rightHandler = createDragHandler(({initialValue, valueChange}) => {
-      const limitedChange = clamp(valueChange, -initialValue.duration, limit - initialValue.duration);
+      const limitedChange = clamp(
+        valueChange,
+        -initialValue.duration,
+        Math.min(limit - initialValue.duration, frame.start + frame.duration - initialValue.start - initialValue.duration),
+      );
       return {
         start: initialValue.start,
         duration: initialValue.duration + limitedChange,
@@ -89,6 +102,15 @@ export function Timeline({frame, limit, value, onChange, onBlur, disabled}: Time
     };
   }, [frame.start, frame.duration, limit, onChange, onBlur]);
 
+  const [cursor, setCursor] = useState<number | undefined>();
+  const updateCursor = ({clientX}: { clientX: number }) => {
+    const rect = wrapperRef.current?.getBoundingClientRect();
+    if (!rect) {
+      return;
+    }
+    setCursor((clientX - rect.left) / rect.width * frame.duration + frame.start);
+  };
+
   const left = (value.start - frame.start) / frame.duration;
   const right = (value.start + value.duration - frame.start) / frame.duration;
   return <>
@@ -102,13 +124,23 @@ export function Timeline({frame, limit, value, onChange, onBlur, disabled}: Time
            value={value.duration.toFixed(3)}
            step="0.001" min={frame.start.toFixed(3)} max={limit.toFixed(3)}
            onInput={e => onChange?.({start: value.start, duration: parseFloat(e.currentTarget.value)})}/>
-    <div className="h-8 bg-red-200 rounded overflow-hidden relative select-none" ref={wrapperRef}>
-      <div className="h-8 bg-red-500 absolute cursor-move" ref={bodyRef}
-           style={{left: `${left * 100}%`, right: `${100 - right * 100}%`}}/>
-      <div className="h-8 w-2 bg-red-800 absolute cursor-col-resize" ref={leftRef}
-           style={{left: `${left * 100}%`}}/>
-      <div className="h-8 w-2 bg-red-800 absolute cursor-col-resize" ref={rightRef}
-           style={{right: `${100 - right * 100}%`}}/>
+    <div className="h-16 bg-black border bg-slate-800 rounded overflow-hidden relative select-none" ref={wrapperRef} onMouseMove={updateCursor}>
+      <div className="absolute inset-0 flex flex-row">
+        {picInt && pics?.map(pic => (
+          <img key={pic} src={pic} alt="" className="object-cover object-center h-full" style={{width: `${picInt / frame.duration * 100}%`}}/>
+        ))}
+      </div>
+      <div className="h-full bg-red-800/0 absolute cursor-move" ref={bodyRef} style={{left: `${left * 100}%`, right: `${100 - right * 100}%`}}/>
+      <div className="h-full bg-red-800/70 absolute" style={{left: `0%`, right: `${100 - left * 100}%`}}/>
+      <div className="h-full bg-red-800/70 absolute" style={{left: `${right * 100}%`, right: `0%`}}/>
+      {cursor !== undefined && <div className="w-0.5 h-full -mx-0.25 bg-black/50 absolute pointer-events-none" style={{left: `${cursor / frame.duration * 100}%`}}/>}
+      <div className="h-full w-2 bg-red-800 absolute cursor-col-resize" ref={leftRef} style={{left: `${left * 100}%`}}/>
+      <div className="h-full w-2 bg-red-800 absolute cursor-col-resize" ref={rightRef} style={{right: `${100 - right * 100}%`}}/>
+    </div>
+    <div className="w-full mt-2 border rounded relative bg-slate-100" style={{aspectRatio: `${metadata.video.width} / ${metadata.video.height}`}}>
+      {pics?.length
+        ? <img src={cursor && picInt && pics[Math.floor(cursor / picInt)] || pics[0]} alt="preview" className="absolute w-full h-full object-contain"/>
+        : <div className="p-4 text-center">{t('timeline.no-preview')}</div>}
     </div>
   </>;
 }

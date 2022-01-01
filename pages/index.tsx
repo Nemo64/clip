@@ -1,6 +1,6 @@
 import {fileOpen} from "browser-fs-access";
 import Head from "next/head";
-import {useContext, useMemo, useState} from "react";
+import {useContext, useEffect, useMemo, useState} from "react";
 import {Controller, useForm} from "react-hook-form";
 import {Button} from "../components/button";
 import {Markdown} from "../components/markdown";
@@ -8,7 +8,7 @@ import {ProgressBar} from "../components/progress";
 import {AudioFormatSelect, VideoFormatSelect} from "../components/selects";
 import {Timeline} from "../components/timeline";
 import {t} from "../src/intl"
-import {convertVideo, Format, KnownVideo, NewVideo, possibleAudioFormats, possibleVideoFormats} from "../src/video";
+import {convertVideo, createPreviews, Format, KnownVideo, NewVideo, possibleAudioFormats, possibleVideoFormats, Video} from "../src/video";
 import {VideoContext, VideoState} from "./_app";
 
 export default function Start() {
@@ -42,12 +42,12 @@ export default function Start() {
     setResult(undefined);
   };
 
-  if (result) {
-    return <DownloadPage file={result} setVideo={setVideoWrapped}/>
+  if (result && video?.status === "known") {
+    return <DownloadPage video={video} file={result} setVideo={setVideoWrapped}/>
   }
 
-  if (progress >= 0) {
-    return <ProgressPage progress={progress}/>;
+  if (progress >= 0 && video) {
+    return <ProgressPage video={video} progress={progress}/>;
   }
 
   if (video?.status === "new") {
@@ -121,6 +121,27 @@ function AnalyseVideo({video}: { video: NewVideo }) {
 const MAX_DURATION = 60;
 
 function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: VideoState[1], start: (format: Format) => Promise<void> }) {
+  const picInt = Math.max(video.metadata.container.duration / 64, 1);
+  const [pics, setPics] = useState<string[]>([]);
+  const picsDone = pics.length >= Math.floor(video.metadata.container.duration / picInt);
+
+  useEffect(() => {
+    let stop = false;
+    (async () => {
+      for await (const preview of createPreviews(video, picInt)) {
+        if (stop) break;
+        pics.push(URL.createObjectURL(preview));
+        setPics([]); // hack to force re-render
+        setPics(pics);
+      }
+    })();
+    return () => {
+      stop = true;
+      pics.forEach(URL.revokeObjectURL);
+      setPics([]);
+    };
+  }, [video, picInt]);
+
   const {control, handleSubmit, watch, getValues, setValue} = useForm<Format>({
     defaultValues: {
       container: {
@@ -178,12 +199,12 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
 
       <div className="my-4">
         <Controller control={control} name="container" render={({field: {ref, ...field}}) => <>
-          <Timeline frame={video.metadata.container} limit={MAX_DURATION} {...field}/>
+          <Timeline frame={video.metadata.container} limit={MAX_DURATION} pics={pics} picInt={picInt} metadata={video.metadata} {...field}/>
         </>}/>
       </div>
 
       <div className="flex gap-2">
-        <Button type="submit" className="px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white">
+        <Button type="submit" className="px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white" disabled={!picsDone}>
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block align-bottom mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
@@ -198,21 +219,29 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
   </>;
 }
 
-function ProgressPage({progress}: { progress: number }) {
+function ProgressPage({video, progress}: { video: Video, progress: number }) {
   return <>
     <Head>
-      <title>{t('conversion.progress', {progress})}</title>
+      <title>{t('progress.value', {progress})}</title>
     </Head>
     <div className="max-w-lg mx-auto p-2">
-      <ProgressBar progress={progress} className="my-8">
-        {t('conversion.progress', {progress})}
+      <h1 className="text-2xl my-4">
+        {t('progress.headline', {name: video.file.name})}
+      </h1>
+      <ProgressBar progress={progress} className="my-4">
+        {t('progress.value', {progress})}
       </ProgressBar>
     </div>
   </>;
 }
 
-function DownloadPage({file, setVideo}: { file: File, setVideo: VideoState[1] }) {
-  const url = useMemo(() => URL.createObjectURL(file), [file]);
+function DownloadPage({file, setVideo, video}: { file: File, setVideo: VideoState[1], video: KnownVideo }) {
+  const [url, setUrl] = useState('');
+  useEffect(() => {
+    const url = URL.createObjectURL(file);
+    setUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file, setUrl]);
 
   return <>
     <Head>
@@ -223,13 +252,15 @@ function DownloadPage({file, setVideo}: { file: File, setVideo: VideoState[1] })
         {t('download.title', {name: file.name})}
       </h1>
 
-      <video className="mx-auto my-4" controls autoPlay={true} src={url}/>
+      <div className="block w-full my-4" style={{aspectRatio: `${video.metadata.video.width} / ${video.metadata.video.height}`}}>
+        {url ? <video className="mx-auto w-full" controls autoPlay={true} src={url}/> : t('download.loading')}
+      </div>
 
       <Button href={url} download={file.name} className="mx-auto table my-4 px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block align-bottom mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
         </svg>
-        {t('download.button')}
+        {t('download.button', {size: Math.ceil(file.size / 1000)})}
       </Button>
 
       <Button onClick={() => setVideo(undefined)} className="mx-auto table relative my-4 px-4 py-2 rounded bg-slate-400 hover:bg-slate-500 text-white">

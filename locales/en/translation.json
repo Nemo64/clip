@@ -17,7 +17,6 @@
       "change": "Select a different file",
       "start": "Start"
     },
-    "progress": "{{progress, number(maximumFractionDigits: 1)}}%",
     "title": "Convert file {{name}}.",
     "video_quality": {
       "crf_1080p": "1080p full HD",
@@ -37,8 +36,13 @@
       "size_label": "File size focus"
     }
   },
+  "progress": {
+    "headline": "Processing {{name}}",
+    "value": "{{progress, number(maximumFractionDigits: 1)}}%"
+  },
   "download": {
-    "button": "Save video",
+    "button": "Save video ({{size, number}} kB)",
+    "loading": "loading...",
     "title": "Finished: {{name}}"
   },
   "footer": {
@@ -56,6 +60,9 @@
       "opensource": "Open-Source projects used",
       "others": "Other projects used"
     }
+  },
+  "timeline": {
+    "no-preview": "Preview unavailable"
   },
   "upload": {
     "button": "Select video",

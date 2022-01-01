@@ -1,4 +1,4 @@
-import {ConvertedVideo, Format, KnownVideo} from "./video";
+import {calculateDimensions, ConvertedVideo, Format, KnownVideo} from "./video";
 
 /**
  * Starts the converting process.
@@ -11,15 +11,7 @@ export async function convertVideo(
 ): Promise<ConvertedVideo> {
   const args: string[] = ['-hide_banner', '-y'];
 
-  // TODO: check what it means if the source video has a start time !== 0
-  if (format.container.start > metadata.container.start) {
-    args.push('-ss', String(format.container.start));
-  }
-
-  if (format.container.duration < metadata.container.duration - format.container.start) {
-    args.push('-t', String(format.container.duration));
-  }
-
+  args.push(...seekArguments(metadata, format));
   args.push('-i', file.name);
   args.push(...videoArguments(metadata, format));
   args.push(...audioArguments(metadata, format));
@@ -43,6 +35,77 @@ export async function convertVideo(
     file: new File([result], newFileName, {type: 'video/mp4'}),
     metadata: format,
   };
+}
+
+export function createPreviews(
+  {file, ffmpeg, metadata}: KnownVideo,
+  interval: number,
+): AsyncIterableIterator<File> {
+  const args: string[] = ['-hide_banner', '-y'];
+
+  // use some tricks to decode faster for the preview
+  args.push('-skip_frame', interval > 2 ? 'nokey' : 'bidir');
+  args.push('-flags2', 'fast'); // https://stackoverflow.com/a/54873148
+
+  // decode at lower resolution; 1920 / 4 = 480; so create previews at 480 width ~ although h264 does not support this
+  const {width, height} = calculateDimensions(metadata, 480, 270);
+  const lowres = Math.floor(Math.log2(metadata.video.width / width));
+  if (lowres >= 1) {
+    args.push('-lowres:v', Math.min(3, lowres).toString());
+  }
+
+  args.push('-i', file.name);
+  args.push('-r', `1/${interval}`);
+  args.push('-pix_fmt:v', 'yuv420p');
+  args.push('-sws_flags', 'neighbor');
+  args.push('-s:v', `${width}x${height}`);
+  args.push('-f', `image2`);
+  args.push('-q:v', `20`); // 1-31, lower is better quality
+  args.push('frame_%d.jpg');
+
+  const execution = ffmpeg.run(...args);
+
+  return (async function* () {
+    const frames = Math.floor(metadata.container.duration / interval);
+    let done = false;
+    let lastFrame = Date.now();
+    for (let i = 1; i <= frames;) {
+      try {
+        const blob = ffmpeg.FS('readFile', `frame_${i}.jpg`);
+        ffmpeg.FS('unlink', `frame_${i}.jpg`);
+        i++;
+        yield new File([blob], `frame_${i}.jpg`, {type: 'image/jpeg'});
+        lastFrame = Date.now();
+      } catch {
+        if (lastFrame + 10000 < Date.now()) {
+          console.error('generate thumbnails timeout', lastFrame);
+          break;
+        } else if (done) {
+          i++; // increase even with read error
+        } else {
+          done = !await Promise.race([
+            new Promise(r => setTimeout(r, 200, true)),
+            execution,
+          ]);
+        }
+      }
+    }
+  })();
+}
+
+function seekArguments(metadata: Format, format: Format) {
+  const args: string[] = [];
+
+  // TODO: check what it means if the source video has a start time !== 0
+  if (format.container.start > metadata.container.start) {
+    args.push('-ss', String(format.container.start));
+  }
+
+  if (format.container.duration < metadata.container.duration - format.container.start) {
+    args.push('-t', String(format.container.duration));
+  }
+
+  return args;
 }
 
 function videoArguments(metadata: Format, format: Format) {
