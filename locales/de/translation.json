@@ -1,4 +1,7 @@
 {
+  "analyse": {
+    "title": "Überprüfe video..."
+  },
   "conversion": {
     "audio_quality": {
       "bitrate_details": "{{codec}} mit {{bitrate, number}} kbit/s",
@@ -14,8 +17,6 @@
       "change": "Andere Datei auswählen",
       "start": "Start"
     },
-    "download": "Video speichern",
-    "headline": "Konvertiere {{name}}.",
     "progress": "{{progress, number(maximumFractionDigits: 1)}}%",
     "title": "Konvertiere {{name}}.",
     "video_quality": {
@@ -36,10 +37,13 @@
       "size_label": "Dateigrößenorientiert"
     }
   },
+  "download": {
+    "button": "Speichere Video",
+    "title": "Fertiggestellt: {{name}}"
+  },
   "upload": {
     "button": "Video auswählen",
-    "description": "Mit diesem Tool können Sie ein Video schnell in ein Format konvertieren, das die Kompatibilität maximiert und die Größe so weit wie möglich reduziert.",
-    "headline": "Wähle ein video zum konvertieren",
-    "title": "Video konvertierer"
+    "description": "Mit diesem Tool können Sie ein Video schnell kürzen und komprimieren, damit du es in Diensten wie WhatsApp und Discord verwenden können, die eine Dateigrößenbeschränkung vorsehen.\n\nDas Video wird im Browser komprimiert und niemals an einen Server übertragen. ",
+    "title": "Schneide und komprimiere Videos im browser"
   }
 }

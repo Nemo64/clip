@@ -12,20 +12,7 @@ export function possibleVideoFormats(format: Format): VideoFormat[] {
     calculateDimensions(format, 640, 360),
   ].filter(({width}, index, list) => list[index + 1]?.width !== width);
 
-  for (const {width, height, expectedHeight} of dimensions) {
-    options.push({
-      preset: `crf_${expectedHeight}p`,
-      codec: 'h264',
-      color: 'yuv420p',
-      width,
-      height,
-      crf: 21,
-      expectedSize: calculateExpectedSize(width, height, format.container.duration, 21) + overheadSize,
-      fps: format.video.fps / Math.ceil(format.video.fps / 30),
-    });
-  }
-
-  for (const sizeTarget of [50000, 16000, 8000]) {
+  for (const sizeTarget of [8000, 16000, 50000]) {
     const resolution = dimensions.find(({width, height}) => {
       return sizeTarget >= calculateExpectedSize(width, height, format.container.duration, 25);
     });
@@ -48,6 +35,19 @@ export function possibleVideoFormats(format: Format): VideoFormat[] {
       height: resolution ? resolution.height : 0,
       bitrate: Math.floor(Math.min(...bitrates)),
       expectedSize: sizeTarget,
+      fps: format.video.fps / Math.ceil(format.video.fps / 30),
+    });
+  }
+
+  for (const {width, height, expectedHeight} of dimensions.reverse()) {
+    options.push({
+      preset: `crf_${expectedHeight}p`,
+      codec: 'h264',
+      color: 'yuv420p',
+      width,
+      height,
+      crf: 21,
+      expectedSize: calculateExpectedSize(width, height, format.container.duration, 21) + overheadSize,
       fps: format.video.fps / Math.ceil(format.video.fps / 30),
     });
   }
@@ -85,7 +85,7 @@ export function possibleAudioFormats(format: Format): AudioFormat[] {
     return options;
   }
 
-  options.unshift({
+  options.push({
     preset: 'bitrate_low',
     implausible: !format.audio,
     codec: 'aac he v2',
@@ -95,7 +95,7 @@ export function possibleAudioFormats(format: Format): AudioFormat[] {
     expectedSize: 32 / 8 * format.container.duration,
   });
 
-  options.unshift({
+  options.push({
     preset: 'bitrate_high',
     implausible: !format.audio,
     codec: 'aac lc',

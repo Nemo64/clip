@@ -102,7 +102,7 @@ export function Timeline({frame, limit, value, onChange, onBlur, disabled}: Time
            value={value.duration.toFixed(3)}
            step="0.001" min={frame.start.toFixed(3)} max={limit.toFixed(3)}
            onInput={e => onChange?.({start: value.start, duration: parseFloat(e.currentTarget.value)})}/>
-    <div className="h-8 bg-red-200 relative select-none" ref={wrapperRef}>
+    <div className="h-8 bg-red-200 rounded overflow-hidden relative select-none" ref={wrapperRef}>
       <div className="h-8 bg-red-500 absolute cursor-move" ref={bodyRef}
            style={{left: `${left * 100}%`, right: `${100 - right * 100}%`}}/>
       <div className="h-8 w-2 bg-red-800 absolute cursor-col-resize" ref={leftRef}

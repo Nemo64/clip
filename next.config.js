@@ -29,12 +29,11 @@ module.exports = {
           {
             key: 'Content-Security-Policy',
             value: [
-              "default-src 'self'",
+              "default-src 'self' blob:",
 
               "object-src 'none'",
               "style-src 'unsafe-inline' 'self'",
               `script-src ${PHASE_DEVELOPMENT_SERVER ? "'unsafe-eval'" : ""} 'self' blob:`,
-              "connect-src 'self' blob:",
 
               "form-action 'none'",
               "frame-ancestors 'none'",

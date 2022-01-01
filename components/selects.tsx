@@ -16,12 +16,12 @@ export function VideoFormatSelect({formats, ...props}: VideoProps) {
             getOptionValue={option => String(option.preset)}
             options={[
               {
-                label: t('conversion.video_quality.crf_label'),
-                options: formats.filter(option => option.preset?.startsWith('crf')),
-              },
-              {
                 label: t('conversion.video_quality.size_label'),
                 options: formats.filter(option => option.preset?.startsWith('size')),
+              },
+              {
+                label: t('conversion.video_quality.crf_label'),
+                options: formats.filter(option => option.preset?.startsWith('crf')),
               },
             ]}
             formatOptionLabel={option => <>
