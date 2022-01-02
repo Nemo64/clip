@@ -30,16 +30,19 @@ export function VideoFormatSelect({formats, ...props}: VideoProps) {
               {option.preset === 'crf_480p' && t('conversion.video_quality.crf_480p')}
               {option.preset === 'crf_360p' && t('conversion.video_quality.crf_360p')}
               {option.preset === 'crf_240p' && t('conversion.video_quality.crf_240p')}
-              {option.preset?.startsWith('crf') && (
-                !option.implausible
-                  ? <div className="opacity-60 text-sm">{t('conversion.video_quality.crf_details', option)}</div>
-                  : <div className="text-red-500 text-sm">{t('conversion.video_quality.crf_implausible', option)}</div>
-              )}
 
               {option.preset === 'size_100mb' && t('conversion.video_quality.size_100mb')}
               {option.preset === 'size_50mb' && t('conversion.video_quality.size_50mb')}
               {option.preset === 'size_16mb' && t('conversion.video_quality.size_16mb')}
               {option.preset === 'size_8mb' && t('conversion.video_quality.size_8mb')}
+
+              {option.original && t('conversion.video_quality.original')}
+
+              {option.preset?.startsWith('crf') && (
+                !option.implausible
+                  ? <div className="opacity-60 text-sm">{t('conversion.video_quality.crf_details', option)}</div>
+                  : <div className="text-red-500 text-sm">{t('conversion.video_quality.crf_implausible', option)}</div>
+              )}
               {option.preset?.startsWith('size') && (
                 !option.implausible
                   ? <div className="opacity-60 text-sm">{t('conversion.video_quality.size_details', option)}</div>
@@ -56,15 +59,16 @@ export function AudioFormatSelect({formats, ...props}: AudioProps) {
             options={formats}
             formatOptionLabel={option => <>
               {option.preset === 'none' && t('conversion.audio_quality.none')}
+              {option.preset === 'bitrate_low' && t('conversion.audio_quality.bitrate_low')}
+              {option.preset === 'bitrate_high' &&  t('conversion.audio_quality.bitrate_high')}
+
+              {option.original && t('conversion.audio_quality.original')}
+
               {option.preset?.startsWith('none') && (
                 !option.implausible
                   ? <div className="opacity-60 text-sm">{t('conversion.audio_quality.none_details')}</div>
                   : <div className="text-red-500 text-sm">{t('conversion.audio_quality.none_implausible')}</div>
               )}
-
-              {option.preset === 'bitrate_high' && option.original && t('conversion.audio_quality.original')}
-              {option.preset === 'bitrate_high' && !option.original &&  t('conversion.audio_quality.bitrate_high')}
-              {option.preset === 'bitrate_low' && t('conversion.audio_quality.bitrate_low')}
               {option.preset?.startsWith('bitrate') && (
                 !option.implausible
                   ? <div className="opacity-60 text-sm">{t('conversion.audio_quality.bitrate_details', option)}</div>

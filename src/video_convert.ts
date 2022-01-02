@@ -122,6 +122,11 @@ function videoArguments(metadata: Format, format: Format) {
     return args;
   }
 
+  if (format.video.original) {
+    args.push('-c:v', 'copy');
+    return args;
+  }
+
   args.push('-pix_fmt:v', format.video.color);
   args.push('-sws_flags', 'bilinear');
 
@@ -161,12 +166,7 @@ function audioArguments(metadata: Format, format: Format) {
     return args;
   }
 
-  // @ts-ignore: typescript does not like treating objects as records
-  const sourceIdentical = metadata.audio?.codec === format.audio.codec
-    && metadata.audio.sampleRate === format.audio.sampleRate
-    && metadata.audio.channelSetup === format.audio.channelSetup
-    && metadata.audio.bitrate <= format.audio.bitrate
-  if (sourceIdentical) {
+  if (format.audio.original) {
     args.push('-c:a', 'copy');
     return args;
   }

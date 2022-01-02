@@ -12,7 +12,7 @@
       "none": "No audio",
       "none_details": "Remove the audio track",
       "none_implausible": "",
-      "original": "High quality (copy from source)"
+      "original": " (copy from source)"
     },
     "button": {
       "change": "Select a different file",
@@ -35,7 +35,8 @@
       "size_8mb": "8 Mb (e.g. for Discord)",
       "size_details": "{{codec}} at {{bitrate, number}} kbit/s; Resolution {{width}}x{{height}}@{{fps, number}}",
       "size_implausible": "Video too long for that file size ({{bitrate,number}} kbit/s)",
-      "size_label": "File size focus"
+      "size_label": "File size focus",
+      "original": " (copy from source)"
     }
   },
   "download": {

@@ -28,30 +28,66 @@ export function possibleVideoFormats(format: Format): VideoFormat[] {
       bitrates.push(biggestSizeForBitrate * 8 / format.container.duration);
     }
 
-    options.push({
-      preset: `size_${sizeTarget / 1000}mb`,
-      implausible: !resolution,
-      codec: 'h264',
-      color: 'yuv420p',
-      width: resolution ? resolution.width : 0,
-      height: resolution ? resolution.height : 0,
-      bitrate: Math.floor(Math.min(...bitrates)),
-      expectedSize: sizeTarget,
-      fps: format.video.fps / Math.ceil(format.video.fps / (resolution?.fps ?? 30)),
-    });
+    const original = format.video.codec.startsWith('h264')
+      && format.video.color === 'yuv420p'
+      && format.video.width === resolution?.width
+      && format.video.height === resolution?.height
+      && format.video.fps === resolution?.fps
+      && sizeTarget >= format.video.expectedSize;
+
+    if (original) {
+      options.push({
+        ...format.video,
+        preset: `size_${sizeTarget / 1000}mb`,
+        original: original,
+        expectedSize: sizeTarget,
+      });
+    } else {
+      options.push({
+        preset: `size_${sizeTarget / 1000}mb`,
+        implausible: !resolution,
+        original: original,
+        codec: 'h264 (High)',
+        color: 'yuv420p',
+        width: resolution ? resolution.width : 0,
+        height: resolution ? resolution.height : 0,
+        bitrate: Math.floor(Math.min(...bitrates)),
+        expectedSize: sizeTarget,
+        fps: format.video.fps / Math.ceil(format.video.fps / (resolution?.fps ?? 30)),
+      });
+    }
   }
 
   for (const resolution of resolutions.reverse()) {
-    options.push({
-      preset: `crf_${resolution.expectedHeight}p`,
-      codec: 'h264',
-      color: 'yuv420p',
-      width: resolution.width,
-      height: resolution.height,
-      crf: 21,
-      expectedSize: calculateExpectedSize(resolution, format.container.duration, 21) + overheadSize,
-      fps: format.video.fps / Math.ceil(format.video.fps / resolution.fps),
-    });
+    const expectedSize = calculateExpectedSize(resolution, format.container.duration, 21);
+
+    const original = format.video.codec.startsWith('h264')
+      && format.video.color === 'yuv420p'
+      && format.video.width === resolution?.width
+      && format.video.height === resolution?.height
+      && format.video.fps === resolution?.fps
+      && expectedSize >= format.video.expectedSize;
+
+    if (original) {
+      options.push({
+        ...format.video,
+        preset: `crf_${resolution.expectedHeight}p`,
+        original: original,
+        expectedSize: expectedSize + overheadSize,
+      });
+    } else {
+      options.push({
+        preset: `crf_${resolution.expectedHeight}p`,
+        original: original,
+        codec: 'h264 (High)',
+        color: 'yuv420p',
+        width: resolution.width,
+        height: resolution.height,
+        crf: 21,
+        expectedSize: expectedSize + overheadSize,
+        fps: format.video.fps / Math.ceil(format.video.fps / resolution.fps),
+      });
+    }
   }
 
   return options;
