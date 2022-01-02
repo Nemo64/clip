@@ -12,11 +12,12 @@ export async function convertVideo(
   const args: string[] = ['-hide_banner', '-y'];
 
   args.push(...seekArguments(metadata, format));
-  args.push('-i', file.name);
-  args.push(...videoArguments(metadata, format));
-  args.push(...audioArguments(metadata, format));
+  !format.audio && args.push('-an'); // no audio (if not specified)
   args.push('-sn'); // no subtitles
   args.push('-dn'); // no data streams
+  args.push('-i', file.name);
+  args.push(...videoArguments(metadata, format));
+  format.audio && args.push(...audioArguments(metadata, format));
   args.push('-f', 'mp4'); // use mp4 since it has the best compatibility as long as all streams are supported
   args.push('-movflags', '+faststart'); // moves metadata to the beginning of the mp4 container ~ useful for streaming
   args.push(`output ${file.name}`);
@@ -46,17 +47,17 @@ export function createPreviews(
   // use some tricks to decode faster for the preview
   args.push('-skip_frame', interval > 2 ? 'nokey' : 'bidir');
   args.push('-flags2', 'fast'); // https://stackoverflow.com/a/54873148
-
   // decode at lower resolution; 1920 / 4 = 480; so create previews at 480 width ~ although h264 does not support this
   const {width, height} = calculateDimensions(metadata, 480, 270);
   const lowres = Math.floor(Math.log2(metadata.video.width / width));
   if (lowres >= 1) {
     args.push('-lowres:v', Math.min(3, lowres).toString());
   }
-
+  args.push('-an'); // no audio
+  args.push('-sn'); // no subtitles
+  args.push('-dn'); // no data streams
   args.push('-i', file.name);
   args.push('-r', `1/${interval}`);
-  args.push('-pix_fmt:v', 'yuv420p');
   args.push('-sws_flags', 'neighbor');
   args.push('-s:v', `${width}x${height}`);
   args.push('-f', `image2`);
