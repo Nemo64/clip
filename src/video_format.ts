@@ -88,22 +88,30 @@ export function possibleAudioFormats(format: Format): AudioFormat[] {
   options.push({
     preset: 'bitrate_low',
     implausible: !format.audio,
-    codec: 'aac he v2',
+    codec: 'aac (HEv2)',
     sampleRate: 48000,
     channelSetup: 'stereo',
     bitrate: 32,
     expectedSize: 32 / 8 * format.container.duration,
   });
 
-  options.push({
-    preset: 'bitrate_high',
-    implausible: !format.audio,
-    codec: 'aac lc',
-    sampleRate: 48000,
-    channelSetup: 'stereo',
-    bitrate: 128,
-    expectedSize: 128 / 8 * format.container.duration,
-  });
+  if (format.audio.codec.startsWith('aac') && format.audio.bitrate < 300) {
+    options.push({
+      ...format.audio,
+      preset: 'bitrate_high',
+      expectedSize: format.audio.bitrate / 8 * format.container.duration,
+    });
+  } else {
+    options.push({
+      preset: 'bitrate_high',
+      implausible: !format.audio,
+      codec: 'aac (LC)',
+      sampleRate: 48000,
+      channelSetup: 'stereo',
+      bitrate: 128,
+      expectedSize: 128 / 8 * format.container.duration,
+    });
+  }
 
   return options;
 }

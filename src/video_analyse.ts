@@ -40,6 +40,7 @@ export function parseMetadata(message: string, metadata: Partial<Format>) {
   const videoMatch = message.match(/Stream #[^:,]+:[^:,]+: Video: (?<codec>.+), (?<color>yuv.+|rgb.+), (?<width>\d+)x(?<height>\d+).*, (?<bitrate>[\d.]+) kb\/s,.* (?<fps>[\d.]+) fps, (?<tbr>[\d.]+) tbr/);
   if (videoMatch?.groups && metadata.container) {
     metadata.video = {
+      original: true,
       codec: videoMatch.groups.codec,
       color: videoMatch.groups.color,
       width: parseFloat(videoMatch.groups.width),
@@ -51,9 +52,10 @@ export function parseMetadata(message: string, metadata: Partial<Format>) {
     return;
   }
 
-  const audioMatch = message.match(/Stream #[^:,]+:[^:,]+: Audio: (?<codec>.+), (?<sampleRate>\d+) Hz, (?<channelSetup>[^,]+), [^,]+, (?<bitrate>[\d.]+) kb\/s/);
+  const audioMatch = message.match(/Stream #[^:,]+:[^:,]+: Audio: (?<codec>[^(),]+(\([\w\s]+\))?).*, (?<sampleRate>\d+) Hz, (?<channelSetup>[^,]+), [^,]+, (?<bitrate>[\d.]+) kb\/s/);
   if (audioMatch?.groups && metadata.container) {
     metadata.audio = {
+      original: true,
       codec: audioMatch.groups.codec,
       sampleRate: parseFloat(audioMatch.groups.sampleRate),
       channelSetup: audioMatch.groups.channelSetup,

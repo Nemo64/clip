@@ -11,7 +11,8 @@
       "label": "Audio",
       "none": "No audio",
       "none_details": "Remove the audio track",
-      "none_implausible": ""
+      "none_implausible": "",
+      "original": "High quality (copy from source)"
     },
     "button": {
       "change": "Select a different file",
@@ -36,10 +37,6 @@
       "size_label": "File size focus"
     }
   },
-  "progress": {
-    "headline": "Processing {{name}}",
-    "value": "{{progress, number(maximumFractionDigits: 1)}}%"
-  },
   "download": {
     "button": "Save video ({{size, number}} kB)",
     "loading": "loading...",
@@ -60,6 +57,10 @@
       "opensource": "Open-Source projects used",
       "others": "Other projects used"
     }
+  },
+  "progress": {
+    "headline": "Processing {{name}}",
+    "value": "{{progress, number(maximumFractionDigits: 1)}}%"
   },
   "timeline": {
     "no-preview": "Preview unavailable"

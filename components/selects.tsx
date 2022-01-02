@@ -61,7 +61,8 @@ export function AudioFormatSelect({formats, ...props}: AudioProps) {
                   : <div className="text-red-500 text-sm">{t('conversion.audio_quality.none_implausible')}</div>
               )}
 
-              {option.preset === 'bitrate_high' && t('conversion.audio_quality.bitrate_high')}
+              {option.preset === 'bitrate_high' && option.original && t('conversion.audio_quality.original')}
+              {option.preset === 'bitrate_high' && !option.original &&  t('conversion.audio_quality.bitrate_high')}
               {option.preset === 'bitrate_low' && t('conversion.audio_quality.bitrate_low')}
               {option.preset?.startsWith('bitrate') && (
                 !option.implausible

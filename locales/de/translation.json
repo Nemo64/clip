@@ -11,7 +11,8 @@
       "label": "Ton",
       "none": "Kein Ton",
       "none_details": "Entferne die Tonspur",
-      "none_implausible": ""
+      "none_implausible": "",
+      "original": "Hohe Qualität (aus Quelldatei)"
     },
     "button": {
       "change": "Andere Datei auswählen",
@@ -36,10 +37,6 @@
       "size_label": "Dateigrößenorientiert"
     }
   },
-  "progress": {
-    "headline": "Verarbeite {{name}}...",
-    "value": "{{progress, number(maximumFractionDigits: 1)}}%"
-  },
   "download": {
     "button": "Speichere Video ({{size, number}} kB)",
     "loading": "Lade...",
@@ -60,6 +57,10 @@
       "opensource": "Verwendete Open-Source Projekte",
       "others": "Andere verwendete Projekte"
     }
+  },
+  "progress": {
+    "headline": "Verarbeite {{name}}...",
+    "value": "{{progress, number(maximumFractionDigits: 1)}}%"
   },
   "timeline": {
     "no-preview": "Keine Vorschau verfügbar"

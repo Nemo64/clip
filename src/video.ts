@@ -68,6 +68,7 @@ export interface ContainerFormat {
 
 export interface VideoFormat {
   preset?: string; // arbitrary name
+  original?: boolean; // indicate if the stream is from the source
   implausible?: boolean; // if true, this format is not suitable for the video
   codec: string; // eg. "h264"
   color: string; // eg. yuv420p
@@ -82,6 +83,7 @@ export interface VideoFormat {
 
 export interface AudioFormat {
   preset?: string; // arbitrary name
+  original?: boolean; // indicate if the stream is from the source
   implausible?: boolean; // if true, this format is not suitable for the video
   codec: string; // eg. "aac"
   sampleRate: number; // eg. 48000

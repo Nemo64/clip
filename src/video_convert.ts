@@ -156,6 +156,12 @@ function audioArguments(metadata: Format, format: Format) {
     return args;
   }
 
+  // @ts-ignore: typescript does not like treating objects as records
+  if (Object.entries(metadata.audio).every(([k, v]) => format.audio[k] === v)) {
+    args.push('-c:a', 'copy');
+    return args;
+  }
+
   args.push('-ar', format.audio.sampleRate.toString());
 
   if (format.audio.codec.startsWith('aac')) {
