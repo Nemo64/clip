@@ -1,7 +1,7 @@
 import {createFFmpeg, fetchFile} from "@ffmpeg/ffmpeg";
 import {LinkHTMLAttributes} from "react";
 
-export type Video = NewVideo | KnownVideo;
+export type Video = NewVideo | KnownVideo | BrokenVideo;
 
 export interface NewVideo {
   status: "new";
@@ -14,6 +14,11 @@ export interface KnownVideo {
   file: File;
   ffmpeg: ReturnType<typeof createFFmpeg>;
   metadata: Format;
+}
+
+export interface BrokenVideo {
+  status: "broken";
+  file: File;
 }
 
 export interface ConvertedVideo {

@@ -2,6 +2,9 @@
   "analyse": {
     "title": "Analyzing video..."
   },
+  "broken": {
+    "title": "The video file is not readable."
+  },
   "conversion": {
     "audio_quality": {
       "bitrate_details": "{{codec}} at {{bitrate, number}} kbit/s; {{expectedSize, number(maximumFractionDigits: 0)}} kB reserved for audio",
@@ -29,14 +32,14 @@
       "crf_implausible": "Resolution not available for that source",
       "crf_label": "Resolution focus",
       "label": "Quality",
+      "original": " (copy from source)",
       "size_100mb": "100 Mb (e.g. for Discord Nitro)",
       "size_16mb": "16 Mb (e.g. for WhatApp)",
       "size_50mb": "50 Mb (e.g. for Discord Nitro Classic)",
       "size_8mb": "8 Mb (e.g. for Discord)",
       "size_details": "{{codec}} at {{bitrate, number}} kbit/s; Resolution {{width}}x{{height}}@{{fps, number}}",
       "size_implausible": "Video too long for that file size ({{bitrate,number}} kbit/s)",
-      "size_label": "File size focus",
-      "original": " (copy from source)"
+      "size_label": "File size focus"
     }
   },
   "download": {
@@ -44,6 +47,7 @@
     "loading": "loading...",
     "title": "Finished: {{name}}"
   },
+  "drop_video": "Drop video here",
   "footer": {
     "author": {
       "github": "GitHub",

@@ -12,31 +12,58 @@ export const VideoContext = createContext<VideoState>([undefined, () => undefine
 
 function MyApp({Component, pageProps}: AppProps) {
   const [video, setVideo] = useState<Video | undefined>(undefined);
+  const [dragOver, setDragOver] = useState(false);
 
   const setVideoWrapped = useCallback(async (file: File | undefined) => {
-    if (video) try {
+    if (video && "ffmpeg" in video) try {
       video.ffmpeg.exit()
     } catch {
     }
+
     if (!file) {
       setVideo(undefined);
       return;
     }
-    const newVideo = await createVideo(file);
-    setVideo(newVideo);
-    const identifiedVideo = await analyzeVideo(newVideo);
-    setVideo(identifiedVideo);
+
+    try {
+      const newVideo = await createVideo(file);
+      setVideo(newVideo);
+      const identifiedVideo = await analyzeVideo(newVideo);
+      setVideo(identifiedVideo);
+    } catch (e) {
+      setVideo({status: "broken", file})
+    }
   }, [video, setVideo]);
 
   useEffect(() => {
     const handler = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      setDragOver(false);
       setVideoWrapped(e.dataTransfer?.files[0]);
     };
+    const allowDrop = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragOver(true);
+    };
+    const dragLeave = () => {
+      setDragOver(false);
+    };
+
     document.addEventListener('drop', handler);
+    document.addEventListener('dragover', allowDrop);
+    document.addEventListener('dragend', dragLeave);
+    window.addEventListener('blur', dragLeave);
+    document.addEventListener('keydown', dragLeave);
+    document.addEventListener('click', dragLeave);
     return () => {
       document.removeEventListener('drop', handler);
+      document.removeEventListener('dragover', allowDrop);
+      document.removeEventListener('dragend', dragLeave);
+      window.removeEventListener('blur', dragLeave);
+      document.removeEventListener('keydown', dragLeave);
+      document.removeEventListener('click', dragLeave);
     };
   }, [setVideoWrapped]);
 
@@ -52,6 +79,13 @@ function MyApp({Component, pageProps}: AppProps) {
       <Component {...pageProps} />
     </VideoContext.Provider>
     <Footer/>
+    {dragOver && (
+      <div className="absolute inset-0 bg-slate-500/50 flex items-center justify-around">
+        <div className="flex bg-white rounded p-4 shadow-xl text-2xl animate-pulse">
+          {t('drop_video')}
+        </div>
+      </div>
+    )}
   </>;
 }
 

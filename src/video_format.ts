@@ -32,7 +32,7 @@ export function possibleVideoFormats(format: Format): VideoFormat[] {
       && format.video.color === 'yuv420p'
       && format.video.width === resolution?.width
       && format.video.height === resolution?.height
-      && format.video.fps === resolution?.fps
+      && format.video.fps <= resolution?.fps
       && sizeTarget >= format.video.expectedSize;
 
     if (original) {
@@ -65,7 +65,7 @@ export function possibleVideoFormats(format: Format): VideoFormat[] {
       && format.video.color === 'yuv420p'
       && format.video.width === resolution?.width
       && format.video.height === resolution?.height
-      && format.video.fps === resolution?.fps
+      && format.video.fps <= resolution?.fps
       && expectedSize >= format.video.expectedSize;
 
     if (original) {

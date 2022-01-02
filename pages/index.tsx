@@ -8,7 +8,17 @@ import {ProgressBar} from "../components/progress";
 import {AudioFormatSelect, VideoFormatSelect} from "../components/selects";
 import {Timeline} from "../components/timeline";
 import {t} from "../src/intl"
-import {convertVideo, createPreviews, Format, KnownVideo, NewVideo, possibleAudioFormats, possibleVideoFormats, Video} from "../src/video";
+import {
+  BrokenVideo,
+  convertVideo,
+  createPreviews,
+  Format,
+  KnownVideo,
+  NewVideo,
+  possibleAudioFormats,
+  possibleVideoFormats,
+  Video,
+} from "../src/video";
 import {VideoContext, VideoState} from "./_app";
 
 export default function Start() {
@@ -52,6 +62,10 @@ export default function Start() {
 
   if (video?.status === "new") {
     return <AnalyseVideo video={video}/>;
+  }
+
+  if (video?.status === "broken") {
+    return <ErrorVideo video={video} setVideo={setVideoWrapped}/>;
   }
 
   if (video?.status === "known") {
@@ -109,11 +123,27 @@ function AnalyseVideo({video}: { video: NewVideo }) {
     <Head>
       <title>{t('analyse.title', {name: video.file.name})}</title>
     </Head>
-    <div className="max-w-sm mx-auto">
+    <div className="max-w-lg mx-auto">
       <h1 className="text-2xl text-center my-4">
         <div className="inline-block w-4 h-4 mr-2 animate-spin rounded-full border-2 border-red-200 border-r-red-500"/>
         {t('analyse.title', {name: video.file.name})}
       </h1>
+    </div>
+  </>
+}
+
+function ErrorVideo({video, setVideo}: { video: BrokenVideo, setVideo: (video: File | undefined) => void }) {
+  return <>
+    <Head>
+      <title>{t('broken.title', {name: video.file.name})}</title>
+    </Head>
+    <div className="max-w-lg mx-auto">
+      <h1 className="text-2xl text-center my-4">
+        {t('broken.title', {name: video.file.name})}
+      </h1>
+      <Button onClick={() => setVideo(undefined)} className="block mx-auto px-4 py-2 rounded bg-slate-400 hover:bg-slate-500 text-white">
+        {t('conversion.button.change')}
+      </Button>
     </div>
   </>
 }
