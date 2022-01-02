@@ -1,4 +1,4 @@
-import {Format, KnownVideo, Video} from "./video";
+import {Format, KnownVideo, NewVideo} from "./video";
 
 /**
  * This function reads the metadata of a video file.
@@ -7,7 +7,7 @@ import {Format, KnownVideo, Video} from "./video";
  * There is no FFPROBE included in {@see https://github.com/ffmpegwasm/ffmpeg.wasm},
  * so abuse ffmpeg for that. {@see https://github.com/ffmpegwasm/ffmpeg.wasm/issues/121}
  */
-export async function analyzeVideo({file, ffmpeg}: Video): Promise<KnownVideo> {
+export async function analyzeVideo({file, ffmpeg}: NewVideo): Promise<KnownVideo> {
   const metadata: Partial<Format> = {};
   const strings = [] as string[];
   ffmpeg.setLogger(({message}) => {
