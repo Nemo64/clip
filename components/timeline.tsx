@@ -10,7 +10,7 @@ interface Crop {
 interface TimelineProps {
   frame: Crop;
   metadata: Format;
-  limit: number;
+  limit?: number;
   value: Crop;
   onChange?: (crop: Crop) => void;
   onBlur?: (crop: Crop) => void;
@@ -20,7 +20,7 @@ interface TimelineProps {
 }
 
 export function Timeline({frame, metadata, limit, value, onChange, onBlur, disabled, pics, picInt}: TimelineProps) {
-  limit = Math.min(limit, frame.duration);
+  const duration = limit ? Math.min(limit, frame.duration) : frame.duration;
 
   const wrapperRef = useRef() as RefObject<HTMLDivElement>;
   const bodyRef = useRef() as RefObject<HTMLDivElement>
@@ -71,7 +71,7 @@ export function Timeline({frame, metadata, limit, value, onChange, onBlur, disab
     const leftHandler = createDragHandler(({initialValue, valueChange}) => {
       const limitedChange = clamp(
         valueChange,
-        Math.max(initialValue.duration - limit, -initialValue.start),
+        Math.max(initialValue.duration - duration, -initialValue.start),
         initialValue.duration,
       );
       return {
@@ -84,7 +84,7 @@ export function Timeline({frame, metadata, limit, value, onChange, onBlur, disab
       const limitedChange = clamp(
         valueChange,
         -initialValue.duration,
-        Math.min(limit - initialValue.duration, frame.start + frame.duration - initialValue.start - initialValue.duration),
+        Math.min(duration - initialValue.duration, frame.start + frame.duration - initialValue.start - initialValue.duration),
       );
       return {
         start: initialValue.start,
@@ -100,7 +100,7 @@ export function Timeline({frame, metadata, limit, value, onChange, onBlur, disab
       left.removeEventListener("mousedown", leftHandler);
       right.removeEventListener("mousedown", rightHandler);
     };
-  }, [frame.start, frame.duration, limit, onChange, onBlur]);
+  }, [frame.start, frame.duration, duration, onChange, onBlur]);
 
   const [cursor, setCursor] = useState<number | undefined>();
   const updateCursor = ({clientX}: { clientX: number }) => {
@@ -145,11 +145,13 @@ export function Timeline({frame, metadata, limit, value, onChange, onBlur, disab
         <label htmlFor="duration">duration </label>
         <input type="number" id="duration" disabled={disabled} className="w-20"
                value={value.duration.toFixed(3)}
-               step="0.001" min={frame.start.toFixed(3)} max={limit.toFixed(3)}
+               step="0.001" min={frame.start.toFixed(3)} max={duration.toFixed(3)}
                onInput={e => onChange?.({start: value.start, duration: parseFloat(e.currentTarget.value)})}/>
-        <span className="text-slate-500">
-          (limited to {limit})
-        </span>
+        {limit && (
+          <span className="text-slate-500">
+            (limited to {limit})
+          </span>
+        )}
       </div>
     </div>
   </>;

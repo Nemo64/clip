@@ -118,10 +118,10 @@ function AnalyseVideo({video}: { video: NewVideo }) {
   </>
 }
 
-const MAX_DURATION = 2 * 60;
+const MAX_DURATION = 5 * 60;
 
 function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: VideoState[1], start: (format: Format) => Promise<void> }) {
-  const picInt = Math.max(video.metadata.container.duration / 64, 1);
+  const picInt = Math.max(video.metadata.container.duration / 64, 0.5);
   const [pics, setPics] = useState<string[]>([]);
   const [picsDone, setPicsDone] = useState(false);
 
@@ -153,7 +153,7 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
     defaultValues: {
       container: {
         start: video.metadata.container.start,
-        duration: Math.min(video.metadata.container.duration, MAX_DURATION),
+        duration: Math.min(video.metadata.container.duration, MAX_DURATION, 60), // start with 60 seconds
       },
       video: undefined,
       audio: undefined,
@@ -163,7 +163,7 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
   const currentContainer = watch('container');
   const audioFormats = useMemo(() => {
     const audioFormats = possibleAudioFormats({...video.metadata, container: currentContainer});
-    const currentPreset = getValues('audio.preset') ?? localStorage.getItem('audio.preset') ?? 'bitrate_high';
+    const currentPreset = getValues('audio.preset') ?? 'bitrate_high';
     setValue('audio', audioFormats.find(f => f.preset === currentPreset) ?? audioFormats[0]);
     return audioFormats;
   }, [video.metadata, currentContainer, getValues, setValue]);
@@ -171,7 +171,7 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
   const currentAudio = watch('audio');
   const videoFormats = useMemo(() => {
     const videoFormats = possibleVideoFormats({...video.metadata, container: currentContainer, audio: currentAudio});
-    const currentPreset = getValues('video.preset') ?? localStorage.getItem('video.preset') ?? 'size_8mb';
+    const currentPreset = getValues('video.preset') ?? 'size_8mb';
     setValue('video', videoFormats.find(f => f.preset === currentPreset) ?? videoFormats[0]);
     return videoFormats;
   }, [video.metadata, currentContainer, currentAudio, getValues, setValue]);
@@ -194,7 +194,7 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
       <form className="flex flex-wrap sm:flex-nowrap justify-center gap-4" onSubmit={handleSubmit(start)}>
         <div className="flex-auto max-w-lg sm:max-w-none">
           <Controller control={control} name="container" render={({field: {ref, ...field}}) => <>
-            <Timeline frame={video.metadata.container} limit={MAX_DURATION} pics={pics} picInt={picInt} metadata={video.metadata} {...field}/>
+            <Timeline frame={video.metadata.container} pics={pics} picInt={picInt} limit={MAX_DURATION} metadata={video.metadata} {...field}/>
           </>}/>
         </div>
         <div className="flex-auto max-w-lg">

@@ -34,7 +34,7 @@
       "size_50mb": "50 Mb (bspw. für Discord Nitro Classic)",
       "size_8mb": "8 Mb (bspw. für Discord)",
       "size_details": "{{codec}} mit {{bitrate, number}} kbit/s; Auflösung {{width}}x{{height}}@{{fps, number}}",
-      "size_implausible": "Video zu lang für diese Dateigröße",
+      "size_implausible": "Video zu lang für diese Dateigröße ({{bitrate,number}} kbit/s)",
       "size_label": "Dateigrößenorientiert"
     }
   },
