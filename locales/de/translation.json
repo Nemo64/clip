@@ -32,7 +32,7 @@
       "size_16mb": "16 Mb (bspw. für WhatApp)",
       "size_50mb": "50 Mb (bspw. für Discord Nitro Classic)",
       "size_8mb": "8 Mb (bspw. für Discord)",
-      "size_details": "2-Pass-Codierung mit {{bitrate, number}} kbit/s; Auflösung {{width}}x{{height}}@{{fps, number}}",
+      "size_details": "{{codec}} mit {{bitrate, number}} kbit/s; Auflösung {{width}}x{{height}}@{{fps, number}}",
       "size_implausible": "Video zu lang für diese Dateigröße",
       "size_label": "Dateigrößenorientiert"
     }
