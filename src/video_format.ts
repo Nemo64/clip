@@ -5,24 +5,27 @@ export function possibleVideoFormats(format: Format): VideoFormat[] {
   const overheadSize = format.audio?.expectedSize ?? 0;
   const sizeThresholdAdjustment = 0.9;
 
-  const dimensions = [
+  const resolutions = [
     // calculateDimensions(format, 1920, 1080),
-    calculateDimensions(format, 1280, 720),
-    calculateDimensions(format, 854, 480),
-    calculateDimensions(format, 640, 360),
+    createResolution(format, 1280, 720),
+    createResolution(format, 854, 480),
+    createResolution(format, 640, 360),
+    createResolution(format, 426, 240, 20),
   ].filter(({width}, index, list) => list[index + 1]?.width !== width);
 
   for (const sizeTarget of [8000, 16000, 50000]) {
-    const resolution = dimensions.find(({width, height}) => {
-      return sizeTarget >= calculateExpectedSize(width, height, format.container.duration, 25);
+    const adjustedSizeTarget = sizeTarget - overheadSize;
+
+    const resolution = resolutions.find(resolution => {
+      return adjustedSizeTarget >= calculateExpectedSize(resolution, format.container.duration, 25);
     });
 
     const bitrates = [
-      (sizeTarget - overheadSize) * 8 * sizeThresholdAdjustment / format.container.duration,
+      adjustedSizeTarget * 8 * sizeThresholdAdjustment / format.container.duration,
     ];
 
     if (resolution) {
-      const biggestSizeForBitrate = calculateExpectedSize(resolution.width, resolution.height, format.container.duration, 18);
+      const biggestSizeForBitrate = calculateExpectedSize(resolution, format.container.duration, 18);
       bitrates.push(biggestSizeForBitrate * 8 / format.container.duration);
     }
 
@@ -35,35 +38,44 @@ export function possibleVideoFormats(format: Format): VideoFormat[] {
       height: resolution ? resolution.height : 0,
       bitrate: Math.floor(Math.min(...bitrates)),
       expectedSize: sizeTarget,
-      fps: format.video.fps / Math.ceil(format.video.fps / 30),
+      fps: format.video.fps / Math.ceil(format.video.fps / (resolution?.fps ?? 30)),
     });
   }
 
-  for (const {width, height, expectedHeight} of dimensions.reverse()) {
+  for (const resolution of resolutions.reverse()) {
     options.push({
-      preset: `crf_${expectedHeight}p`,
+      preset: `crf_${resolution.expectedHeight}p`,
       codec: 'h264',
       color: 'yuv420p',
-      width,
-      height,
+      width: resolution.width,
+      height: resolution.height,
       crf: 21,
-      expectedSize: calculateExpectedSize(width, height, format.container.duration, 21) + overheadSize,
-      fps: format.video.fps / Math.ceil(format.video.fps / 30),
+      expectedSize: calculateExpectedSize(resolution, format.container.duration, 21) + overheadSize,
+      fps: format.video.fps / Math.ceil(format.video.fps / resolution.fps),
     });
   }
 
   return options;
 }
 
-function calculateExpectedSize(width: number, height: number, duration: number, crf: number) {
-  return width * height * duration / 120 / crf; // TODO better calculation
+export interface Resolution {
+  width: number;
+  height: number;
+  fps: number;
+  expectedWidth: number;
+  expectedHeight: number;
 }
 
-export function calculateDimensions({video}: Format, width: number, height: number): { width: number, height: number, expectedWidth: number, expectedHeight: number } {
+function calculateExpectedSize(res: Resolution, duration: number, crf: number) {
+  return res.width * res.height * duration / Math.log2(res.fps) / 24 / crf; // TODO better calculation
+}
+
+export function createResolution({video}: Format, width: number, height: number, fps = 30): Resolution {
   const scaleFactor = Math.min(1.0, width / video.width, height / video.height);
   return {
     width: Math.round(video.width * scaleFactor / 2) * 2, // divisible by 2 for yuv420p colorspace
     height: Math.round(video.height * scaleFactor / 2) * 2, // divisible by 2 for yuv420p colorspace
+    fps: fps,
     expectedWidth: width,
     expectedHeight: height,
   };

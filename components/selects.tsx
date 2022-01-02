@@ -29,10 +29,11 @@ export function VideoFormatSelect({formats, ...props}: VideoProps) {
               {option.preset === 'crf_720p' && t('conversion.video_quality.crf_720p')}
               {option.preset === 'crf_480p' && t('conversion.video_quality.crf_480p')}
               {option.preset === 'crf_360p' && t('conversion.video_quality.crf_360p')}
+              {option.preset === 'crf_240p' && t('conversion.video_quality.crf_240p')}
               {option.preset?.startsWith('crf') && (
                 !option.implausible
                   ? <div className="opacity-60 text-sm">{t('conversion.video_quality.crf_details', option)}</div>
-                  : <div className="text-red-500 text-sm">{t('conversion.video_quality.crf_implausible')}</div>
+                  : <div className="text-red-500 text-sm">{t('conversion.video_quality.crf_implausible', option)}</div>
               )}
 
               {option.preset === 'size_100mb' && t('conversion.video_quality.size_100mb')}
@@ -42,7 +43,7 @@ export function VideoFormatSelect({formats, ...props}: VideoProps) {
               {option.preset?.startsWith('size') && (
                 !option.implausible
                   ? <div className="opacity-60 text-sm">{t('conversion.video_quality.size_details', option)}</div>
-                  : <div className="text-red-500 text-sm">{t('conversion.video_quality.size_implausible')}</div>
+                  : <div className="text-red-500 text-sm">{t('conversion.video_quality.size_implausible', option)}</div>
               )}
             </>}/>
   );

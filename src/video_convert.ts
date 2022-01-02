@@ -1,4 +1,4 @@
-import {calculateDimensions, ConvertedVideo, Format, KnownVideo} from "./video";
+import {createResolution, ConvertedVideo, Format, KnownVideo} from "./video";
 
 /**
  * Starts the converting process.
@@ -48,7 +48,7 @@ export function createPreviews(
   args.push('-skip_frame', interval > 2 ? 'nokey' : 'bidir');
   args.push('-flags2', 'fast'); // https://stackoverflow.com/a/54873148
   // decode at lower resolution; 1920 / 4 = 480; so create previews at 480 width ~ although h264 does not support this
-  const {width, height} = calculateDimensions(metadata, 480, 270);
+  const {width, height} = createResolution(metadata, 480, 270);
   const lowres = Math.floor(Math.log2(metadata.video.width / width));
   if (lowres >= 1) {
     args.push('-lowres:v', Math.min(3, lowres).toString());

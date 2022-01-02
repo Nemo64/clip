@@ -21,11 +21,12 @@
     "title": "Convert file {{name}}.",
     "video_quality": {
       "crf_1080p": "1080p full HD",
-      "crf_360p": "360p SD",
+      "crf_240p": "240p",
+      "crf_360p": "360p",
       "crf_480p": "480p SD",
       "crf_720p": "720p HD",
       "crf_details": "crf {{crf}}; resolution {{width}}x{{height}}@{{fps, number}}; ~{{expectedSize, number(maximumFractionDigits: 0)}} kB (rough estimate)",
-      "crf_implausible": "Resolution not available for that source ",
+      "crf_implausible": "Resolution not available for that source",
       "crf_label": "Resolution focus",
       "label": "Quality",
       "size_100mb": "100 Mb (e.g. for Discord Nitro)",
@@ -33,7 +34,7 @@
       "size_50mb": "50 Mb (e.g. for Discord Nitro Classic)",
       "size_8mb": "8 Mb (e.g. for Discord)",
       "size_details": "{{codec}} at {{bitrate, number}} kbit/s; Resolution {{width}}x{{height}}@{{fps, number}}",
-      "size_implausible": "Video too long for that file size",
+      "size_implausible": "Video too long for that file size ({{bitrate,number}} kbit/s), cut the video shorter or try a lower audio quality",
       "size_label": "File size focus"
     }
   },

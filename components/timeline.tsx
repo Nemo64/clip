@@ -124,6 +124,7 @@ export function Timeline({frame, metadata, limit, value, onChange, onBlur, disab
            value={value.duration.toFixed(3)}
            step="0.001" min={frame.start.toFixed(3)} max={limit.toFixed(3)}
            onInput={e => onChange?.({start: value.start, duration: parseFloat(e.currentTarget.value)})}/>
+    <span className="text-slate-500">(limited to {limit})</span>
     <div className="h-16 bg-black border bg-slate-800 rounded overflow-hidden relative select-none" ref={wrapperRef} onMouseMove={updateCursor}>
       <div className="absolute inset-0 flex flex-row">
         {picInt && pics?.map(pic => (

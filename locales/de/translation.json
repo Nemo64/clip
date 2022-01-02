@@ -21,7 +21,8 @@
     "title": "Konvertiere {{name}}.",
     "video_quality": {
       "crf_1080p": "1080p full HD",
-      "crf_360p": "360p SD",
+      "crf_240p": "240p",
+      "crf_360p": "360p",
       "crf_480p": "480p SD",
       "crf_720p": "720p HD",
       "crf_details": "CRF {{crf}}; Auflösung {{width}}x{{height}}@{{fps, number}}; ~{{expectedSize, number(maximumFractionDigits: 1)}} kB (grob geschätzt)",

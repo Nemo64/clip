@@ -118,7 +118,7 @@ function AnalyseVideo({video}: { video: NewVideo }) {
   </>
 }
 
-const MAX_DURATION = 60;
+const MAX_DURATION = 2 * 60;
 
 function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: VideoState[1], start: (format: Format) => Promise<void> }) {
   const picInt = Math.max(video.metadata.container.duration / 64, 1);
