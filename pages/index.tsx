@@ -123,16 +123,22 @@ const MAX_DURATION = 60;
 function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: VideoState[1], start: (format: Format) => Promise<void> }) {
   const picInt = Math.max(video.metadata.container.duration / 64, 1);
   const [pics, setPics] = useState<string[]>([]);
-  const picsDone = pics.length >= Math.floor(video.metadata.container.duration / picInt);
+  const [picsDone, setPicsDone] = useState(false);
 
   useEffect(() => {
     let stop = false;
     (async () => {
-      for await (const preview of createPreviews(video, picInt)) {
-        if (stop) break;
-        pics.push(URL.createObjectURL(preview));
-        setPics([]); // hack to force re-render
-        setPics(pics);
+      try {
+        for await (const preview of createPreviews(video, picInt)) {
+          if (stop) break;
+          pics.push(URL.createObjectURL(preview));
+          setPics([]); // hack to force re-render
+          setPics(pics);
+        }
+      } finally {
+        if (!stop) {
+          setPicsDone(true);
+        }
       }
     })();
     return () => {
