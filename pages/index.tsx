@@ -129,6 +129,7 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
     let stop = false;
     (async () => {
       try {
+        setPicsDone(false);
         for await (const preview of createPreviews(video, picInt)) {
           if (stop) break;
           pics.push(URL.createObjectURL(preview));
