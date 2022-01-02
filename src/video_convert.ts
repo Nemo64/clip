@@ -22,13 +22,18 @@ export async function convertVideo(
   args.push('-movflags', '+faststart'); // moves metadata to the beginning of the mp4 container ~ useful for streaming
   args.push(`output ${file.name}`);
 
-  ffmpeg.setProgress(({ratio}) => {
-    onProgress(ratio >= 0 && ratio <= 1 ? ratio * 100 : 0);
+  // frame= 1199 fps= 23 q=31.0 size=    4096kB time=00:00:40.26 bitrate= 833.4kbits/s dup=0 drop=685 speed=0.773x
+  ffmpeg.setLogger(({message}) => {
+    const match = message.match(/time=\s*(?<time>\d+:\d+:\d+\.\d+)/);
+    if (match?.groups?.time) {
+      const time = match.groups.time.split(':').map(parseFloat).reduce((acc, val) => acc * 60 + val);
+      onProgress(time / format.container.duration * 100);
+    }
   });
 
   await ffmpeg.run(...args);
   const result = ffmpeg.FS('readFile', `output ${file.name}`);
-  ffmpeg.setProgress(() => void 0);
+  ffmpeg.setLogger(() => void 0);
 
   const newFileName = file.name.replace(/\.\w{2,4}$|$/, ".mp4");
   return {
