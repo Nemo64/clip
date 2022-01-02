@@ -52,7 +52,7 @@ export function parseMetadata(message: string, metadata: Partial<Format>) {
     return;
   }
 
-  const audioMatch = message.match(/Stream #[^:,]+:[^:,]+: Audio: (?<codec>[^(),]+(\([\w\s]+\))?).*, (?<sampleRate>\d+) Hz, (?<channelSetup>[^,]+), [^,]+, (?<bitrate>[\d.]+) kb\/s/);
+  const audioMatch = message.match(/Stream #[^:,]+:[^:,]+: Audio: (?<codec>[^(),]+(\(\S+\))?).*, (?<sampleRate>\d+) Hz, (?<channelSetup>[^,]+), [^,]+, (?<bitrate>[\d.]+) kb\/s/);
   if (audioMatch?.groups && metadata.container) {
     metadata.audio = {
       original: true,

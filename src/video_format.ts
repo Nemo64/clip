@@ -10,7 +10,6 @@ export function possibleVideoFormats(format: Format): VideoFormat[] {
     createResolution(format, 1280, 720),
     createResolution(format, 854, 480),
     createResolution(format, 640, 360),
-    createResolution(format, 426, 240, 20),
   ].filter(({width}, index, list) => list[index + 1]?.width !== width);
 
   for (const sizeTarget of [8000, 16000, 50000]) {
@@ -100,7 +99,7 @@ export function possibleAudioFormats(format: Format): AudioFormat[] {
   options.push({
     preset: 'bitrate_low',
     implausible: !format.audio,
-    codec: 'aac (HEv2)',
+    codec: 'aac (HE-AACv2)',
     sampleRate: 48000,
     channelSetup: 'stereo',
     bitrate: 32,

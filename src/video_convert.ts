@@ -157,7 +157,11 @@ function audioArguments(metadata: Format, format: Format) {
   }
 
   // @ts-ignore: typescript does not like treating objects as records
-  if (Object.entries(metadata.audio).every(([k, v]) => format.audio[k] === v)) {
+  const sourceIdentical = metadata.audio?.codec === format.audio.codec
+    && metadata.audio.sampleRate === format.audio.sampleRate
+    && metadata.audio.channelSetup === format.audio.channelSetup
+    && metadata.audio.bitrate <= format.audio.bitrate
+  if (sourceIdentical) {
     args.push('-c:a', 'copy');
     return args;
   }

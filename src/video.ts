@@ -66,30 +66,29 @@ export interface ContainerFormat {
   start: number; // in seconds
 }
 
-export interface VideoFormat {
+export interface GenericStreamFormat {
   preset?: string; // arbitrary name
   original?: boolean; // indicate if the stream is from the source
   implausible?: boolean; // if true, this format is not suitable for the video
+  expectedSize: number; // in kilobytes
+}
+
+export interface VideoFormat extends GenericStreamFormat {
   codec: string; // eg. "h264"
   color: string; // eg. yuv420p
   width: number; // eg. 1920
   height: number; // eg. 1080
   bitrate?: number; // in kbit/s
   crf?: number; // constant rate factor ~ usually only available for encode
-  expectedSize: number; // in kilobytes
   fps: number; // average frames per second
   // tbr?: number; // https://stackoverflow.com/a/3199582
 }
 
-export interface AudioFormat {
-  preset?: string; // arbitrary name
-  original?: boolean; // indicate if the stream is from the source
-  implausible?: boolean; // if true, this format is not suitable for the video
+export interface AudioFormat extends GenericStreamFormat {
   codec: string; // eg. "aac"
   sampleRate: number; // eg. 48000
   channelSetup: string; // eg. "mono" or "stereo"
   bitrate: number; // in kbit/s
-  expectedSize: number; // in kilobytes
 }
 
 export interface Format {
