@@ -255,29 +255,35 @@ function DownloadPage({file, setVideo, video}: { file: File, setVideo: VideoStat
     return () => URL.revokeObjectURL(url);
   }, [file, setUrl]);
 
+  const aspectRatio = `${video.metadata.video.width} / ${video.metadata.video.height}`;
+  const maxWidth = `${80 * video.metadata.video.width / video.metadata.video.height}vh`;
+
   return <>
     <Head>
       <title>{t('download.title', {name: file.name})}</title>
     </Head>
-    <div className="max-w-lg mx-auto p-2">
-      <h1 className="text-2xl my-4">
+    <div className="block w-full max-h-[80vh] min-w-full bg-slate-300" style={{aspectRatio}}>
+      {url
+        ? <video className="mx-auto h-full bg-slate-500" controls autoPlay={true} src={url} style={{aspectRatio}}/>
+        : t('download.loading')}
+    </div>
+    <div className="mx-auto p-2 flex flex-row items-baseline justify-between flex-wrap gap-2 box-content" style={{maxWidth}}>
+      <h1 className="flex text-2xl">
         {t('download.title', {name: file.name})}
       </h1>
 
-      <div className="block w-full my-4" style={{aspectRatio: `${video.metadata.video.width} / ${video.metadata.video.height}`}}>
-        {url ? <video className="mx-auto w-full" controls autoPlay={true} src={url}/> : t('download.loading')}
+      <div className="flex flex-row items-baseline gap-2">
+        <Button href={url} download={file.name} className="table px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block align-bottom mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          {t('download.button', {size: Math.ceil(file.size / 1000)})}
+        </Button>
+
+        <Button onClick={() => setVideo(undefined)} className="table relative px-4 py-2 rounded bg-slate-400 hover:bg-slate-500 text-white">
+          {t('conversion.button.change')}
+        </Button>
       </div>
-
-      <Button href={url} download={file.name} className="mx-auto table my-4 px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block align-bottom mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-        </svg>
-        {t('download.button', {size: Math.ceil(file.size / 1000)})}
-      </Button>
-
-      <Button onClick={() => setVideo(undefined)} className="mx-auto table relative my-4 px-4 py-2 rounded bg-slate-400 hover:bg-slate-500 text-white">
-        {t('conversion.button.change')}
-      </Button>
     </div>
   </>;
 }
