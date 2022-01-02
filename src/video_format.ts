@@ -1,4 +1,4 @@
-import {AudioFormat, Format, KnownVideo, VideoFormat} from "./video";
+import {AudioFormat, Format, VideoFormat} from "./video";
 
 export function possibleVideoFormats(format: Format): VideoFormat[] {
   const options: VideoFormat[] = [];

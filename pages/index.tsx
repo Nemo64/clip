@@ -184,44 +184,49 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
     <Head>
       <title>{t("conversion.title", {name: video.file.name})}</title>
     </Head>
-    <form className="max-w-lg mx-auto p-2" onSubmit={handleSubmit(start)}>
+    <div className="container mx-auto p-2">
+
       <h1 className="text-2xl my-4">
         {t('conversion.title', {name: video.file.name})}
       </h1>
 
-      <div className="my-4">
-        <label htmlFor="video_format">{t('conversion.video_quality.label')}</label>
-        <Controller control={control} name="video" rules={formatRules} render={({field: {ref, ...field}}) => (
-          <VideoFormatSelect formats={videoFormats} id="video_format" {...field} />
-        )}/>
-      </div>
+      <form className="flex flex-wrap sm:flex-nowrap justify-center gap-4" onSubmit={handleSubmit(start)}>
+        <div className="flex-auto max-w-lg sm:max-w-none">
+          <Controller control={control} name="container" render={({field: {ref, ...field}}) => <>
+            <Timeline frame={video.metadata.container} limit={MAX_DURATION} pics={pics} picInt={picInt} metadata={video.metadata} {...field}/>
+          </>}/>
+        </div>
+        <div className="flex-auto max-w-lg">
+          <div className="mb-2">
+            <label htmlFor="video_format">{t('conversion.video_quality.label')}</label>
+            <Controller control={control} name="video" rules={formatRules} render={({field: {ref, ...field}}) => (
+              <VideoFormatSelect formats={videoFormats} id="video_format" {...field} />
+            )}/>
+          </div>
 
-      <div className="my-4">
-        <label htmlFor="audio_format">{t('conversion.audio_quality.label')}</label>
-        <Controller control={control} name="audio" rules={formatRules} render={({field: {ref, ...field}}) => (
-          <AudioFormatSelect formats={audioFormats} id="audio_format" {...field} />
-        )}/>
-      </div>
+          <div className="my-2">
+            <label htmlFor="audio_format">{t('conversion.audio_quality.label')}</label>
+            <Controller control={control} name="audio" rules={formatRules} render={({field: {ref, ...field}}) => (
+              <AudioFormatSelect formats={audioFormats} id="audio_format" {...field} />
+            )}/>
+          </div>
 
-      <div className="my-4">
-        <Controller control={control} name="container" render={({field: {ref, ...field}}) => <>
-          <Timeline frame={video.metadata.container} limit={MAX_DURATION} pics={pics} picInt={picInt} metadata={video.metadata} {...field}/>
-        </>}/>
-      </div>
+          <div className="flex gap-2 mt-4">
+            <Button type="submit" className="px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white" disabled={!picsDone}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block align-bottom mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              {t('conversion.button.start')}
+            </Button>
 
-      <div className="flex gap-2">
-        <Button type="submit" className="px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white" disabled={!picsDone}>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block align-bottom mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          {t('conversion.button.start')}
-        </Button>
+            <Button onClick={() => setVideo(undefined)} className="px-4 py-2 rounded bg-slate-400 hover:bg-slate-500 text-white">
+              {t('conversion.button.change')}
+            </Button>
+          </div>
+        </div>
+      </form>
 
-        <Button onClick={() => setVideo(undefined)} className="px-4 py-2 rounded bg-slate-400 hover:bg-slate-500 text-white">
-          {t('conversion.button.change')}
-        </Button>
-      </div>
-    </form>
+    </div>
   </>;
 }
 
