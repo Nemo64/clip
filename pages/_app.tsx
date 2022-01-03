@@ -2,7 +2,6 @@ import type {AppProps} from 'next/app'
 import Head from "next/head";
 import {createContext, useCallback, useEffect, useState} from "react";
 import {Footer} from "../components/footer";
-import {Link} from "../components/link";
 import {t} from "../src/intl";
 import {analyzeVideo, createVideo, FFMPEG_PATHS, Video} from "../src/video";
 import '../styles/globals.css'
@@ -80,7 +79,7 @@ function MyApp({Component, pageProps}: AppProps) {
     </VideoContext.Provider>
     <Footer/>
     {dragOver && (
-      <div className="absolute inset-0 bg-slate-500/50 flex items-center justify-around">
+      <div className="fixed inset-0 bg-slate-500/50 flex items-center justify-around">
         <div className="flex bg-white rounded p-4 shadow-xl text-2xl animate-pulse">
           {t('drop_video')}
         </div>

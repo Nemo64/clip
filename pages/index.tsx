@@ -26,6 +26,12 @@ export default function Start() {
   const [progress, setProgress] = useState(-1);
   const [result, setResult] = useState<File>();
 
+  // reset result when video changes
+  useEffect(() => {
+    setProgress(-1);
+    setResult(undefined);
+  }, [video]);
+
   const start = async (format: Format) => {
     if (video?.status !== 'known') {
       throw new Error("Video is not known");
@@ -46,14 +52,8 @@ export default function Start() {
     }
   };
 
-  const setVideoWrapped = (video: Parameters<typeof setVideo>[0]) => {
-    setVideo(video);
-    setProgress(-1);
-    setResult(undefined);
-  };
-
   if (result && video?.status === "known") {
-    return <DownloadPage video={video} file={result} setVideo={setVideoWrapped}/>
+    return <DownloadPage video={video} file={result} setVideo={setVideo}/>
   }
 
   if (progress >= 0 && video) {
@@ -65,14 +65,14 @@ export default function Start() {
   }
 
   if (video?.status === "broken") {
-    return <ErrorVideo video={video} setVideo={setVideoWrapped}/>;
+    return <ErrorVideo video={video} setVideo={setVideo}/>;
   }
 
   if (video?.status === "known") {
-    return <ConvertPage video={video} setVideo={setVideoWrapped} start={start}/>;
+    return <ConvertPage video={video} setVideo={setVideo} start={start}/>;
   }
 
-  return <SelectPage setVideo={setVideoWrapped}/>;
+  return <SelectPage setVideo={setVideo}/>;
 };
 
 function SelectPage({setVideo}: { setVideo: VideoState[1] }) {
