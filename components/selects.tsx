@@ -31,7 +31,6 @@ export function VideoFormatSelect({formats, ...props}: VideoProps) {
               {option.preset === 'crf_360p' && t('conversion.video_quality.crf_360p')}
               {option.preset === 'crf_240p' && t('conversion.video_quality.crf_240p')}
 
-              {option.preset === 'size_100mb' && t('conversion.video_quality.size_100mb')}
               {option.preset === 'size_50mb' && t('conversion.video_quality.size_50mb')}
               {option.preset === 'size_16mb' && t('conversion.video_quality.size_16mb')}
               {option.preset === 'size_8mb' && t('conversion.video_quality.size_8mb')}

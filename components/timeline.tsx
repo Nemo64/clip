@@ -117,7 +117,7 @@ export function Timeline({frame, metadata, limit, value, onChange, onBlur, disab
     <div className="w-full relative bg-slate-100" style={{aspectRatio: `${metadata.video.width} / ${metadata.video.height}`}}>
       {pics?.length
         ? <img src={cursor && picInt && pics[Math.floor(cursor / picInt)] || pics[0]} alt="preview" className="absolute w-full h-full object-contain"/>
-        : <div className="p-4 text-center">{t('timeline.no-preview')}</div>}
+        : <div className="p-4 text-center">{t('timeline.no_preview')}</div>}
     </div>
     <div className="h-16 bg-black bg-slate-800 rounded-bl rounded-br overflow-hidden relative select-none" ref={wrapperRef} onMouseMove={updateCursor}>
       <div className="absolute inset-0 flex flex-row">
@@ -135,14 +135,14 @@ export function Timeline({frame, metadata, limit, value, onChange, onBlur, disab
     </div>
     <div className="flex flex-row flex-wrap">
       <div>
-        <label htmlFor="start">start time </label>
+        <label htmlFor="start">{t('timeline.start_time')} </label>
         <input type="number" id="start" disabled={disabled} className="w-20"
                value={value.start.toFixed(3)}
                step="0.001" min={frame.start.toFixed(3)} max={(frame.start + frame.duration - value.duration).toFixed(3)}
                onInput={e => onChange?.({start: parseFloat(e.currentTarget.value), duration: value.duration})}/>
       </div>
       <div>
-        <label htmlFor="duration">duration </label>
+        <label htmlFor="duration">{t('timeline.duration')} </label>
         <input type="number" id="duration" disabled={disabled} className="w-20"
                value={value.duration.toFixed(3)}
                step="0.001" min={frame.start.toFixed(3)} max={duration.toFixed(3)}

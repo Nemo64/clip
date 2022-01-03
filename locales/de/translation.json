@@ -33,10 +33,9 @@
       "crf_label": "Auflösungsorientiert",
       "label": "Qualität",
       "original": " (aus Quelldatei; schnell und verlustlos)",
-      "size_100mb": "100 Mb (bspw. für Discord Nitro)",
       "size_16mb": "16 Mb (bspw. für WhatApp)",
-      "size_50mb": "50 Mb (bspw. für Discord Nitro Classic)",
-      "size_8mb": "8 Mb (bspw. für Discord oder E-Mail)",
+      "size_50mb": "50 Mb (bspw. für Discord Nitro)",
+      "size_8mb": "8 Mb (bspw. für Discord, E-Mail…)",
       "size_details": "{{codec}} mit ~{{bitrate, number}} kbit/s; Auflösung {{width}}x{{height}}@{{fps, number}}",
       "size_implausible": "Video zu lang für diese Dateigröße ({{bitrate,number}} kbit/s)",
       "size_label": "Dateigrößenorientiert"
@@ -69,11 +68,13 @@
     "value": "{{progress, number(maximumFractionDigits: 1)}}%"
   },
   "timeline": {
-    "no-preview": "Keine Vorschau verfügbar"
+    "duration": "Laufzeit",
+    "no_preview": "Keine Vorschau verfügbar",
+    "start_time": "Startzeit"
   },
   "upload": {
     "button": "Video auswählen",
-    "description": "Mit diesem Tool können Sie ein Video schnell kürzen und komprimieren, damit du es in Diensten wie WhatsApp und Discord verwenden können, die eine Dateigrößenbeschränkung vorsehen.\n\nDas Video wird im Browser komprimiert und niemals an einen Server übertragen. ",
+    "description": "Mit diesem Tool kannst du ein Video schnell kürzen und komprimieren, damit du es in Diensten wie WhatsApp und Discord verwenden können, welche eine Dateigrößenbeschränkung vorsehen.\n\nDas Video wird im Browser verarbeitet  \nund niemals an einen Server übertragen. ",
     "title": "Schneide und komprimiere Videos im browser"
   }
 }

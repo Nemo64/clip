@@ -2,14 +2,20 @@ import type {AppProps} from 'next/app'
 import Head from "next/head";
 import {createContext, useCallback, useEffect, useState} from "react";
 import {Footer} from "../components/footer";
-import {t} from "../src/intl";
+import {changeLanguage, language, t} from "../src/intl";
 import {analyzeVideo, createVideo, FFMPEG_PATHS, Video} from "../src/video";
 import '../styles/globals.css'
 
 export type VideoState = [Video | undefined, (file: File | undefined) => void];
 export const VideoContext = createContext<VideoState>([undefined, () => undefined]);
 
-function MyApp({Component, pageProps}: AppProps) {
+export default function MyApp({Component, pageProps, router}: AppProps) {
+  console.log(router);
+  console.log(router);
+  if (language() !== router.locale) {
+    changeLanguage(router.locale).catch(console.error);
+  }
+
   const [video, setVideo] = useState<Video | undefined>(undefined);
   const [dragOver, setDragOver] = useState(false);
 
@@ -30,7 +36,7 @@ function MyApp({Component, pageProps}: AppProps) {
       const identifiedVideo = await analyzeVideo(newVideo);
       setVideo(identifiedVideo);
     } catch (e) {
-      setVideo({status: "broken", file})
+      setVideo({status: "broken", file, message: String(e)});
     }
   }, [video, setVideo]);
 
@@ -68,6 +74,11 @@ function MyApp({Component, pageProps}: AppProps) {
 
   return <>
     <Head>
+      <link key="canonical" rel="canonical" href={`${process.env.NEXT_PUBLIC_HOST}/${router.locale}${router.pathname}`}/>
+      <link key="x-default" rel="alternate" href={`${process.env.NEXT_PUBLIC_HOST}${router.pathname}`} hrefLang="x-default"/>
+      {router.locales?.map(locale => (
+        <link key={locale} rel="alternate" href={`${process.env.NEXT_PUBLIC_HOST}/${locale}${router.pathname}`} hrefLang={locale}/>
+      ))}
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
       <meta name="robots" content="noindex"/>
       {Object.values(FFMPEG_PATHS).map(info => (
@@ -87,5 +98,3 @@ function MyApp({Component, pageProps}: AppProps) {
     )}
   </>;
 }
-
-export default MyApp;

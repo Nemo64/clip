@@ -1,10 +1,31 @@
+import classNames from "classnames";
+import {useRouter} from "next/router";
 import {t} from "../src/intl";
+import {TranslateIcon} from "./icons";
 import {Link} from "./link";
+import NextLink from "next/link"
 
 export function Footer() {
+  const {locale: currentLocale, locales, pathname} = useRouter();
+
   return (
     <div className="mt-16 min-h-[80vh] bg-gradient-to-b from-slate-100 to-slate-50 bg-slate-50 bg-[length:100%_1rem] bg-no-repeat">
-      <footer className="max-w-lg mx-auto px-2 py-8 flex flex-row text-slate-500 text-sm">
+      <footer className="max-w-lg mx-auto px-2 py-8 flex flex-row flex-wrap gap-2 text-slate-500 text-sm">
+        {Array.isArray(locales) && (
+          <div className="flex w-full">
+            <TranslateIcon className="mr-2" />
+            Languages:
+            <ul role="list" className="flex flex-row gap-2 mx-2">
+              {locales.map(locale => (
+                <li key={locale} className={classNames('inline-block', {'font-semibold': locale === currentLocale})}>
+                  <NextLink href={pathname} locale={locale}>
+                    {locale}
+                  </NextLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="flex-auto flex-col">
 
           <h2>{t('footer.used_libraries.opensource')}</h2>

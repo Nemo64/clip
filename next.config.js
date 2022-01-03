@@ -5,8 +5,14 @@ const path = require('path');
 /** @type {import('next').NextConfig} */
 module.exports = {
   reactStrictMode: true,
+  i18n: {
+    locales: ['en', 'de'],
+    defaultLocale: 'en',
+  },
+  trailingSlash: true,
   env: {
     NEXT_PUBLIC_FFMPEG_URL: '/dist/ffmpeg',
+    NEXT_PUBLIC_HOST: 'https://clip.marco.zone',
   },
   webpack(config) {
     config.plugins.push(
@@ -25,6 +31,7 @@ module.exports = {
     return [
       {
         source: '/(.*)',
+        locale: false,
         headers: [
           {
             key: 'Content-Security-Policy',

@@ -17,3 +17,8 @@ i18next.init({
 });
 
 export const t = i18next.t.bind(i18next);
+export const changeLanguage = i18next.changeLanguage.bind(i18next);
+
+export function language(): string {
+  return i18next.languages[0];
+}
