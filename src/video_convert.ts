@@ -50,7 +50,7 @@ export function createPreviews(
   const args: string[] = ['-hide_banner', '-y'];
 
   // use some tricks to decode faster for the preview
-  args.push('-skip_frame', interval > 2 ? 'nokey' : 'bidir', '-vsync', '2');
+  args.push('-skip_frame', interval > 2 ? 'nokey' : 'default', '-vsync', '2');
   args.push('-flags2', 'fast'); // https://stackoverflow.com/a/54873148
   // decode at lower resolution; 1920 / 4 = 480; so create previews at 480 width ~ although h264 does not support this
   const {width, height} = createResolution(metadata, 480, 270);
