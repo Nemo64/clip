@@ -1,4 +1,4 @@
-import {createResolution, ConvertedVideo, Format, KnownVideo} from "./video";
+import {createResolution, ConvertedVideo, Format, KnownVideo, SIZE_UNDERSHOOT_FACTOR} from "./video";
 
 /**
  * Starts the converting process.
@@ -148,6 +148,8 @@ function videoArguments(metadata: Format, format: Format) {
       args.push('-crf:v', format.video.crf.toString());
     } else if (format.video.bitrate) {
       args.push('-b:v', `${format.video.bitrate}k`);
+      args.push('-maxrate:v', `${Math.floor(format.video.bitrate / SIZE_UNDERSHOOT_FACTOR)}k`);
+      args.push('-bufsize:v', `${Math.floor(format.video.bitrate / SIZE_UNDERSHOOT_FACTOR * 10)}k`); // ~ 10 second buffer
     } else {
       throw new Error("No video bitrate or crf specified");
     }

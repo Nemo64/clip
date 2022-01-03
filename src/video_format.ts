@@ -1,9 +1,13 @@
 import {AudioFormat, Format, VideoFormat} from "./video";
 
+/**
+ * The amount the target size is undershoot to accommodate overheads and average bitrate variance.
+ */
+export const SIZE_UNDERSHOOT_FACTOR = 0.9;
+
 export function possibleVideoFormats(format: Format): VideoFormat[] {
   const options: VideoFormat[] = [];
   const overheadSize = format.audio?.expectedSize ?? 0;
-  const sizeThresholdAdjustment = 0.9;
 
   const resolutions = [
     // calculateDimensions(format, 1920, 1080),
@@ -20,9 +24,8 @@ export function possibleVideoFormats(format: Format): VideoFormat[] {
     });
 
     const bitrates = [
-      adjustedSizeTarget * 8 * sizeThresholdAdjustment / format.container.duration,
+      adjustedSizeTarget * 8 * SIZE_UNDERSHOOT_FACTOR / format.container.duration,
     ];
-
     if (resolution) {
       const biggestSizeForBitrate = calculateExpectedSize(resolution, format.container.duration, 18);
       bitrates.push(biggestSizeForBitrate * 8 / format.container.duration);
