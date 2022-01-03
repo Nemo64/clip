@@ -141,7 +141,7 @@ function ErrorVideo({video, setVideo}: { video: BrokenVideo, setVideo: (video: F
       <h1 className="text-2xl text-center my-4">
         {t('broken.title', {name: video.file.name})}
       </h1>
-      <Button onClick={() => setVideo(undefined)} className="block mx-auto px-4 py-2 rounded bg-slate-400 hover:bg-slate-500 text-white">
+      <Button onClick={() => setVideo(undefined)} className="block mx-auto px-4 py-2 rounded bg-slate-500 hover:bg-slate-600 text-white">
         {t('conversion.button.change')}
       </Button>
     </div>
@@ -250,7 +250,7 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
               {t('conversion.button.start')}
             </Button>
 
-            <Button onClick={() => setVideo(undefined)} className="px-4 py-2 rounded bg-slate-400 hover:bg-slate-500 text-white">
+            <Button onClick={() => setVideo(undefined)} className="px-4 py-2 rounded bg-slate-500 hover:bg-slate-600 text-white">
               {t('conversion.button.change')}
             </Button>
           </div>
@@ -310,7 +310,7 @@ function DownloadPage({file, setVideo, video}: { file: File, setVideo: VideoStat
           {t('download.button', {size: Math.ceil(file.size / 1000)})}
         </Button>
 
-        <Button onClick={() => setVideo(undefined)} className="table relative px-4 py-2 rounded bg-slate-400 hover:bg-slate-500 text-white">
+        <Button onClick={() => setVideo(undefined)} className="table relative px-4 py-2 rounded bg-slate-500 hover:bg-slate-600 text-white">
           {t('conversion.button.change')}
         </Button>
       </div>

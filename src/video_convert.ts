@@ -78,6 +78,10 @@ export function createPreviews(
     for (let i = 1; i <= frames;) {
       try {
         const blob = ffmpeg.FS('readFile', `frame_${i}.jpg`);
+        if (blob.length <= 0) {
+          console.warn(`frame_${i}.jpg is empty`);
+          throw new Error(`frame_${i}.jpg is empty`);
+        }
         ffmpeg.FS('unlink', `frame_${i}.jpg`);
         i++;
         yield new File([blob], `frame_${i}.jpg`, {type: 'image/jpeg'});

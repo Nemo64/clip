@@ -3,7 +3,7 @@ import {Link} from "./link";
 
 export function Footer() {
   return (
-    <div className="mt-16 min-h-screen bg-gradient-to-b from-slate-100 to-slate-50 bg-slate-50 bg-[length:100%_1rem] bg-no-repeat">
+    <div className="mt-16 min-h-[80vh] bg-gradient-to-b from-slate-100 to-slate-50 bg-slate-50 bg-[length:100%_1rem] bg-no-repeat">
       <footer className="max-w-lg mx-auto px-2 py-8 flex flex-row text-slate-500 text-sm">
         <div className="flex-auto flex-col">
 
