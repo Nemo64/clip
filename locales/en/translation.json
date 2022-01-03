@@ -15,7 +15,7 @@
       "none": "No audio",
       "none_details": "Remove the audio track",
       "none_implausible": "",
-      "original": " (copy from source)"
+      "original": " (copy from source; fast and lossless)"
     },
     "button": {
       "change": "Select a different file",
@@ -32,7 +32,7 @@
       "crf_implausible": "Resolution not available for that source",
       "crf_label": "Resolution focus",
       "label": "Quality",
-      "original": " (copy from source)",
+      "original": " (copy from source; fast and lossless)",
       "size_100mb": "100 Mb (e.g. for Discord Nitro)",
       "size_16mb": "16 Mb (e.g. for WhatApp)",
       "size_50mb": "50 Mb (e.g. for Discord Nitro Classic)",

@@ -15,7 +15,7 @@
       "none": "Kein Ton",
       "none_details": "Entferne die Tonspur",
       "none_implausible": "",
-      "original": " (aus Quelldatei)"
+      "original": " (aus Quelldatei; schnell und verlustlos)"
     },
     "button": {
       "change": "Andere Datei auswählen",
@@ -32,7 +32,7 @@
       "crf_implausible": "Auflösung mit dem Ursprungsvideo nicht verfügbar",
       "crf_label": "Auflösungsorientiert",
       "label": "Qualität",
-      "original": " (aus Quelldatei)",
+      "original": " (aus Quelldatei; schnell und verlustlos)",
       "size_100mb": "100 Mb (bspw. für Discord Nitro)",
       "size_16mb": "16 Mb (bspw. für WhatApp)",
       "size_50mb": "50 Mb (bspw. für Discord Nitro Classic)",
