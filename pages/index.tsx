@@ -3,6 +3,7 @@ import Head from "next/head";
 import {useContext, useEffect, useMemo, useState} from "react";
 import {Controller, useForm} from "react-hook-form";
 import {Button} from "../components/button";
+import {AddFileIcon, BoltIcon, DownloadIcon, Spinner} from "../components/icons";
 import {Markdown} from "../components/markdown";
 import {ProgressBar} from "../components/progress";
 import {AudioFormatSelect, VideoFormatSelect} from "../components/selects";
@@ -104,9 +105,7 @@ function SelectPage({setVideo}: { setVideo: VideoState[1] }) {
       </Markdown>
       <Button onClick={changeVideo} className="mx-auto block relative px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white text-xl">
         <div className="absolute inset-0 -z-50 rounded bg-red-800 animate-ping opacity-20"/>
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block align-text-bottom mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-        </svg>
+        <AddFileIcon className="align-text-bottom mr-2 -ml-1"/>
         {t('upload.button')}
       </Button>
       {error && (
@@ -125,7 +124,7 @@ function AnalyseVideo({video}: { video: NewVideo }) {
     </Head>
     <div className="max-w-lg mx-auto">
       <h1 className="text-2xl text-center my-4">
-        <div className="inline-block w-4 h-4 mr-2 animate-spin rounded-full border-2 border-red-200 border-r-red-500"/>
+        <Spinner className="mr-2 align-middle" />
         {t('analyse.title', {name: video.file.name})}
       </h1>
     </div>
@@ -244,9 +243,7 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
 
           <div className="flex gap-2 mt-4">
             <Button type="submit" className="px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white" disabled={!picsDone}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block align-bottom mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+              {picsDone ? <BoltIcon className="align-bottom mr-2 -ml-1"/> : <Spinner className="align-bottom mr-2 -ml-1"/>}
               {t('conversion.button.start')}
             </Button>
 
@@ -304,9 +301,7 @@ function DownloadPage({file, setVideo, video}: { file: File, setVideo: VideoStat
 
       <div className="flex flex-row items-baseline gap-2">
         <Button href={url} download={file.name} className="table px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block align-bottom mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-          </svg>
+          <DownloadIcon className="align-bottom mr-2 -ml-1"/>
           {t('download.button', {size: Math.ceil(file.size / 1000)})}
         </Button>
 
