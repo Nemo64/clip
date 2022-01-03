@@ -19,6 +19,7 @@ export interface KnownVideo {
 export interface BrokenVideo {
   status: "broken";
   file: File;
+  message: string;
 }
 
 export interface ConvertedVideo {

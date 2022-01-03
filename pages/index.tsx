@@ -140,6 +140,7 @@ function ErrorVideo({video, setVideo}: { video: BrokenVideo, setVideo: (video: F
       <h1 className="text-2xl text-center my-4">
         {t('broken.title', {name: video.file.name})}
       </h1>
+      {video.message && <p className="my-4 text-red-800">{video.message}</p>}
       <Button onClick={() => setVideo(undefined)} className="block mx-auto px-4 py-2 rounded bg-slate-500 hover:bg-slate-600 text-white">
         {t('conversion.button.change')}
       </Button>
