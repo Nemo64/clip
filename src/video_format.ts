@@ -3,11 +3,13 @@ import {AudioFormat, Format, VideoFormat} from "./video";
 /**
  * The amount the target size is undershoot to accommodate overheads and average bitrate variance.
  */
-export const SIZE_UNDERSHOOT_FACTOR = 0.95;
+export const SIZE_UNDERSHOOT_FACTOR = 0.9;
 
 export function possibleVideoFormats(format: Format): VideoFormat[] {
   const options: VideoFormat[] = [];
-  const overheadSize = format.audio?.expectedSize ?? 0;
+  const audioOverheadSize = format.audio?.expectedSize ?? 0;
+  const containerOverheadSize = format.container.duration; // I just assume 1 kb/s
+  const overheadSize = audioOverheadSize + containerOverheadSize;
 
   const resolutions = [
     // calculateDimensions(format, 1920, 1080),
@@ -20,7 +22,7 @@ export function possibleVideoFormats(format: Format): VideoFormat[] {
     const adjustedSizeTarget = sizeTarget - overheadSize;
 
     const resolution = resolutions.find(resolution => {
-      return adjustedSizeTarget >= calculateExpectedSize(resolution, format.container.duration, 25);
+      return adjustedSizeTarget >= calculateExpectedSize(resolution, format.container.duration, 28);
     });
 
     const bitrates = [
@@ -76,7 +78,7 @@ export function possibleVideoFormats(format: Format): VideoFormat[] {
         ...format.video,
         preset: `crf_${resolution.expectedHeight}p`,
         original: original,
-        expectedSize: expectedSize + overheadSize,
+        expectedSize: expectedSize,
       });
     } else {
       options.push({
@@ -87,7 +89,7 @@ export function possibleVideoFormats(format: Format): VideoFormat[] {
         width: resolution.width,
         height: resolution.height,
         crf: 21,
-        expectedSize: expectedSize + overheadSize,
+        expectedSize: expectedSize,
         fps: format.video.fps / Math.ceil(format.video.fps / resolution.fps),
       });
     }
@@ -105,7 +107,7 @@ export interface Resolution {
 }
 
 function calculateExpectedSize(res: Resolution, duration: number, crf: number) {
-  return res.width * res.height * duration / Math.log2(res.fps) / 24 / crf; // TODO better calculation
+  return res.width * res.height * duration / Math.log2(res.fps) / 20 / crf; // TODO better calculation
 }
 
 export function createResolution({video}: Format, width: number, height: number, fps = 30): Resolution {

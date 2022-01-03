@@ -144,7 +144,7 @@ function videoArguments(metadata: Format, format: Format) {
 
   if (format.video.codec.startsWith('h264')) {
     args.push('-c:v', 'libx264');
-    args.push('-preset:v', 'fast');
+    args.push('-preset:v', 'medium');
     // args.push('-level:v', '4.0'); // https://en.wikipedia.org/wiki/Advanced_Video_Coding#Levels
     args.push('-profile:v', 'high');
 
@@ -152,8 +152,8 @@ function videoArguments(metadata: Format, format: Format) {
       args.push('-crf:v', format.video.crf.toString());
     } else if (format.video.bitrate) {
       args.push('-b:v', `${format.video.bitrate}k`);
-      args.push('-maxrate:v', `${Math.floor(format.video.bitrate / SIZE_UNDERSHOOT_FACTOR)}k`);
-      args.push('-bufsize:v', `${Math.floor(format.video.bitrate / SIZE_UNDERSHOOT_FACTOR * Math.min(10, format.container.duration / 2))}k`);
+      args.push('-maxrate:v', `${format.video.bitrate}k`);
+      args.push('-bufsize:v', `${Math.floor(format.video.bitrate * Math.min(10, format.container.duration / 4))}k`);
     } else {
       throw new Error("No video bitrate or crf specified");
     }
