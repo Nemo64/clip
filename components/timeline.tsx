@@ -119,7 +119,7 @@ export function Timeline({frame, metadata, limit, value, onChange, onBlur, disab
         ? <img src={cursor && picInt && pics[Math.floor(cursor / picInt)] || pics[0]} alt="preview" className="absolute w-full h-full object-contain"/>
         : <div className="p-4 text-center">{t('timeline.no_preview')}</div>}
     </div>
-    <div className="h-16 bg-black bg-slate-800 rounded-bl rounded-br overflow-hidden relative select-none" ref={wrapperRef} onMouseMove={updateCursor}>
+    <div className="h-16 bg-black bg-slate-800 rounded-b-lg overflow-hidden relative select-none" ref={wrapperRef} onMouseMove={updateCursor}>
       <div className="absolute inset-0 flex flex-row">
         {picInt && pics?.map(pic => (
           <img key={pic} src={pic} alt="" className="object-cover object-center h-full" style={{width: `${picInt / frame.duration * 100}%`}}/>

@@ -7,7 +7,7 @@
   },
   "conversion": {
     "audio_quality": {
-      "bitrate_details": "{{codec}} mit {{bitrate, number}} kbit/s",
+      "bitrate_details": "{{codec}} mit {{bitrate, number}} kbit/s; {{expectedSize, number(maximumFractionDigits: 0)}} kB",
       "bitrate_high": "Hohe Qualität",
       "bitrate_implausible": "",
       "bitrate_low": "Niedrige Qualität (reicht für Sprache und Soundeffekte)",

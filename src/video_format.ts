@@ -55,7 +55,7 @@ export function possibleVideoFormats(format: Format): VideoFormat[] {
         width: resolution ? resolution.width : 0,
         height: resolution ? resolution.height : 0,
         bitrate: Math.floor(Math.min(...bitrates)),
-        expectedSize: sizeTarget,
+        expectedSize: adjustedSizeTarget,
         fps: format.video.fps / Math.ceil(format.video.fps / (resolution?.fps ?? 30)),
       });
     }

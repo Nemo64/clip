@@ -1,8 +1,8 @@
+import i18next from "i18next";
 import type {AppProps} from 'next/app'
 import Head from "next/head";
 import {createContext, useCallback, useEffect, useState} from "react";
 import {Footer} from "../components/footer";
-import {changeLanguage, language, t} from "../src/intl";
 import {analyzeVideo, createVideo, FFMPEG_PATHS, Video} from "../src/video";
 import '../styles/globals.css'
 
@@ -10,10 +10,8 @@ export type VideoState = [Video | undefined, (file: File | undefined) => void];
 export const VideoContext = createContext<VideoState>([undefined, () => undefined]);
 
 export default function MyApp({Component, pageProps, router}: AppProps) {
-  console.log(router);
-  console.log(router);
-  if (language() !== router.locale) {
-    changeLanguage(router.locale).catch(console.error);
+  if (i18next.languages[0] !== router.locale) {
+    i18next.changeLanguage(router.locale).catch(console.error);
   }
 
   const [video, setVideo] = useState<Video | undefined>(undefined);
@@ -92,7 +90,7 @@ export default function MyApp({Component, pageProps, router}: AppProps) {
     {dragOver && (
       <div className="fixed inset-0 bg-slate-500/50 flex items-center justify-around">
         <div className="flex bg-white rounded p-4 shadow-xl text-2xl animate-pulse">
-          {t('drop_video')}
+          {i18next.t('drop_video')}
         </div>
       </div>
     )}
