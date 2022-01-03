@@ -31,7 +31,7 @@ export function Footer() {
           <h2>{t('footer.used_libraries.opensource')}</h2>
           <ul role="list" className="list-disc pl-6">
             <li>
-              <Link href="https://github.com/ffmpegwasm/ffmpeg.wasm" className="hover:text-slate-800">ffmpeg.wasm</Link>
+              <Link href="https://ffmpegwasm.netlify.app/" className="hover:text-slate-800">ffmpeg.wasm</Link>
               <Link href="https://www.ffmpeg.org/" className="hover:text-slate-800"> (FFmpeg,</Link>
               <Link href="https://emscripten.org/" className="hover:text-slate-800"> Emscripten)</Link>
             </li>
