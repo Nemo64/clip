@@ -1,4 +1,4 @@
-import {createResolution, ConvertedVideo, Format, KnownVideo, SIZE_UNDERSHOOT_FACTOR} from "./video";
+import {ConvertedVideo, createResolution, Format, KnownVideo, SIZE_UNDERSHOOT_FACTOR} from "./video";
 
 /**
  * Starts the converting process.
@@ -108,11 +108,11 @@ function seekArguments(metadata: Format, format: Format) {
 
   // TODO: check what it means if the source video has a start time !== 0
   if (format.container.start > metadata.container.start) {
-    args.push('-ss', String(format.container.start), '-accurate_seek');
+    args.push('-ss', format.container.start.toFixed(3), '-accurate_seek');
   }
 
   if (format.container.duration < metadata.container.duration - format.container.start) {
-    args.push('-t', String(format.container.duration));
+    args.push('-t', format.container.duration.toFixed(3));
   }
 
   return args;
@@ -153,7 +153,7 @@ function videoArguments(metadata: Format, format: Format) {
     } else if (format.video.bitrate) {
       args.push('-b:v', `${format.video.bitrate}k`);
       args.push('-maxrate:v', `${Math.floor(format.video.bitrate / SIZE_UNDERSHOOT_FACTOR)}k`);
-      args.push('-bufsize:v', `${Math.floor(format.video.bitrate / SIZE_UNDERSHOOT_FACTOR * 10)}k`); // ~ 10 second buffer
+      args.push('-bufsize:v', `${Math.floor(format.video.bitrate / SIZE_UNDERSHOOT_FACTOR * Math.min(10, format.container.duration / 2))}k`);
     } else {
       throw new Error("No video bitrate or crf specified");
     }
