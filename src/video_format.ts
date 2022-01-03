@@ -3,7 +3,7 @@ import {AudioFormat, Format, VideoFormat} from "./video";
 /**
  * The amount the target size is undershoot to accommodate overheads and average bitrate variance.
  */
-export const SIZE_UNDERSHOOT_FACTOR = 0.9;
+export const SIZE_UNDERSHOOT_FACTOR = 0.95;
 
 export function possibleVideoFormats(format: Format): VideoFormat[] {
   const options: VideoFormat[] = [];
