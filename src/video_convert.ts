@@ -104,7 +104,7 @@ function seekArguments(metadata: Format, format: Format) {
 
   // TODO: check what it means if the source video has a start time !== 0
   if (format.container.start > metadata.container.start) {
-    args.push('-ss', String(format.container.start));
+    args.push('-ss', String(format.container.start), '-accurate_seek');
   }
 
   if (format.container.duration < metadata.container.duration - format.container.start) {
@@ -167,6 +167,8 @@ function audioArguments(metadata: Format, format: Format) {
     args.push('-an');
     return args;
   }
+
+  args.push('-async', '1');
 
   if (format.audio.original) {
     args.push('-c:a', 'copy');
