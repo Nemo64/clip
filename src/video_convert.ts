@@ -17,7 +17,7 @@ export async function convertVideo(
   args.push('-dn'); // no data streams
   args.push('-i', file.name);
   args.push(...videoArguments(metadata, format));
-  format.audio && args.push(...audioArguments(metadata, format));
+  args.push(...audioArguments(metadata, format));
   args.push('-f', 'mp4'); // use mp4 since it has the best compatibility as long as all streams are supported
   args.push('-movflags', '+faststart'); // moves metadata to the beginning of the mp4 container ~ useful for streaming
   args.push(`output ${file.name}`);
@@ -52,8 +52,8 @@ export function createPreviews(
   // use some tricks to decode faster for the preview
   args.push('-skip_frame', interval > 2 ? 'nokey' : 'default', '-vsync', '2');
   args.push('-flags2', 'fast'); // https://stackoverflow.com/a/54873148
-  // decode at lower resolution; 1920 / 4 = 480; so create previews at 480 width ~ although h264 does not support this
-  const {width, height} = createResolution(metadata, 480, 270);
+  const {width, height} = createResolution(metadata, 640, 360);
+  // lowres is not supported by h264 ~ but I add it anyway in case someone drops an mpeg2 video
   const lowres = Math.floor(Math.log2(metadata.video.width / width));
   if (lowres >= 1) {
     args.push('-lowres:v', Math.min(3, lowres).toString());
@@ -63,7 +63,7 @@ export function createPreviews(
   args.push('-dn'); // no data streams
   args.push('-i', file.name);
   args.push('-r', `1/${interval}`);
-  args.push('-sws_flags', 'neighbor');
+  args.push('-sws_flags', 'fast_bilinear');
   args.push('-s:v', `${width}x${height}`);
   args.push('-f', `image2`);
   args.push('-q:v', `10`); // 1-31, lower is better quality
@@ -134,12 +134,12 @@ function videoArguments(metadata: Format, format: Format) {
   args.push('-pix_fmt:v', format.video.color);
   args.push('-sws_flags', 'bilinear');
 
-  if (format.video.width !== metadata.video.width || format.video.height !== metadata.video.height) {
-    args.push('-s:v', `${format.video.width}x${format.video.height}`);
-  }
-
   if (metadata.video.fps > format.video.fps) {
     args.push('-r:v', format.video.fps.toString());
+  }
+
+  if (format.video.width !== metadata.video.width || format.video.height !== metadata.video.height) {
+    args.push('-s:v', `${format.video.width}x${format.video.height}`);
   }
 
   if (format.video.codec.startsWith('h264')) {
