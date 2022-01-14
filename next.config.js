@@ -1,6 +1,7 @@
 const {PHASE_DEVELOPMENT_SERVER} = require('next/constants');
 const CopyPlugin = require("copy-webpack-plugin");
 const path = require('path');
+const classNames = require("classnames");
 
 /** @type {import('next').NextConfig} */
 module.exports = {
@@ -36,10 +37,17 @@ module.exports = {
           {
             key: 'Content-Security-Policy',
             value: [
-              "default-src 'self' blob:",
-
+              "default-src 'self'",
               "style-src 'unsafe-inline' 'self'",
-              `script-src ${PHASE_DEVELOPMENT_SERVER ? "'unsafe-eval'" : ""} 'self' blob:`,
+
+              // thumbnails and preview video at the end are blob urls
+              "img-src 'self' blob:",
+              "media-src 'self' blob:",
+
+              // the ffmpeg-wasm library requires blob: to work, even though that's not a good idea
+              // if matomo is configured, CSP needs to allow that as well
+              `script-src ${classNames("'self' blob:", {"'unsafe-eval'": PHASE_DEVELOPMENT_SERVER})}`,
+              `connect-src ${classNames("'self' blob:", process.env.NEXT_PUBLIC_MATOMO_URL)}`,
 
               "form-action 'none'",
               "frame-ancestors 'none'",
@@ -47,7 +55,7 @@ module.exports = {
           },
           {
             key: 'Cross-Origin-Embedder-Policy',
-            value: 'require-corp',
+            value: 'require-corp', // required for SharedArrayBuffer of the ffmpeg library
           },
           {
             key: 'Cross-Origin-Opener-Policy',

@@ -3,10 +3,11 @@ import type {AppProps} from 'next/app'
 import Head from "next/head";
 import {createContext, useCallback, useEffect, useState} from "react";
 import {Footer} from "../components/footer";
+import {trackEvent, trackPageView} from "../src/tracker";
 import {analyzeVideo, createVideo, FFMPEG_PATHS, Video} from "../src/video";
 import '../styles/globals.css'
 
-export type VideoState = [Video | undefined, (file: File | undefined) => void];
+export type VideoState = [Video | undefined, (file: File | undefined, action?: string) => void];
 export const VideoContext = createContext<VideoState>([undefined, () => undefined]);
 
 export default function MyApp({Component, pageProps, router}: AppProps) {
@@ -14,10 +15,13 @@ export default function MyApp({Component, pageProps, router}: AppProps) {
     i18next.changeLanguage(router.locale).catch(console.error);
   }
 
-  const [video, setVideo] = useState<Video | undefined>(undefined);
-  const [dragOver, setDragOver] = useState(false);
+  const canonicalUrl = `${process.env.NEXT_PUBLIC_HOST}/${router.locale}${router.pathname}`;
+  useEffect(() => {
+    trackPageView(canonicalUrl);
+  }, [canonicalUrl]);
 
-  const setVideoWrapped = useCallback(async (file: File | undefined) => {
+  const [video, setVideo] = useState<Video | undefined>(undefined);
+  const setVideoFile = useCallback(async (file: File | undefined, action?: string) => {
     if (video && "ffmpeg" in video) try {
       video.ffmpeg.exit()
     } catch {
@@ -29,21 +33,56 @@ export default function MyApp({Component, pageProps, router}: AppProps) {
     }
 
     try {
+      let fileExtension = file.name.match(/\.\w{2,5}$/)?.[0].toLowerCase();
+      trackEvent("upload", action ?? 'unknown', fileExtension, file.size);
       const newVideo = await createVideo(file);
       setVideo(newVideo);
+
       const identifiedVideo = await analyzeVideo(newVideo);
+      const formatStr = `${identifiedVideo.metadata.video.codec}:${identifiedVideo.metadata.audio?.codec}:${2 ** Math.round(Math.log2(identifiedVideo.metadata.container.duration))}s`;
+      trackEvent("analyze", action ?? 'unknown', formatStr);
       setVideo(identifiedVideo);
     } catch (e) {
+      trackEvent("analyze-error", action ?? 'unknown', String(e));
       setVideo({status: "broken", file, message: String(e)});
     }
   }, [video, setVideo]);
+
+  return <>
+    <Head>
+      <link key="canonical" rel="canonical" href={canonicalUrl}/>
+      <link key="x-default" rel="alternate" href={`${process.env.NEXT_PUBLIC_HOST}${router.pathname}`} hrefLang="x-default"/>
+      {router.locales?.map(locale => (
+        <link key={locale} rel="alternate" href={`${process.env.NEXT_PUBLIC_HOST}/${locale}${router.pathname}`} hrefLang={locale}/>
+      ))}
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      {process.env.ENABLE_ROBOTS && (
+        <meta name="robots" content="noindex"/>
+      )}
+      {Object.values(FFMPEG_PATHS).map(info => (
+        <link key={info.href} {...info}/>
+      ))}
+    </Head>
+    <VideoContext.Provider value={[video, setVideoFile]}>
+      <Component {...pageProps} />
+    </VideoContext.Provider>
+    <Footer/>
+    <DragArea setVideo={setVideoFile} />
+  </>;
+}
+
+function DragArea({setVideo}: {setVideo: VideoState[1]}) {
+  const [dragOver, setDragOver] = useState(false);
 
   useEffect(() => {
     const handler = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
       setDragOver(false);
-      setVideoWrapped(e.dataTransfer?.files[0]);
+      let file = e.dataTransfer?.files[0];
+      if (file) {
+        setVideo(file, 'dropped');
+      }
     };
     const allowDrop = (e: DragEvent) => {
       e.preventDefault();
@@ -68,31 +107,17 @@ export default function MyApp({Component, pageProps, router}: AppProps) {
       document.removeEventListener('keydown', dragLeave);
       document.removeEventListener('click', dragLeave);
     };
-  }, [setVideoWrapped]);
+  }, [setVideo]);
 
-  return <>
-    <Head>
-      <link key="canonical" rel="canonical" href={`${process.env.NEXT_PUBLIC_HOST}/${router.locale}${router.pathname}`}/>
-      <link key="x-default" rel="alternate" href={`${process.env.NEXT_PUBLIC_HOST}${router.pathname}`} hrefLang="x-default"/>
-      {router.locales?.map(locale => (
-        <link key={locale} rel="alternate" href={`${process.env.NEXT_PUBLIC_HOST}/${locale}${router.pathname}`} hrefLang={locale}/>
-      ))}
-      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <meta name="robots" content="noindex"/>
-      {Object.values(FFMPEG_PATHS).map(info => (
-        <link key={info.href} {...info}/>
-      ))}
-    </Head>
-    <VideoContext.Provider value={[video, setVideoWrapped]}>
-      <Component {...pageProps} />
-    </VideoContext.Provider>
-    <Footer/>
-    {dragOver && (
-      <div className="fixed inset-0 bg-slate-500/50 flex items-center justify-around">
-        <div className="flex bg-white rounded p-4 shadow-xl text-2xl animate-pulse">
-          {i18next.t('drop_video')}
-        </div>
+  if (!dragOver) {
+    return <></>;
+  }
+
+  return (
+    <div className="fixed inset-0 bg-slate-500/50 flex items-center justify-around">
+      <div className="flex bg-white rounded p-4 shadow-xl text-2xl animate-pulse">
+        {i18next.t('drop_video')}
       </div>
-    )}
-  </>;
+    </div>
+  );
 }

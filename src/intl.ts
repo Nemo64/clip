@@ -12,7 +12,7 @@ for (const key of resourceContext.keys()) {
 
 i18next.init({
   lng: 'en',
-  debug: process.env.NODE_ENV === 'development',
+  debug: process.env.NODE_ENV === 'development' && typeof window !== 'undefined',
   resources,
 });
 

@@ -19,7 +19,8 @@ export async function analyzeVideo({file, ffmpeg}: NewVideo): Promise<KnownVideo
   ffmpeg.setLogger(() => void 0);
 
   if (!metadata.container || !metadata.video) {
-    throw new Error(`Could not analyze video ${JSON.stringify(metadata)}\n${strings.join("\n")}`);
+    const message = strings.join("\n").replace('At least one output file must be specified', '');
+    throw new Error(`Could not analyze video ${JSON.stringify(metadata)}\n${message}`);
   }
 
   return {status: "known", file, ffmpeg, metadata: metadata as Format};

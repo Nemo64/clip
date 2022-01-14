@@ -9,6 +9,7 @@ import {ProgressBar} from "../components/progress";
 import {AudioFormatSelect, VideoFormatSelect} from "../components/selects";
 import {Timeline} from "../components/timeline";
 import {t} from "../src/intl"
+import {trackEvent} from "../src/tracker";
 import {
   BrokenVideo,
   convertVideo,
@@ -38,14 +39,23 @@ export default function Start() {
       throw new Error("Video is not known");
     }
 
+    const startTime = Date.now();
+    const presetStr = `${format.video.original ? 'original' : format.video.preset}:${format.audio?.original ? 'original' : format.audio?.preset}:${2 ** Math.round(Math.log2(format.container.duration))}s`;
+    const formatStr = `${video.metadata.video.codec}:${video.metadata.audio?.codec}:${2 ** Math.round(Math.log2(video.metadata.container.duration))}s`;
     try {
       console.log('convert using format', format);
+      trackEvent('convert-start', presetStr, formatStr);
       setProgress(0);
       const convertedVideo = await convertVideo(video, format, setProgress);
-      setResult(convertedVideo.file);
+      trackEvent('convert-finish', presetStr, formatStr, (Date.now() - startTime) / 1000);
       console.log('converted video', convertedVideo);
-    } finally {
+      setResult(convertedVideo.file);
       setProgress(-1);
+    } catch (e) {
+      trackEvent('convert-error', presetStr, String(e), (Date.now() - startTime) / 1000);
+      setProgress(-1);
+      throw e;
+    } finally {
       try {
         video.ffmpeg.exit();
       } catch {
@@ -82,11 +92,12 @@ function SelectPage({setVideo}: { setVideo: VideoState[1] }) {
   const changeVideo = async () => {
     try {
       setError(undefined);
-      setVideo(await fileOpen({
+      const file = await fileOpen({
         startIn: "videos",
         mimeTypes: ['video/*'],
         id: "video-select",
-      }));
+      });
+      setVideo(file, 'selected');
     } catch (e) {
       setError(String(e));
     }
@@ -131,7 +142,7 @@ function AnalyseVideo({video}: { video: NewVideo }) {
   </>
 }
 
-function ErrorVideo({video, setVideo}: { video: BrokenVideo, setVideo: (video: File | undefined) => void }) {
+function ErrorVideo({video, setVideo}: { video: BrokenVideo, setVideo: VideoState[1] }) {
   return <>
     <Head>
       <title>{t('broken.title', {name: video.file.name})}</title>
@@ -156,24 +167,31 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
   const [picsDone, setPicsDone] = useState(false);
 
   useEffect(() => {
-    let stop = false;
+    let canceled = false;
     (async () => {
+      const startTime = Date.now();
+      const formatStr = `${video.metadata.video.codec}:${video.metadata.audio?.codec}:${2 ** Math.round(Math.log2(video.metadata.container.duration))}s`;
       try {
+        trackEvent('thumbnail-start', 'generate', formatStr);
         setPicsDone(false);
         for await (const preview of createPreviews(video, picInt)) {
-          if (stop) break;
+          if (canceled) break;
           pics.push(URL.createObjectURL(preview));
           setPics([]); // hack to force re-render
           setPics(pics);
         }
-      } finally {
-        if (!stop) {
+        if (!canceled) {
           setPicsDone(true);
+          trackEvent('thumbnail-finish', 'generate', formatStr, (Date.now() - startTime) / 1000);
         }
+      } catch (e) {
+        setPicsDone(true);
+        trackEvent('thumbnail-error', 'generate', String(e), (Date.now() - startTime) / 1000);
+        throw e;
       }
     })();
     return () => {
-      stop = true;
+      canceled = true;
       pics.forEach(URL.revokeObjectURL);
       setPics([]);
     };
