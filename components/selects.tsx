@@ -29,7 +29,6 @@ export function VideoFormatSelect({formats, ...props}: VideoProps) {
               {option.preset === 'crf_720p' && t('conversion.video_quality.crf_720p')}
               {option.preset === 'crf_480p' && t('conversion.video_quality.crf_480p')}
               {option.preset === 'crf_360p' && t('conversion.video_quality.crf_360p')}
-              {option.preset === 'crf_240p' && t('conversion.video_quality.crf_240p')}
 
               {option.preset === 'size_50mb' && t('conversion.video_quality.size_50mb')}
               {option.preset === 'size_16mb' && t('conversion.video_quality.size_16mb')}
