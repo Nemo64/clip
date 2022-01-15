@@ -6,7 +6,7 @@ export interface IconProps {
 
 export function Spinner ({className}: IconProps) {
   return (
-    <div className={classNames('inline-block w-6 h-6 animate-spin rounded-full border-4 border-red-200 border-r-current', className)}/>
+    <div className={classNames('inline-block w-6 h-6 animate-spin rounded-full border-4 border-red-200 border-r-red-500', className)}/>
   );
 }
 
