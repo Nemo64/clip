@@ -104,8 +104,8 @@ function SelectPage({setVideo}: { setVideo: VideoState[1] }) {
     <Head>
       <title>{t('upload.title')}</title>
     </Head>
-    <div className="max-w-lg mx-auto p-2 sm:my-8">
-      <h1 className="text-2xl text-center my-4">
+    <div className="mx-auto p-2 sm:my-8">
+      <h1 className="text-2xl font-semibold text-center my-4">
         {t('upload.title')}
       </h1>
       <Markdown className="text-center">
@@ -116,11 +116,19 @@ function SelectPage({setVideo}: { setVideo: VideoState[1] }) {
         <AddFileIcon className="align-text-bottom mr-2 -ml-1"/>
         {t('upload.button')}
       </Button>
+      <div className="text-center text-sm text-slate-500">
+        {t('upload.drop_hint')}
+      </div>
       {error && (
         <p className="bg-red-600 py-2 px-4 rounded text-white text-center my-4">
           {error}
         </p>
       )}
+    </div>
+    <div className="max-w-lg mx-auto p-2">
+      <Markdown>
+        {t('upload.use_cases')}
+      </Markdown>
     </div>
   </>
 }

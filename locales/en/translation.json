@@ -73,7 +73,9 @@
   },
   "upload": {
     "button": "Select video",
-    "description": "This tool allows you to quickly cut a videos length and compress it so you can use it in services like WhatsApp and Discord which impose a file size limit.\n\nThe video will be processed within your browser  \nand will never be transmitted to a server. ",
-    "title": "Cut and compress videos in browser"
+    "description": "The video will be processed within your browser  \nand will never be transmitted to a server. ",
+    "drop_hint": "(or drop a video here)",
+    "title": "Cut and compress videos in browser",
+    "use_cases": "## Why do I need this?\n\nMostly for compatibility with other platforms.\n\n- **Gameplay videos** that you want to share **via messenger**\n- **Smartphone videos** you want to send **via email**\n- **Screen captures** that you want to attach in a **ticket system**\n\nOr any combination of the use cases above.\n\nThe processed video will most likely not look as good as the original, but it will be significantly smaller and playable on just about any platform from just about any device.\n"
   }
 }

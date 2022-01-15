@@ -73,7 +73,9 @@
   },
   "upload": {
     "button": "Video auswählen",
-    "description": "Mit diesem Tool kannst du ein Video schnell kürzen und komprimieren, damit du es in Diensten wie WhatsApp und Discord verwenden können, welche eine Dateigrößenbeschränkung vorsehen.\n\nDas Video wird im Browser verarbeitet  \nund niemals an einen Server übertragen. ",
-    "title": "Schneide und komprimiere Videos im Browser"
+    "description": "Das Video wird im Browser verarbeitet  \nund niemals an einen Server übertragen. ",
+    "drop_hint": "(oder Ziehe ein Video hier hin)",
+    "title": "Schneide und komprimiere Videos im Browser",
+    "use_cases": "## Wozu ist das gut?\n\nHauptsächlich für Kompatibilität mit anderen Plattformen.\n\n- **Gameplay-Videos**, die du **über Messenger** teilen möchten\n- **Smartphone-Videos**, welche du **per E-Mail** versenden willst\n- **Bildschirmaufnahmen**, die du in einem **Ticket-System** anhängen willst\n\nOder eine beliebige Kombination der oben genannten Anwendungsfälle.\n\nDas verarbeitete Video wird sehr wahrscheinlich nicht so gut aus sehen wie das Original, aber es wird deutlich kleiner sein und auf nahezu jeder Platform von so ziemlich jedem Gerät abspielbar sein."
   }
 }
