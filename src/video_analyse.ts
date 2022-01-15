@@ -43,7 +43,7 @@ export function parseMetadata(message: string, metadata: Partial<Format>) {
     return;
   }
 
-  const videoMatch = message.match(/Stream #[^:,]+:[^:,]+: Video: (?<codec>[^(),]+(\(\S+\))?).*, (?<color>yuv.+|rgb.+), (?<width>\d+)x(?<height>\d+).*, (?<bitrate>[\d.]+) kb\/s,.* (?<fps>[\d.]+) fps, (?<tbr>[\d.]+) tbr/);
+  const videoMatch = message.match(/Stream #[^:,]+:[^:,]+: Video: (?<codec>[^(),]+(\(\S+\))?).*, (?<color>yuv.+|rgb.+), (?<width>\d+)x(?<height>\d+).*(, (?<bitrate>[\d.]+) kb\/s)?,.* (?<fps>[\d.]+) fps, (?<tbr>[\d.]+) tbr/);
   if (videoMatch?.groups && metadata.container) {
     metadata.video = {
       original: true,
@@ -51,7 +51,7 @@ export function parseMetadata(message: string, metadata: Partial<Format>) {
       color: videoMatch.groups.color,
       width: parseFloat(videoMatch.groups.width),
       height: parseFloat(videoMatch.groups.height),
-      bitrate: parseFloat(videoMatch.groups.bitrate),
+      bitrate: videoMatch.groups.bitrate ? parseFloat(videoMatch.groups.bitrate) : undefined,
       expectedSize: parseFloat(videoMatch.groups.bitrate) * metadata.container.duration / 8,
       fps: Math.max(parseFloat(videoMatch.groups.fps), parseFloat(videoMatch.groups.tbr)),
     };

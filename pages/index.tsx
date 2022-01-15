@@ -8,6 +8,7 @@ import {Markdown} from "../components/markdown";
 import {ProgressBar} from "../components/progress";
 import {AudioFormatSelect, VideoFormatSelect} from "../components/selects";
 import {Timeline} from "../components/timeline";
+import {ensureFreshFfmpegInstance} from "../src/ffmpeg";
 import {t} from "../src/intl"
 import {trackEvent} from "../src/tracker";
 import {
@@ -83,6 +84,7 @@ export default function Start() {
 
 function SelectPage({setVideo}: { setVideo: VideoState[1] }) {
   const [error, setError] = useState<string | undefined>();
+  useEffect(ensureFreshFfmpegInstance, []);
 
   const changeVideo = async () => {
     try {
