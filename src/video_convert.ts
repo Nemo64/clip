@@ -1,11 +1,12 @@
-import {ConvertedVideo, createResolution, Format, KnownVideo, SIZE_UNDERSHOOT_FACTOR} from "./video";
+import {ffmpeg} from "./ffmpeg";
+import {ConvertedVideo, createResolution, Format, KnownVideo} from "./video";
 
 /**
  * Starts the converting process.
  *
  */
 export async function convertVideo(
-  {file, ffmpeg, metadata}: KnownVideo,
+  {file, metadata}: KnownVideo,
   format: Format,
   onProgress: (percent: number) => void,
 ): Promise<ConvertedVideo> {
@@ -22,20 +23,23 @@ export async function convertVideo(
   args.push('-movflags', '+faststart'); // moves metadata to the beginning of the mp4 container ~ useful for streaming
   args.push(`output ${file.name}`);
 
-  // frame= 1199 fps= 23 q=31.0 size=    4096kB time=00:00:40.26 bitrate= 833.4kbits/s dup=0 drop=685 speed=0.773x
-  ffmpeg.setLogger(({message}) => {
-    const match = message.match(/time=\s*(?<time>\d+:\d+:\d+\.\d+)/);
-    if (match?.groups?.time) {
-      const time = match.groups.time.split(':').map(parseFloat).reduce((acc, val) => acc * 60 + val);
-      onProgress(time / format.container.duration * 100);
-    }
+  const run = ffmpeg({
+    file: file,
+    args: args,
+    logger: ({message}) => {
+      // example line: frame= 1199 fps= 23 q=31.0 size=    4096kB time=00:00:40.26 bitrate= 833.4kbits/s dup=0 drop=685 speed=0.773x
+      const match = message.match(/time=\s*(?<time>\d+:\d+:\d+\.\d+)/);
+      if (match?.groups?.time) {
+        const time = match.groups.time.split(':').map(parseFloat).reduce((acc, val) => acc * 60 + val);
+        onProgress(time / format.container.duration * 100);
+      }
+    },
   });
 
-  await ffmpeg.run(...args);
-  const result = ffmpeg.FS('readFile', `output ${file.name}`);
-  ffmpeg.setLogger(() => void 0);
-
+  const instance = await run.promise;
+  const result = instance.FS('readFile', `output ${file.name}`);
   const newFileName = file.name.replace(/\.\w{2,4}$|$/, ".mp4");
+
   return {
     status: "converted",
     file: new File([result], newFileName, {type: 'video/mp4'}),
@@ -44,7 +48,7 @@ export async function convertVideo(
 }
 
 export function createPreviews(
-  {file, ffmpeg, metadata}: KnownVideo,
+  {file, metadata}: KnownVideo,
   interval: number,
 ): AsyncIterableIterator<File> {
   const args: string[] = ['-hide_banner', '-y'];
@@ -69,20 +73,21 @@ export function createPreviews(
   args.push('-q:v', `10`); // 1-31, lower is better quality
   args.push('frame_%d.jpg');
 
-  const execution = ffmpeg.run(...args);
+  const run = ffmpeg({file, args});
 
   return (async function* () {
-    const frames = Math.floor(metadata.container.duration / interval);
+    const instance = await run.instance;
+    const frames = Math.ceil(metadata.container.duration / interval);
     let done = false;
     let lastFrame = Date.now();
     for (let i = 1; i <= frames;) {
       try {
-        const blob = ffmpeg.FS('readFile', `frame_${i}.jpg`);
+        const blob = instance.FS('readFile', `frame_${i}.jpg`);
         if (blob.length <= 0) {
           console.warn(`frame_${i}.jpg is empty`);
           throw new Error(`frame_${i}.jpg is empty`);
         }
-        ffmpeg.FS('unlink', `frame_${i}.jpg`);
+        instance.FS('unlink', `frame_${i}.jpg`);
         i++;
         yield new File([blob], `frame_${i}.jpg`, {type: 'image/jpeg'});
         lastFrame = Date.now();
@@ -95,7 +100,7 @@ export function createPreviews(
         } else {
           done = !await Promise.race([
             new Promise(r => setTimeout(r, 200, true)),
-            execution,
+            run.promise,
           ]);
         }
       }

@@ -1,18 +1,13 @@
-import {createFFmpeg, fetchFile} from "@ffmpeg/ffmpeg";
-import {LinkHTMLAttributes} from "react";
-
 export type Video = NewVideo | KnownVideo | BrokenVideo;
 
 export interface NewVideo {
   status: "new";
   file: File;
-  ffmpeg: ReturnType<typeof createFFmpeg>;
 }
 
 export interface KnownVideo {
   status: "known";
   file: File;
-  ffmpeg: ReturnType<typeof createFFmpeg>;
   metadata: Format;
 }
 
@@ -29,42 +24,10 @@ export interface ConvertedVideo {
 }
 
 /**
- * The paths are exported for preloading purposes.
- */
-export const FFMPEG_PATHS: Record<string, LinkHTMLAttributes<HTMLLinkElement>> = {
-  core: {
-    href: `${process.env.NEXT_PUBLIC_FFMPEG_URL}/ffmpeg-core.js`,
-    rel: 'prefetch',
-    as: 'fetch',
-    crossOrigin: 'anonymous',
-  },
-  wasm: {
-    href: `${process.env.NEXT_PUBLIC_FFMPEG_URL}/ffmpeg-core.wasm`,
-    rel: 'prefetch',
-    as: 'fetch',
-    crossOrigin: 'anonymous',
-  },
-  worker: {
-    href: `${process.env.NEXT_PUBLIC_FFMPEG_URL}/ffmpeg-core.worker.js`,
-    rel: 'prefetch',
-    as: 'fetch',
-    crossOrigin: 'anonymous',
-  },
-};
-
-/**
  * Creates a new video object and starts its dedicated worker.
  */
 export async function createVideo(file: File): Promise<NewVideo> {
-  const ffmpeg = createFFmpeg({
-    log: true,
-    corePath: FFMPEG_PATHS.core.href,
-  });
-
-  const [, data] = await Promise.all([ffmpeg.load(), fetchFile(file)]);
-  ffmpeg.FS('writeFile', file.name, data);
-
-  return {status: "new", file, ffmpeg};
+  return {status: "new", file};
 }
 
 export interface ContainerFormat {

@@ -1,3 +1,4 @@
+import {ffmpeg} from "./ffmpeg";
 import {Format, KnownVideo, NewVideo} from "./video";
 
 /**
@@ -7,23 +8,27 @@ import {Format, KnownVideo, NewVideo} from "./video";
  * There is no FFPROBE included in {@see https://github.com/ffmpegwasm/ffmpeg.wasm},
  * so abuse ffmpeg for that. {@see https://github.com/ffmpegwasm/ffmpeg.wasm/issues/121}
  */
-export async function analyzeVideo({file, ffmpeg}: NewVideo): Promise<KnownVideo> {
+export async function analyzeVideo({file}: NewVideo): Promise<KnownVideo> {
   const metadata: Partial<Format> = {};
   const strings = [] as string[];
-  ffmpeg.setLogger(({message}) => {
-    strings.push(message);
-    parseMetadata(message, metadata);
+
+  const run = ffmpeg({
+    file: file,
+    args: ['-hide_banner', '-v', 'info', '-i', file.name],
+    logger: ({message}) => {
+      strings.push(message);
+      parseMetadata(message, metadata);
+    }
   });
 
-  await ffmpeg.run('-hide_banner', '-v', 'info', '-i', file.name);
-  ffmpeg.setLogger(() => void 0);
+  await run.promise;
 
   if (!metadata.container || !metadata.video) {
     const message = strings.join("\n").replace('At least one output file must be specified', '');
     throw new Error(`Could not analyze video ${JSON.stringify(metadata)}\n${message}`);
   }
 
-  return {status: "known", file, ffmpeg, metadata: metadata as Format};
+  return {status: "known", file, metadata: metadata as Format};
 }
 
 export function parseMetadata(message: string, metadata: Partial<Format>) {

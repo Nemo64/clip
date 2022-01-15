@@ -147,7 +147,7 @@ export function possibleAudioFormats(format: Format): AudioFormat[] {
     expectedSize: 32 / 8 * format.container.duration,
   });
 
-  if (format.audio.codec.startsWith('aac') && format.audio.bitrate < 300) {
+  if (format.audio.codec.startsWith('aac') && format.audio.bitrate < 260/* ~256 */) {
     options.push({
       ...format.audio,
       preset: 'bitrate_high',

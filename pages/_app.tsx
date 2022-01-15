@@ -4,7 +4,7 @@ import Head from "next/head";
 import {createContext, useCallback, useEffect, useState} from "react";
 import {Footer} from "../components/footer";
 import {trackEvent, trackPageView} from "../src/tracker";
-import {analyzeVideo, createVideo, FFMPEG_PATHS, Video} from "../src/video";
+import {analyzeVideo, createVideo, Video} from "../src/video";
 import '../styles/globals.css'
 
 export type VideoState = [Video | undefined, (file: File | undefined, action?: string) => void];
@@ -22,11 +22,6 @@ export default function MyApp({Component, pageProps, router}: AppProps) {
 
   const [video, setVideo] = useState<Video | undefined>(undefined);
   const setVideoFile = useCallback(async (file: File | undefined, action?: string) => {
-    if (video && "ffmpeg" in video) try {
-      video.ffmpeg.exit()
-    } catch {
-    }
-
     if (!file) {
       setVideo(undefined);
       return;
@@ -59,9 +54,6 @@ export default function MyApp({Component, pageProps, router}: AppProps) {
       {process.env.ENABLE_ROBOTS && (
         <meta name="robots" content="noindex"/>
       )}
-      {Object.values(FFMPEG_PATHS).map(info => (
-        <link key={info.href} {...info}/>
-      ))}
     </Head>
     <VideoContext.Provider value={[video, setVideoFile]}>
       <Component {...pageProps} />

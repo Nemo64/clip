@@ -55,11 +55,6 @@ export default function Start() {
       trackEvent('convert-error', presetStr, String(e), (Date.now() - startTime) / 1000);
       setProgress(-1);
       throw e;
-    } finally {
-      try {
-        video.ffmpeg.exit();
-      } catch {
-      }
     }
   };
 
@@ -164,7 +159,6 @@ const MAX_DURATION = 5 * 60;
 function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: VideoState[1], start: (format: Format) => Promise<void> }) {
   const picInt = Math.max(video.metadata.container.duration / 30, 0.5);
   const [pics, setPics] = useState<string[]>([]);
-  const [picsDone, setPicsDone] = useState(false);
 
   useEffect(() => {
     let canceled = false;
@@ -173,7 +167,6 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
       const formatStr = `${video.metadata.video.codec}:${video.metadata.audio?.codec}:${2 ** Math.round(Math.log2(video.metadata.container.duration))}s`;
       try {
         trackEvent('thumbnail-start', 'generate', formatStr);
-        setPicsDone(false);
         for await (const preview of createPreviews(video, picInt)) {
           if (canceled) break;
           pics.push(URL.createObjectURL(preview));
@@ -181,11 +174,9 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
           setPics(pics);
         }
         if (!canceled) {
-          setPicsDone(true);
           trackEvent('thumbnail-finish', 'generate', formatStr, (Date.now() - startTime) / 1000);
         }
       } catch (e) {
-        setPicsDone(true);
         trackEvent('thumbnail-error', 'generate', String(e), (Date.now() - startTime) / 1000);
         throw e;
       }
@@ -261,8 +252,8 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
           </div>
 
           <div className="flex gap-2 mt-4">
-            <Button type="submit" className="px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white" disabled={!picsDone}>
-              {picsDone ? <BoltIcon className="align-bottom mr-2 -ml-1"/> : <Spinner className="align-bottom mr-2 -ml-1"/>}
+            <Button type="submit" className="px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white">
+              <BoltIcon className="align-bottom mr-2 -ml-1"/>
               {t('conversion.button.start')}
             </Button>
 
