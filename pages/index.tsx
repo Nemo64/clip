@@ -162,7 +162,7 @@ function ErrorVideo({video, setVideo}: { video: BrokenVideo, setVideo: VideoStat
 const MAX_DURATION = 5 * 60;
 
 function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: VideoState[1], start: (format: Format) => Promise<void> }) {
-  const picInt = Math.max(video.metadata.container.duration / 64, 0.5);
+  const picInt = Math.max(video.metadata.container.duration / 30, 0.5);
   const [pics, setPics] = useState<string[]>([]);
   const [picsDone, setPicsDone] = useState(false);
 

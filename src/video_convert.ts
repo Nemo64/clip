@@ -50,7 +50,7 @@ export function createPreviews(
   const args: string[] = ['-hide_banner', '-y'];
 
   // use some tricks to decode faster for the preview
-  args.push('-skip_frame', interval > 2 ? 'nokey' : 'default', '-vsync', '2');
+  args.push('-skip_frame', interval >= 2 ? 'nokey' : 'default', '-vsync', '2');
   args.push('-flags2', 'fast'); // https://stackoverflow.com/a/54873148
   const {width, height} = createResolution(metadata, 640, 360);
   // lowres is not supported by h264 ~ but I add it anyway in case someone drops an mpeg2 video
