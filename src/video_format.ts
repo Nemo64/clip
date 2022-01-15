@@ -160,8 +160,8 @@ export function possibleAudioFormats(format: Format): AudioFormat[] {
       codec: 'aac (LC)',
       sampleRate: 48000,
       channelSetup: 'stereo',
-      bitrate: 128,
-      expectedSize: 128 / 8 * format.container.duration,
+      bitrate: 192,
+      expectedSize: 192 / 8 * format.container.duration,
     });
   }
 
