@@ -20,7 +20,7 @@ export function Footer() {
             <ul className="flex flex-row gap-2 mx-2">
               {locales.map(locale => (
                 <li key={locale} className={classNames('inline-block', {'font-semibold': locale === currentLocale})}>
-                  <NextLink href={pathname} locale={locale}>
+                  <NextLink href={pathname} locale={locale} scroll={false}>
                     {locale}
                   </NextLink>
                 </li>
@@ -46,6 +46,9 @@ export function Footer() {
             <li>
               <Link href="https://tailwindcss.com/" className="hover:text-slate-800">Tailwind CSS</Link>
               <Link href="https://heroicons.com/" className="hover:text-slate-800"> + Heroicons</Link>
+            </li>
+            <li>
+              <Link href="https://www.shapedivider.app/" className="hover:text-slate-800">Custom Shape Dividers</Link>
             </li>
             <li>
               <Link href="https://www.i18next.com/" className="hover:text-slate-800">i18next</Link>

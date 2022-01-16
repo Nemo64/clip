@@ -108,12 +108,14 @@ function ErrorVideo({video}: { video: BrokenVideo }) {
       <title>{t('broken.title', {name: video.file.name})}</title>
     </Head>
     <div className="max-w-lg mx-auto">
-      <h1 className="text-2xl text-center my-4 aniamte-fly-1">
+      <h1 className="text-2xl text-center my-4 animate-fly-1">
         {t('broken.title', {name: video.file.name})}
       </h1>
       <div className="motion-safe:animate-fly-2">
         {video.message && <p className="my-4 text-red-800">{video.message}</p>}
-        <Button href="/" className="block mx-auto px-4 py-2 rounded-lg bg-slate-500 hover:bg-slate-600 text-white">
+      </div>
+      <div className="text-center animate-fly-3">
+        <Button href="/" className="px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-600 text-white">
           {t('conversion.button.change')}
         </Button>
       </div>
@@ -278,12 +280,12 @@ function DownloadPage({file, video}: { file: File, video: KnownVideo }) {
       </h1>
 
       <div className="flex flex-row items-baseline gap-2 motion-safe:animate-fly-3">
-        <Button href={url} download={file.name} className="table px-4 py-2 rounded-lg bg-red-800 hover:bg-red-700 text-white">
+        <Button href={url} download={file.name} className="table px-4 py-2 rounded-2xl bg-red-800 hover:bg-red-700 text-white">
           <DownloadIcon className="align-bottom mr-2 -ml-1"/>
           {t('download.button', {size: Math.ceil(file.size / 1000)})}
         </Button>
 
-        <Button href="/" className="table relative px-4 py-2 rounded-lg bg-slate-500 hover:bg-slate-600 text-white">
+        <Button href="/" className="table relative px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-600 text-white">
           {t('conversion.button.change')}
         </Button>
       </div>

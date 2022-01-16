@@ -114,12 +114,12 @@ export function Timeline({frame, width, height, limit, value, onChange, onBlur, 
   const left = (value.start - frame.start) / frame.duration;
   const right = (value.start + value.duration - frame.start) / frame.duration;
   return <>
-    <div className="w-full rounded-lg overflow-hidden relative bg-slate-100" style={{aspectRatio: `${width} / ${height}`}}>
+    <div className="w-full rounded-2xl overflow-hidden relative bg-slate-100" style={{aspectRatio: `${width} / ${height}`}}>
       {pics?.length
         ? <img src={cursor && picInt && pics[Math.floor(cursor / picInt)] || pics[0]} alt="preview" className="absolute w-full h-full object-contain"/>
         : <div className="p-4 text-center">{t('timeline.no_preview')}</div>}
     </div>
-    <div className="h-16 mt-2 bg-black bg-slate-800 rounded-lg overflow-hidden relative select-none" ref={wrapperRef} onMouseMove={updateCursor}>
+    <div className="h-16 mt-2 bg-black bg-slate-800 rounded-2xl overflow-hidden relative select-none" ref={wrapperRef} onMouseMove={updateCursor}>
       <div className="absolute inset-0 flex flex-row">
         {picInt && pics?.map(pic => (
           <img key={pic} src={pic} alt="" className="object-cover object-center h-full motion-safe:animate-fly-in" style={{width: `${picInt / frame.duration * 100}%`}}/>

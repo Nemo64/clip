@@ -109,7 +109,7 @@ function DragArea({setVideo}: {setVideo: VideoState[1]}) {
 
   return (
     <div className="fixed inset-0 bg-slate-500/50 flex items-center justify-around">
-      <div className="flex bg-white rounded-lg p-4 shadow-xl text-2xl animate-pulse">
+      <div className="flex bg-white rounded-2xl p-4 shadow-xl text-2xl animate-pulse">
         {i18next.t('drop_video')}
       </div>
     </div>
