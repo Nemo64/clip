@@ -42,9 +42,11 @@ module.exports = (phase) => ({
               "default-src 'self' blob:",
               "style-src 'unsafe-inline' 'self'",
 
-              // the ffmpeg-wasm library requires blob: to work, even though that's not a good idea
+              // the ffmpeg-wasm library requires "blob:" to work, even though that's not a good idea
+              // on safari, it even requires 'unsafe-eval', so I begrudgingly added it as well
+              `script-src 'self' blob: 'unsafe-eval'`,
               // if matomo is configured, CSP needs to allow that as well
-              `script-src ${classNames("'self' blob:", {"'unsafe-eval'": phase === PHASE_DEVELOPMENT_SERVER})}`,
+              // and safari, again, requires the ws: protocol for live reloading in dev mode
               `connect-src ${classNames("'self' blob:", {"ws:": phase === PHASE_DEVELOPMENT_SERVER}, process.env.NEXT_PUBLIC_MATOMO_URL)}`,
 
               "form-action 'none'",
