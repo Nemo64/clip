@@ -6,7 +6,7 @@ const classNames = require("classnames");
 const FFMPEG_PATH = 'dist/ffmpeg';
 
 /** @type {import('next').NextConfig} */
-module.exports = {
+module.exports = (phase) => ({
   reactStrictMode: true,
   i18n: {
     locales: ['en', 'de'],
@@ -44,8 +44,8 @@ module.exports = {
 
               // the ffmpeg-wasm library requires blob: to work, even though that's not a good idea
               // if matomo is configured, CSP needs to allow that as well
-              `script-src ${classNames("'self' blob:", {"'unsafe-eval'": PHASE_DEVELOPMENT_SERVER})}`,
-              `connect-src ${classNames("'self' blob:", {"ws:": PHASE_DEVELOPMENT_SERVER}, process.env.NEXT_PUBLIC_MATOMO_URL)}`,
+              `script-src ${classNames("'self' blob:", {"'unsafe-eval'": phase === PHASE_DEVELOPMENT_SERVER})}`,
+              `connect-src ${classNames("'self' blob:", {"ws:": phase === PHASE_DEVELOPMENT_SERVER}, process.env.NEXT_PUBLIC_MATOMO_URL)}`,
 
               "form-action 'none'",
               "frame-ancestors 'none'",
@@ -79,4 +79,4 @@ module.exports = {
       },
     ];
   },
-};
+});

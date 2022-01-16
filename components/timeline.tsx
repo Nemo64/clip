@@ -1,15 +1,15 @@
 import {RefObject, useEffect, useRef, useState} from "react";
 import {t} from "../src/intl"
-import {Format} from "../src/video";
 
-interface Crop {
+export interface Crop {
   start: number;
   duration: number;
 }
 
-interface TimelineProps {
+export interface TimelineProps {
   frame: Crop;
-  metadata: Format;
+  width: number;
+  height: number;
   limit?: number;
   value: Crop;
   onChange?: (crop: Crop) => void;
@@ -19,7 +19,7 @@ interface TimelineProps {
   pics?: string[];
 }
 
-export function Timeline({frame, metadata, limit, value, onChange, onBlur, disabled, pics, picInt}: TimelineProps) {
+export function Timeline({frame, width, height, limit, value, onChange, onBlur, disabled, pics, picInt}: TimelineProps) {
   const duration = limit ? Math.min(limit, frame.duration) : frame.duration;
 
   const wrapperRef = useRef() as RefObject<HTMLDivElement>;
@@ -114,20 +114,21 @@ export function Timeline({frame, metadata, limit, value, onChange, onBlur, disab
   const left = (value.start - frame.start) / frame.duration;
   const right = (value.start + value.duration - frame.start) / frame.duration;
   return <>
-    <div className="w-full relative bg-slate-100" style={{aspectRatio: `${metadata.video.width} / ${metadata.video.height}`}}>
+    <div className="w-full rounded-lg overflow-hidden relative bg-slate-100" style={{aspectRatio: `${width} / ${height}`}}>
       {pics?.length
         ? <img src={cursor && picInt && pics[Math.floor(cursor / picInt)] || pics[0]} alt="preview" className="absolute w-full h-full object-contain"/>
         : <div className="p-4 text-center">{t('timeline.no_preview')}</div>}
     </div>
-    <div className="h-16 bg-black bg-slate-800 rounded-b-lg overflow-hidden relative select-none" ref={wrapperRef} onMouseMove={updateCursor}>
+    <div className="h-16 mt-2 bg-black bg-slate-800 rounded-lg overflow-hidden relative select-none" ref={wrapperRef} onMouseMove={updateCursor}>
       <div className="absolute inset-0 flex flex-row">
         {picInt && pics?.map(pic => (
           <img key={pic} src={pic} alt="" className="object-cover object-center h-full" style={{width: `${picInt / frame.duration * 100}%`}}/>
         ))}
       </div>
+      <div className="absolute inset-0 shadow-inner" />
       <div className="h-full bg-red-800/0 absolute cursor-move" ref={bodyRef} style={{left: `${left * 100}%`, right: `${100 - right * 100}%`,}}/>
-      <div className="h-full bg-red-800/70 absolute" style={{left: `0%`, right: `${100 - left * 100}%`}}/>
-      <div className="h-full bg-red-800/70 absolute" style={{left: `${right * 100}%`, right: `0%`}}/>
+      <div className="h-full bg-red-800/70 absolute backdrop-grayscale backdrop-contrast-200" style={{left: `0%`, right: `${100 - left * 100}%`}}/>
+      <div className="h-full bg-red-800/70 absolute backdrop-grayscale backdrop-contrast-200" style={{left: `${right * 100}%`, right: `0%`}}/>
       {cursor !== undefined &&
         <div className="w-0.5 h-full -mx-0.25 bg-black/50 absolute pointer-events-none" style={{left: `${cursor / frame.duration * 100}%`}}/>}
       <div className="h-full w-2 bg-red-800 absolute cursor-col-resize" ref={leftRef} style={{left: `${left * 100}%`}}/>
@@ -136,14 +137,14 @@ export function Timeline({frame, metadata, limit, value, onChange, onBlur, disab
     <div className="flex flex-row flex-wrap">
       <div>
         <label htmlFor="start">{t('timeline.start_time')} </label>
-        <input type="number" id="start" disabled={disabled} className="w-20"
+        <input type="number" id="start" disabled={disabled} className="w-20 bg-transparent text-right mr-4"
                value={value.start.toFixed(3)}
                step="0.001" min={frame.start.toFixed(3)} max={(frame.start + frame.duration - value.duration).toFixed(3)}
                onInput={e => onChange?.({start: parseFloat(e.currentTarget.value), duration: value.duration})}/>
       </div>
       <div>
         <label htmlFor="duration">{t('timeline.duration')} </label>
-        <input type="number" id="duration" disabled={disabled} className="w-20"
+        <input type="number" id="duration" disabled={disabled} className="w-20 bg-transparent text-right mr-4"
                value={value.duration.toFixed(3)}
                step="0.001" min={frame.start.toFixed(3)} max={duration.toFixed(3)}
                onInput={e => onChange?.({start: value.start, duration: parseFloat(e.currentTarget.value)})}/>

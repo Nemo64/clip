@@ -37,11 +37,13 @@ export default function MyApp({Component, pageProps, router}: AppProps) {
       const formatStr = `${identifiedVideo.metadata.video.codec}:${identifiedVideo.metadata.audio?.codec}:${2 ** Math.round(Math.log2(identifiedVideo.metadata.container.duration))}s`;
       trackEvent("analyze", action ?? 'unknown', formatStr);
       setVideo(identifiedVideo);
+      router.push("/video").catch(console.error);
     } catch (e) {
       trackEvent("analyze-error", action ?? 'unknown', String(e));
       setVideo({status: "broken", file, message: String(e)});
+      router.push("/video").catch(console.error);
     }
-  }, [video, setVideo]);
+  }, [router, setVideo]);
 
   return <>
     <Head>
@@ -107,7 +109,7 @@ function DragArea({setVideo}: {setVideo: VideoState[1]}) {
 
   return (
     <div className="fixed inset-0 bg-slate-500/50 flex items-center justify-around">
-      <div className="flex bg-white rounded p-4 shadow-xl text-2xl animate-pulse">
+      <div className="flex bg-white rounded-lg p-4 shadow-xl text-2xl animate-pulse">
         {i18next.t('drop_video')}
       </div>
     </div>
