@@ -39,17 +39,13 @@ module.exports = {
           {
             key: 'Content-Security-Policy',
             value: [
-              "default-src 'self'",
+              "default-src 'self' blob:",
               "style-src 'unsafe-inline' 'self'",
-
-              // thumbnails and preview video at the end are blob urls
-              "img-src 'self' blob:",
-              "media-src 'self' blob:",
 
               // the ffmpeg-wasm library requires blob: to work, even though that's not a good idea
               // if matomo is configured, CSP needs to allow that as well
               `script-src ${classNames("'self' blob:", {"'unsafe-eval'": PHASE_DEVELOPMENT_SERVER})}`,
-              `connect-src ${classNames("'self' blob:", process.env.NEXT_PUBLIC_MATOMO_URL)}`,
+              `connect-src ${classNames("'self' blob:", {"ws:": PHASE_DEVELOPMENT_SERVER}, process.env.NEXT_PUBLIC_MATOMO_URL)}`,
 
               "form-action 'none'",
               "frame-ancestors 'none'",
