@@ -37,7 +37,7 @@ export function parseMetadata(message: string, metadata: Partial<Format>) {
     const duration = metadataMatch.groups.duration.split(":").map(parseFloat).reduce((a, b) => a * 60 + b);
     metadata.container = {
       duration: duration,
-      start: parseFloat(metadataMatch.groups.start),
+      start: 0, // parseFloat(metadataMatch.groups.start),
       // bitrate: parseFloat(metadataMatch.groups.bitrate),
     };
     return;

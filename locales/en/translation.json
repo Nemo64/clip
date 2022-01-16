@@ -68,8 +68,9 @@
   },
   "timeline": {
     "duration": "duration",
+    "end_time": "end",
     "no_preview": "Preview unavailable",
-    "start_time": "start time"
+    "start_time": "start"
   },
   "upload": {
     "button": "Select video",

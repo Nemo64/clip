@@ -122,7 +122,7 @@ export function Timeline({frame, width, height, limit, value, onChange, onBlur, 
     <div className="h-16 mt-2 bg-black bg-slate-800 rounded-lg overflow-hidden relative select-none" ref={wrapperRef} onMouseMove={updateCursor}>
       <div className="absolute inset-0 flex flex-row">
         {picInt && pics?.map(pic => (
-          <img key={pic} src={pic} alt="" className="object-cover object-center h-full animate-fly-in" style={{width: `${picInt / frame.duration * 100}%`}}/>
+          <img key={pic} src={pic} alt="" className="object-cover object-center h-full motion-safe:animate-fly-in" style={{width: `${picInt / frame.duration * 100}%`}}/>
         ))}
       </div>
       <div className="absolute inset-0 shadow-inner" />
@@ -133,25 +133,27 @@ export function Timeline({frame, width, height, limit, value, onChange, onBlur, 
       <div className="h-full w-2 bg-red-800 absolute cursor-col-resize" ref={leftRef} style={{left: `${left * 100}%`}}/>
       <div className="h-full w-2 bg-red-800 absolute cursor-col-resize" ref={rightRef} style={{right: `${100 - right * 100}%`}}/>
     </div>
-    <div className="flex flex-row flex-wrap">
+    <div className="flex flex-row justify-between">
       <div>
         <label htmlFor="start">{t('timeline.start_time')} </label>
-        <input type="number" id="start" disabled={disabled} className="w-20 bg-transparent text-right mr-4"
+        <input type="number" id="start" disabled={disabled} className="w-20 bg-transparent text-right"
                value={value.start.toFixed(3)}
                step="0.001" min={frame.start.toFixed(3)} max={(frame.start + frame.duration - value.duration).toFixed(3)}
                onInput={e => onChange?.({start: parseFloat(e.currentTarget.value), duration: value.duration})}/>
       </div>
       <div>
         <label htmlFor="duration">{t('timeline.duration')} </label>
-        <input type="number" id="duration" disabled={disabled} className="w-20 bg-transparent text-right mr-4"
+        <input type="number" id="duration" disabled={disabled} className="w-20 bg-transparent text-right"
                value={value.duration.toFixed(3)}
-               step="0.001" min={frame.start.toFixed(3)} max={duration.toFixed(3)}
+               step="0.001" min="0.000" max={duration.toFixed(3)}
                onInput={e => onChange?.({start: value.start, duration: parseFloat(e.currentTarget.value)})}/>
-        {limit && limit < frame.duration && (
-          <span className="text-slate-500">
-            (limited to {limit})
-          </span>
-        )}
+      </div>
+      <div>
+        <label htmlFor="end">{t('timeline.end_time')} </label>
+        <input type="number" id="end" disabled={disabled} className="w-20 bg-transparent text-right"
+               value={(value.start + value.duration).toFixed(3)}
+               step="0.001" min={frame.start.toFixed(3)} max={(frame.start + frame.duration).toFixed(3)}
+               onInput={e => onChange?.({start: value.start, duration: parseFloat(e.currentTarget.value) - value.duration})}/>
       </div>
     </div>
   </>;

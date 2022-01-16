@@ -7,6 +7,11 @@ module.exports = {
     extend: {
       animation: {
         "fly-in": 'fly-in 0.5s',
+        "fly-1": 'fly-in 0.5s 0.1s backwards',
+        "fly-2": 'fly-in 0.5s 0.2s backwards',
+        "fly-3": 'fly-in 0.5s 0.3s backwards',
+        "fly-4": 'fly-in 0.5s 0.4s backwards',
+        "fly-5": 'fly-in 0.5s 0.5s backwards',
       },
       keyframes: {
         "fly-in": {

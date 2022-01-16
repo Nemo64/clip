@@ -93,7 +93,7 @@ function AnalyseVideo({video}: { video: NewVideo }) {
     <Head>
       <title>{t('analyse.title', {name: video.file.name})}</title>
     </Head>
-    <div className="max-w-lg mx-auto">
+    <div className="max-w-lg mx-auto motion-safe:animate-fly-1">
       <h1 className="text-2xl text-center my-4">
         <Spinner className="mr-2 align-middle"/>
         {t('analyse.title', {name: video.file.name})}
@@ -108,13 +108,15 @@ function ErrorVideo({video}: { video: BrokenVideo }) {
       <title>{t('broken.title', {name: video.file.name})}</title>
     </Head>
     <div className="max-w-lg mx-auto">
-      <h1 className="text-2xl text-center my-4">
+      <h1 className="text-2xl text-center my-4 aniamte-fly-1">
         {t('broken.title', {name: video.file.name})}
       </h1>
-      {video.message && <p className="my-4 text-red-800">{video.message}</p>}
-      <Button href="/" className="block mx-auto px-4 py-2 rounded-lg bg-slate-500 hover:bg-slate-600 text-white">
-        {t('conversion.button.change')}
-      </Button>
+      <div className="motion-safe:animate-fly-2">
+        {video.message && <p className="my-4 text-red-800">{video.message}</p>}
+        <Button href="/" className="block mx-auto px-4 py-2 rounded-lg bg-slate-500 hover:bg-slate-600 text-white">
+          {t('conversion.button.change')}
+        </Button>
+      </div>
     </div>
   </>;
 }
@@ -191,39 +193,39 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
     </Head>
     <div className="container mx-auto p-2">
 
-      <h1 className="text-2xl my-4">
+      <h1 className="text-2xl my-4 motion-safe:animate-fly-1">
         {t('conversion.title', {name: video.file.name})}
       </h1>
 
       <form className="flex flex-wrap sm:flex-nowrap justify-center gap-4" onSubmit={handleSubmit(start)}>
-        <div className="flex-auto max-w-lg sm:max-w-none">
+        <div className="flex-auto max-w-lg sm:max-w-none motion-safe:animate-fly-5">
           <Controller control={control} name="container" render={({field: {ref, ...field}}) => <>
             <Timeline frame={video.metadata.container} width={video.metadata.video.width} height={video.metadata.video.height}
                       pics={pics} picInt={picInt} limit={MAX_DURATION} {...field}/>
           </>}/>
         </div>
         <div className="flex-auto max-w-lg">
-          <div className="mb-2">
+          <div className="mb-2 motion-safe:animate-fly-2">
             <label htmlFor="video_format">{t('conversion.video_quality.label')}</label>
             <Controller control={control} name="video" rules={formatRules} render={({field: {ref, ...field}}) => (
               <VideoFormatSelect formats={videoFormats} id="video_format" {...field} />
             )}/>
           </div>
 
-          <div className="my-2">
+          <div className="my-2 motion-safe:animate-fly-3">
             <label htmlFor="audio_format">{t('conversion.audio_quality.label')}</label>
             <Controller control={control} name="audio" rules={formatRules} render={({field: {ref, ...field}}) => (
               <AudioFormatSelect formats={audioFormats} id="audio_format" {...field} />
             )}/>
           </div>
 
-          <div className="flex gap-2 mt-4">
-            <Button type="submit" className="px-4 py-2 rounded-lg bg-red-800 hover:bg-red-700 text-white">
+          <div className="flex gap-2 mt-4 motion-safe:animate-fly-4">
+            <Button type="submit" className="px-4 py-2 rounded-2xl bg-red-800 hover:bg-red-700 text-white">
               <BoltIcon className="align-bottom mr-2 -ml-1"/>
               {t('conversion.button.start')}
             </Button>
 
-            <Button onClick={() => setVideo(undefined)} className="px-4 py-2 rounded-lg bg-slate-500 hover:bg-slate-600 text-white">
+            <Button href="/" className="px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-600 text-white">
               {t('conversion.button.change')}
             </Button>
           </div>
@@ -240,10 +242,10 @@ function ProgressPage({video, progress}: { video: Video, progress: number }) {
       <title>{t('progress.value', {progress})}</title>
     </Head>
     <div className="max-w-lg mx-auto p-2">
-      <h1 className="text-2xl my-4">
+      <h1 className="text-2xl my-4 motion-safe:animate-fly-1">
         {t('progress.headline', {name: video.file.name})}
       </h1>
-      <ProgressBar progress={progress} className="my-4">
+      <ProgressBar progress={progress} className="my-4 motion-safe:animate-fly-2">
         {t('progress.value', {progress})}
       </ProgressBar>
     </div>
@@ -267,15 +269,15 @@ function DownloadPage({file, video}: { file: File, video: KnownVideo }) {
     </Head>
     <div className="block w-full max-h-[80vh] min-w-full bg-slate-300" style={{aspectRatio}}>
       {url
-        ? <video className="mx-auto h-full bg-slate-500" controls autoPlay={true} src={url} style={{aspectRatio}}/>
+        ? <video className="mx-auto h-full bg-slate-500 motion-safe:animate-fly-1" controls autoPlay={true} src={url} style={{aspectRatio}}/>
         : t('download.loading')}
     </div>
     <div className="mx-auto p-2 flex flex-row items-baseline justify-between flex-wrap gap-2 box-content" style={{maxWidth}}>
-      <h1 className="flex text-2xl">
+      <h1 className="flex text-2xl motion-safe:animate-fly-2">
         {t('download.title', {name: file.name})}
       </h1>
 
-      <div className="flex flex-row items-baseline gap-2">
+      <div className="flex flex-row items-baseline gap-2 motion-safe:animate-fly-3">
         <Button href={url} download={file.name} className="table px-4 py-2 rounded-lg bg-red-800 hover:bg-red-700 text-white">
           <DownloadIcon className="align-bottom mr-2 -ml-1"/>
           {t('download.button', {size: Math.ceil(file.size / 1000)})}

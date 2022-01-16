@@ -68,8 +68,9 @@
   },
   "timeline": {
     "duration": "Laufzeit",
+    "end_time": "Ende",
     "no_preview": "Keine Vorschau verfügbar",
-    "start_time": "Startzeit"
+    "start_time": "Start"
   },
   "upload": {
     "button": "Video auswählen",
