@@ -122,15 +122,14 @@ export function Timeline({frame, width, height, limit, value, onChange, onBlur, 
     <div className="h-16 mt-2 bg-black bg-slate-800 rounded-lg overflow-hidden relative select-none" ref={wrapperRef} onMouseMove={updateCursor}>
       <div className="absolute inset-0 flex flex-row">
         {picInt && pics?.map(pic => (
-          <img key={pic} src={pic} alt="" className="object-cover object-center h-full" style={{width: `${picInt / frame.duration * 100}%`}}/>
+          <img key={pic} src={pic} alt="" className="object-cover object-center h-full animate-fly-in" style={{width: `${picInt / frame.duration * 100}%`}}/>
         ))}
       </div>
       <div className="absolute inset-0 shadow-inner" />
       <div className="h-full bg-red-800/0 absolute cursor-move" ref={bodyRef} style={{left: `${left * 100}%`, right: `${100 - right * 100}%`,}}/>
       <div className="h-full bg-red-800/70 absolute backdrop-grayscale backdrop-contrast-200" style={{left: `0%`, right: `${100 - left * 100}%`}}/>
       <div className="h-full bg-red-800/70 absolute backdrop-grayscale backdrop-contrast-200" style={{left: `${right * 100}%`, right: `0%`}}/>
-      {cursor !== undefined &&
-        <div className="w-0.5 h-full -mx-0.25 bg-black/50 absolute pointer-events-none" style={{left: `${cursor / frame.duration * 100}%`}}/>}
+      {cursor !== undefined && <div className="w-0.5 h-full -mx-0.25 bg-black/50 absolute pointer-events-none" style={{left: `${cursor / frame.duration * 100}%`}}/>}
       <div className="h-full w-2 bg-red-800 absolute cursor-col-resize" ref={leftRef} style={{left: `${left * 100}%`}}/>
       <div className="h-full w-2 bg-red-800 absolute cursor-col-resize" ref={rightRef} style={{right: `${100 - right * 100}%`}}/>
     </div>

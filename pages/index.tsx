@@ -43,7 +43,7 @@ export default function Start() {
       <title>{t('upload.title')}</title>
     </Head>
     <div className="container mx-auto md:my-16 flex flex-wrap items-center justify-center">
-      <div className="md:w-5/12 p-8 -skew-y-6 drop-shadow-xl" tabIndex={-1} role="img">
+      <div className="md:w-5/12 p-8 -skew-y-6 drop-shadow-xl" role="img">
         <Timeline frame={DEMO_TIMELINE} width={640} height={272} value={demoCrop} onChange={setDemoCrop}
                   pics={DEMO_IMAGES} picInt={DEMO_TIMELINE.duration / DEMO_IMAGES.length} />
       </div>
