@@ -66,7 +66,7 @@ export default function VideoPage() {
   };
 
   if (result && video?.status === "known") {
-    return <DownloadPage video={video} file={result} setVideo={setVideo}/>;
+    return <DownloadPage video={video} file={result}/>;
   }
 
   if (progress >= 0 && video) {
@@ -78,7 +78,7 @@ export default function VideoPage() {
   }
 
   if (video?.status === "broken") {
-    return <ErrorVideo video={video} setVideo={setVideo}/>;
+    return <ErrorVideo video={video}/>;
   }
 
   if (video?.status === "known") {
@@ -102,7 +102,7 @@ function AnalyseVideo({video}: { video: NewVideo }) {
   </>;
 }
 
-function ErrorVideo({video, setVideo}: { video: BrokenVideo, setVideo: VideoState[1] }) {
+function ErrorVideo({video}: { video: BrokenVideo }) {
   return <>
     <Head>
       <title>{t('broken.title', {name: video.file.name})}</title>
@@ -112,7 +112,7 @@ function ErrorVideo({video, setVideo}: { video: BrokenVideo, setVideo: VideoStat
         {t('broken.title', {name: video.file.name})}
       </h1>
       {video.message && <p className="my-4 text-red-800">{video.message}</p>}
-      <Button onClick={() => setVideo(undefined)} className="block mx-auto px-4 py-2 rounded-lg bg-slate-500 hover:bg-slate-600 text-white">
+      <Button href="/" className="block mx-auto px-4 py-2 rounded-lg bg-slate-500 hover:bg-slate-600 text-white">
         {t('conversion.button.change')}
       </Button>
     </div>
@@ -127,6 +127,7 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
 
   useEffect(() => {
     let canceled = false;
+    const pics: string[] = [];
     (async () => {
       const startTime = Date.now();
       const formatStr = `${video.metadata.video.codec}:${video.metadata.audio?.codec}:${2 ** Math.round(Math.log2(video.metadata.container.duration))}s`;
@@ -135,8 +136,7 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
         for await (const preview of createPreviews(video, picInt)) {
           if (canceled) break;
           pics.push(URL.createObjectURL(preview));
-          setPics([]); // hack to force re-render
-          setPics(pics);
+          setPics([...pics]); // copy over so react rerenders
         }
         if (!canceled) {
           trackEvent('thumbnail-finish', 'generate', formatStr, (Date.now() - startTime) / 1000);
@@ -250,7 +250,7 @@ function ProgressPage({video, progress}: { video: Video, progress: number }) {
   </>;
 }
 
-function DownloadPage({file, setVideo, video}: { file: File, setVideo: VideoState[1], video: KnownVideo }) {
+function DownloadPage({file, video}: { file: File, video: KnownVideo }) {
   const [url, setUrl] = useState('');
   useEffect(() => {
     const url = URL.createObjectURL(file);
@@ -281,7 +281,7 @@ function DownloadPage({file, setVideo, video}: { file: File, setVideo: VideoStat
           {t('download.button', {size: Math.ceil(file.size / 1000)})}
         </Button>
 
-        <Button onClick={() => setVideo(undefined)} className="table relative px-4 py-2 rounded-lg bg-slate-500 hover:bg-slate-600 text-white">
+        <Button href="/" className="table relative px-4 py-2 rounded-lg bg-slate-500 hover:bg-slate-600 text-white">
           {t('conversion.button.change')}
         </Button>
       </div>
