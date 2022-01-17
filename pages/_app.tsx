@@ -53,9 +53,6 @@ export default function MyApp({Component, pageProps, router}: AppProps) {
         <link key={locale} rel="alternate" href={`${process.env.NEXT_PUBLIC_HOST}/${locale}${router.pathname}`} hrefLang={locale}/>
       ))}
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      {!process.env.ENABLE_ROBOTS && (
-        <meta name="robots" content="noindex"/>
-      )}
     </Head>
     <VideoContext.Provider value={[video, setVideoFile]}>
       <Component {...pageProps} />
