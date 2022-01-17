@@ -41,6 +41,11 @@ export default function Start() {
   return <>
     <Head>
       <title>{t('upload.title')}</title>
+      <meta name="description" content={t('upload.description')}/>
+      <meta name="og:title" content={t('upload.title')}/>
+      <meta name="og:description" content={t('upload.description')}/>
+      <meta name="og:image" content="/og.png"/>
+      <meta name="og:url" content={`${process.env.NEXT_PUBLIC_HOST}${router.pathname}`}/>
     </Head>
     <div className="bg-red-600 text-white">
       <div className="container mx-auto md:py-16 flex flex-row-reverse flex-wrap items-center justify-center">
@@ -48,7 +53,7 @@ export default function Start() {
         <div className="md:w-7/12 p-2 pb-16">
           <h1 className="text-5xl font-semibold whitespace-pre-wrap text-center my-8 motion-safe:animate-fly-1">{t('upload.title')}</h1>
           <div className="motion-safe:animate-fly-2">
-            <Markdown className="text-center">{t('upload.description')}</Markdown>
+            <p className="my-4 text-center whitespace-pre-wrap">{t('upload.description')}</p>
             <Button onClick={selectVideo} className="mx-auto block relative px-5 py-3 text-2xl rounded-3xl shadow-lg shadow-red-900/50 bg-red-900 hover:bg-red-800 text-white text-xl">
               <div className="absolute inset-0 rounded-3xl bg-red-900/20 animate-ping pointer-events-none"/>
               <div className="relative">
