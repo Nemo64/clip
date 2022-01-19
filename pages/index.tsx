@@ -3,6 +3,7 @@ import classNames from "classnames";
 import Head from "next/head";
 import {useRouter} from "next/router";
 import {useContext, useEffect, useState} from "react";
+import {SoftwareApplication} from "schema-dts";
 import {Button} from "../components/button";
 import {AddFileIcon} from "../components/icons";
 import {Markdown} from "../components/markdown";
@@ -10,6 +11,8 @@ import {Crop, Timeline} from "../components/timeline";
 import {ensureFreshFfmpegInstance} from "../src/ffmpeg";
 import {t} from "../src/intl";
 import {VideoContext} from "./_app";
+import {JsonLd} from "react-schemaorg";
+
 
 const DEMO_TIMELINE: Crop = {start: 0, duration: 888};
 const DEMO_IMAGES = [...Array(28)].map((_, i) => `/demo/${(i + 1).toString().padStart(2, "0")}.jpeg`);
@@ -47,6 +50,20 @@ export default function Start() {
       <meta name="og:description" content={t('upload.description')}/>
       <meta name="og:image" content={`${process.env.NEXT_PUBLIC_HOST}/og.png`}/>
       <meta name="og:url" content={`${process.env.NEXT_PUBLIC_HOST}${router.pathname}`}/>
+      <JsonLd<SoftwareApplication> item={{
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Clip",
+        "url": process.env.NEXT_PUBLIC_HOST,
+        "image": `${process.env.NEXT_PUBLIC_HOST}/og.png`,
+        "description": t('upload.description'),
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Any",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+        },
+      }}/>
     </Head>
     <div className="bg-red-600 text-white">
       <div className="container mx-auto md:py-16 flex flex-row-reverse flex-wrap items-center justify-center">
@@ -55,23 +72,18 @@ export default function Start() {
           <h1 className="text-5xl font-semibold whitespace-pre-wrap text-center my-8 motion-safe:animate-fly-1">
             {t('upload.title')}
           </h1>
-          <div className="motion-safe:animate-fly-2">
-            <p className="my-4 text-center whitespace-pre-wrap">
-              {t('upload.description')}
-            </p>
+          <div className="text-center motion-safe:animate-fly-2">
+            <Markdown>{t('upload.description')}</Markdown>
             <Button onClick={selectVideo} className="mx-auto block relative px-5 py-3 text-2xl rounded-3xl shadow-lg shadow-red-900/50 bg-red-900 hover:bg-red-800 text-white text-xl">
               <div className="absolute inset-0 rounded-3xl bg-red-900/20 animate-ping pointer-events-none"/>
               <div className="relative">
                 <AddFileIcon className="align-text-bottom mr-2 -ml-1"/>
                 {t('upload.button')}
+                <span className="block text-sm text-red-200">{t('upload.drop_hint')}</span>
               </div>
             </Button>
-            <div className="my-4 text-center text-sm text-red-200">
-              {t('upload.drop_hint')}
-            </div>
-            <p className={classNames("py-2 px-4 min-h-3l text-center font-mono text-sm", {'animate-fly-in': error})}>
-              {error}
-            </p>
+            <p className="my-4 text-red-200 whitespace-pre-wrap">{t('upload.disclaimer')}</p>
+            <p className={classNames("my-4 min-h-3l font-mono text-sm", {'animate-fly-in': error})}>{error}</p>
           </div>
         </div>
 
@@ -89,9 +101,7 @@ export default function Start() {
       </svg>
     </div>
     <div className="max-w-lg mx-auto p-2">
-      <Markdown>
-        {t('upload.use_cases')}
-      </Markdown>
+      <Markdown>{t('upload.text.use_cases')}</Markdown>
     </div>
   </>;
 }

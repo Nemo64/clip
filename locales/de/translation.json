@@ -77,9 +77,12 @@
   },
   "upload": {
     "button": "Video auswählen",
-    "description": "Das Video wird im Browser verarbeitet  \nund niemals an einen Server übertragen. ",
+    "description": "Die einfachste Art Videos zu optimieren.  \nKeine Software installation notwendig.\n\nWähle einfach ein Video aus, schneide es zu  \nund wähle eine passende Qualitäts-Einstellung.",
+    "disclaimer": "Das Video wird im Browser verarbeitet  \nund niemals an einen Server übertragen. ",
     "drop_hint": "(oder Ziehe ein Video hier hin)",
-    "title": "Schneide und komprimiere\nVideos im Browser",
-    "use_cases": "## Wozu ist das gut?\n\nHauptsächlich für Kompatibilität mit anderen Plattformen.\n\n- **Gameplay-Videos**, die du **über Discord** teilen möchten\n- **Projekt-Videos**, die du **über WhatsApp** zeigen möchten\n- **Smartphone-Videos**, welche du **per E-Mail** versenden willst\n- **Bildschirm-Aufnahmen**, die du in einem **Ticket-System** anhängen willst\n\nOder eine beliebige Kombination der oben genannten Anwendungsfälle.\n\nDas verarbeitete Video wird sehr wahrscheinlich nicht so gut aus sehen wie das Original, aber es wird deutlich kleiner sein und auf nahezu jeder Platform von so ziemlich jedem Gerät abspielbar sein."
+    "text": {
+      "use_cases": "## Wozu ist das gut?\n\nHauptsächlich für Kompatibilität mit anderen Plattformen.\n\n- **Gameplay-Videos**, die du **über Discord** teilen möchten\n- **Projekt-Videos**, die du **über WhatsApp** zeigen möchten\n- **Smartphone-Videos**, welche du **per E-Mail** versenden willst\n- **Bildschirm-Aufnahmen**, die du in einem **Ticket-System** anhängen willst\n\nOder eine beliebige Kombination der oben genannten Anwendungsfälle.\n\nDas verarbeitete Video wird sehr wahrscheinlich nicht so gut aus sehen wie das Original, aber es wird deutlich kleiner sein und auf nahezu jeder Platform von so ziemlich jedem Gerät abspielbar sein."
+    },
+    "title": "Schneide und komprimiere\nVideos im Browser"
   }
 }
