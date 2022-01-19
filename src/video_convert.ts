@@ -1,14 +1,18 @@
 import {ffmpeg} from "./ffmpeg";
 import {ConvertedVideo, createResolution, Format, KnownVideo} from "./video";
 
+export interface ProgressEvent {
+  percent: number;
+  message?: string;
+}
+
 /**
  * Starts the converting process.
- *
  */
 export async function convertVideo(
   {file, metadata}: KnownVideo,
   format: Format,
-  onProgress: (percent: number) => void,
+  onProgress: (progress: ProgressEvent) => void,
 ): Promise<ConvertedVideo> {
   const args: string[] = ['-hide_banner', '-y'];
 
@@ -31,7 +35,10 @@ export async function convertVideo(
       const match = message.match(/time=\s*(?<time>\d+:\d+:\d+\.\d+)/);
       if (match?.groups?.time) {
         const time = match.groups.time.split(':').map(parseFloat).reduce((acc, val) => acc * 60 + val);
-        onProgress(time / format.container.duration * 100);
+        onProgress({
+          percent: time / format.container.duration * 100,
+          message: message,
+        });
       }
     },
   });

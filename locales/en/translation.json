@@ -63,8 +63,11 @@
     }
   },
   "progress": {
+    "button": {
+      "cancel": "Cancel"
+    },
     "headline": "Processing {{name}}",
-    "value": "{{progress, number(maximumFractionDigits: 1)}}%"
+    "value": "{{percent, number(maximumFractionDigits: 1)}}%"
   },
   "timeline": {
     "duration": "duration",
@@ -77,6 +80,6 @@
     "description": "The video will be processed within your browser  \nand will never be transmitted to a server. ",
     "drop_hint": "(or drop a video here)",
     "title": "Cut and compress\nvideos in browser",
-    "use_cases": "## Why do I need this?\n\nMostly for compatibility with other platforms.\n\n- **Gameplay videos** that you want to share **via messenger**\n- **Smartphone videos** you want to send **via email**\n- **Screen captures** that you want to attach in a **ticket system**\n\nOr any combination of the use cases above.\n\nThe processed video will most likely not look as good as the original, but it will be significantly smaller and playable on just about any platform from just about any device.\n"
+    "use_cases": "## Why do I need this?\n\nMostly for compatibility with other platforms.\n\n- **Gameplay videos** that you want to share **via Discord**\n- **project videos** which you want to show **via WhatsApp**\n- **Smartphone videos** you want to send **via email**\n- **Screen captures** that you want to attach in a **ticket system**\n\nOr any combination of the use cases above.\n\nThe processed video will most likely not look as good as the original, but it will be significantly smaller and playable on just about any platform from just about any device.\n"
   }
 }

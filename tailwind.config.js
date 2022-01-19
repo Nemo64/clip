@@ -1,3 +1,4 @@
+// noinspection PointlessArithmeticExpressionJS
 module.exports = {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx}",
@@ -5,6 +6,14 @@ module.exports = {
   ],
   theme: {
     extend: {
+      minHeight: {
+        '1l': `${1 * 1.5}em`,
+        '2l': `${2 * 1.5}em`,
+        '3l': `${3 * 1.5}em`,
+        '4l': `${4 * 1.5}em`,
+        '5l': `${5 * 1.5}em`,
+        '6l': `${6 * 1.5}em`,
+      },
       animation: {
         "fly-in": 'fly-in 0.5s',
         "fly-1": 'fly-in 0.5s 0.1s backwards',

@@ -7,6 +7,7 @@ import {BoltIcon, DownloadIcon, Spinner} from "../components/icons";
 import {ProgressBar} from "../components/progress";
 import {AudioFormatSelect, VideoFormatSelect} from "../components/selects";
 import {Timeline} from "../components/timeline";
+import {ensureFreshFfmpegInstance} from "../src/ffmpeg";
 import {t} from "../src/intl";
 import {trackEvent} from "../src/tracker";
 import {
@@ -18,19 +19,20 @@ import {
   NewVideo,
   possibleAudioFormats,
   possibleVideoFormats,
+  ProgressEvent,
   Video,
 } from "../src/video";
 import {VideoContext, VideoState} from "./_app";
 
 export default function VideoPage() {
   const [video, setVideo] = useContext(VideoContext);
-  const [progress, setProgress] = useState(-1);
+  const [progress, setProgress] = useState<ProgressEvent | undefined>();
   const [result, setResult] = useState<File>();
   const router = useRouter();
 
   // reset result when video changes
   useEffect(() => {
-    setProgress(-1);
+    setProgress(undefined);
     setResult(undefined);
   }, [video]);
 
@@ -52,15 +54,15 @@ export default function VideoPage() {
     try {
       console.log('convert using format', format);
       trackEvent('convert-start', presetStr, formatStr);
-      setProgress(0);
+      setProgress({percent: 0});
       const convertedVideo = await convertVideo(video, format, setProgress);
       trackEvent('convert-finish', presetStr, formatStr, (Date.now() - startTime) / 1000);
       console.log('converted video', convertedVideo);
       setResult(convertedVideo.file);
-      setProgress(-1);
+      setProgress(undefined);
     } catch (e) {
       trackEvent('convert-error', presetStr, String(e), (Date.now() - startTime) / 1000);
-      setProgress(-1);
+      setProgress(undefined);
       throw e;
     }
   };
@@ -69,8 +71,11 @@ export default function VideoPage() {
     return <DownloadPage video={video} file={result}/>;
   }
 
-  if (progress >= 0 && video) {
-    return <ProgressPage video={video} progress={progress}/>;
+  if (progress && video) {
+    return <ProgressPage video={video} progress={progress} cancel={() => {
+      ensureFreshFfmpegInstance();
+      setProgress(undefined);
+    }}/>;
   }
 
   if (video?.status === "new") {
@@ -87,7 +92,7 @@ export default function VideoPage() {
 
   return <>
     <Head>
-      <title>Dynamic Page</title>
+      <title>Just a sec...</title>
       <meta name="robots" content="noindex"/>
     </Head>
   </>;
@@ -122,7 +127,7 @@ function ErrorVideo({video}: { video: BrokenVideo }) {
         {video.message && <p className="my-4 text-red-800">{video.message}</p>}
       </div>
       <div className="text-center animate-fly-3">
-        <Button href="/" className="px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-600 text-white">
+        <Button href="/" className="px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-400 text-white">
           {t('conversion.button.change')}
         </Button>
       </div>
@@ -235,7 +240,7 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
               {t('conversion.button.start')}
             </Button>
 
-            <Button href="/" className="px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-600 text-white">
+            <Button href="/" className="px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-400 text-white">
               {t('conversion.button.change')}
             </Button>
           </div>
@@ -246,19 +251,27 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
   </>;
 }
 
-function ProgressPage({video, progress}: { video: Video, progress: number }) {
+function ProgressPage({video, progress, cancel}: { video: Video, progress: ProgressEvent, cancel: () => void }) {
   return <>
     <Head>
-      <title>{t('progress.value', {progress})}</title>
+      <title>{t('progress.value', progress)}</title>
       <meta name="robots" content="noindex"/>
     </Head>
     <div className="max-w-lg mx-auto p-2">
       <h1 className="text-2xl my-4 motion-safe:animate-fly-1">
         {t('progress.headline', {name: video.file.name})}
       </h1>
-      <ProgressBar progress={progress} className="my-4 motion-safe:animate-fly-2">
-        {t('progress.value', {progress})}
+      <ProgressBar progress={progress.percent} className="my-4 motion-safe:animate-fly-2">
+        {t('progress.value', progress)}
       </ProgressBar>
+      <p className="my-4 min-h-3l text-slate-500 text-xs font-mono">
+        {progress?.message?.replace(/\s(?=\s*\d)/g, '\u00A0')}
+      </p>
+      <div className="flex flex-row gap-2">
+        <Button onClick={cancel} className="px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-400 text-white">
+          {t('progress.button.cancel')}
+        </Button>
+      </div>
     </div>
   </>;
 }
@@ -295,7 +308,7 @@ function DownloadPage({file, video}: { file: File, video: KnownVideo }) {
           {t('download.button', {size: Math.ceil(file.size / 1000)})}
         </Button>
 
-        <Button href="/" className="table relative px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-600 text-white">
+        <Button href="/" className="table relative px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-400 text-white">
           {t('conversion.button.change')}
         </Button>
       </div>
