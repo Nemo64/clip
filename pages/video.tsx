@@ -85,13 +85,19 @@ export default function VideoPage() {
     return <ConvertPage video={video} setVideo={setVideo} start={start}/>;
   }
 
-  return <></>;
+  return <>
+    <Head>
+      <title>Dynamic Page</title>
+      <meta name="robots" content="noindex"/>
+    </Head>
+  </>;
 }
 
 function AnalyseVideo({video}: { video: NewVideo }) {
   return <>
     <Head>
       <title>{t('analyse.title', {name: video.file.name})}</title>
+      <meta name="robots" content="noindex"/>
     </Head>
     <div className="max-w-lg mx-auto motion-safe:animate-fly-1">
       <h1 className="text-2xl text-center my-4">
@@ -106,6 +112,7 @@ function ErrorVideo({video}: { video: BrokenVideo }) {
   return <>
     <Head>
       <title>{t('broken.title', {name: video.file.name})}</title>
+      <meta name="robots" content="noindex"/>
     </Head>
     <div className="max-w-lg mx-auto">
       <h1 className="text-2xl text-center my-4 animate-fly-1">
@@ -192,6 +199,7 @@ function ConvertPage({video, setVideo, start}: { video: KnownVideo, setVideo: Vi
   return <>
     <Head>
       <title>{t("conversion.title", {name: video.file.name})}</title>
+      <meta name="robots" content="noindex"/>
     </Head>
     <div className="container mx-auto p-2">
 
@@ -242,6 +250,7 @@ function ProgressPage({video, progress}: { video: Video, progress: number }) {
   return <>
     <Head>
       <title>{t('progress.value', {progress})}</title>
+      <meta name="robots" content="noindex"/>
     </Head>
     <div className="max-w-lg mx-auto p-2">
       <h1 className="text-2xl my-4 motion-safe:animate-fly-1">
@@ -271,7 +280,8 @@ function DownloadPage({file, video}: { file: File, video: KnownVideo }) {
     </Head>
     <div className="block w-full max-h-[80vh] min-w-full bg-slate-300" style={{aspectRatio}}>
       {url
-        ? <video className="mx-auto h-full bg-slate-500 motion-safe:animate-fly-1" controls autoPlay={true} src={url} style={{aspectRatio}}/>
+        ?
+        <video className="mx-auto h-full bg-slate-500 motion-safe:animate-fly-1" controls autoPlay={true} src={url} style={{aspectRatio}}/>
         : t('download.loading')}
     </div>
     <div className="mx-auto p-2 flex flex-row items-baseline justify-between flex-wrap gap-2 box-content" style={{maxWidth}}>

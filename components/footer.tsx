@@ -7,7 +7,7 @@ import {Link} from "./link";
 import NextLink from "next/link"
 
 export function Footer() {
-  const {locale: currentLocale, locales, pathname} = useRouter();
+  const {locale: currentLocale, locales, asPath} = useRouter();
   const [matomoEnabled, setMatomoEnabled] = useLocalStorage('matomo', true);
 
   return (
@@ -20,7 +20,7 @@ export function Footer() {
             <ul className="flex flex-row gap-2 mx-2">
               {locales.map(locale => (
                 <li key={locale} className={classNames('inline-block', {'font-semibold': locale === currentLocale})}>
-                  <NextLink href={pathname} locale={locale} scroll={false}>
+                  <NextLink href={asPath} locale={locale} scroll={false}>
                     {locale}
                   </NextLink>
                 </li>
