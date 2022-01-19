@@ -1,4 +1,5 @@
 import {fileOpen} from "browser-fs-access";
+import classNames from "classnames";
 import Head from "next/head";
 import {useRouter} from "next/router";
 import {useContext, useEffect, useState} from "react";
@@ -50,10 +51,14 @@ export default function Start() {
     <div className="bg-red-600 text-white">
       <div className="container mx-auto md:py-16 flex flex-row-reverse flex-wrap items-center justify-center">
 
-        <div className="md:w-7/12 p-2 pb-16">
-          <h1 className="text-5xl font-semibold whitespace-pre-wrap text-center my-8 motion-safe:animate-fly-1">{t('upload.title')}</h1>
+        <div className="md:w-7/12 p-2">
+          <h1 className="text-5xl font-semibold whitespace-pre-wrap text-center my-8 motion-safe:animate-fly-1">
+            {t('upload.title')}
+          </h1>
           <div className="motion-safe:animate-fly-2">
-            <p className="my-4 text-center whitespace-pre-wrap">{t('upload.description')}</p>
+            <p className="my-4 text-center whitespace-pre-wrap">
+              {t('upload.description')}
+            </p>
             <Button onClick={selectVideo} className="mx-auto block relative px-5 py-3 text-2xl rounded-3xl shadow-lg shadow-red-900/50 bg-red-900 hover:bg-red-800 text-white text-xl">
               <div className="absolute inset-0 rounded-3xl bg-red-900/20 animate-ping pointer-events-none"/>
               <div className="relative">
@@ -61,22 +66,26 @@ export default function Start() {
                 {t('upload.button')}
               </div>
             </Button>
-            <div className="my-4 text-center text-sm text-red-200">{t('upload.drop_hint')}</div>
-            {error && <p className="bg-red-600 py-2 px-4 rounded-2xl text-white text-center my-4">{error}</p>}
+            <div className="my-4 text-center text-sm text-red-200">
+              {t('upload.drop_hint')}
+            </div>
+            <p className={classNames("py-2 px-4 min-h-3l text-center font-mono text-sm", {'animate-fly-in': error})}>
+              {error}
+            </p>
           </div>
         </div>
 
         <div className="md:w-5/12 p-8 drop-shadow-xl motion-safe:animate-fly-3" role="img">
           <div className="-skew-y-6">
             <Timeline frame={DEMO_TIMELINE} width={640} height={272} value={demoCrop} onChange={setDemoCrop}
-                      pics={DEMO_IMAGES} picInt={DEMO_TIMELINE.duration / DEMO_IMAGES.length} />
+                      pics={DEMO_IMAGES} picInt={DEMO_TIMELINE.duration / DEMO_IMAGES.length}/>
           </div>
         </div>
 
       </div>
 
       <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full">
-        <path d="M1200,0H0V120H281.94C572.9,116.24,602.45,3.86,602.45,3.86h0S632,116.24,923,120h277Z" className="fill-white rotate-180 origin-center" />
+        <path d="M1200,0H0V120H281.94C572.9,116.24,602.45,3.86,602.45,3.86h0S632,116.24,923,120h277Z" className="fill-white rotate-180 origin-center"/>
       </svg>
     </div>
     <div className="max-w-lg mx-auto p-2">

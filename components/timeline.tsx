@@ -1,5 +1,6 @@
+import classNames from "classnames";
 import {RefObject, useEffect, useRef, useState} from "react";
-import {t} from "../src/intl"
+import {t} from "../src/intl";
 
 export interface Crop {
   start: number;
@@ -21,6 +22,7 @@ export interface TimelineProps {
 
 export function Timeline({frame, width, height, limit, value, onChange, onBlur, disabled, pics, picInt}: TimelineProps) {
   const duration = limit ? Math.min(limit, frame.duration) : frame.duration;
+  const [initialPicsLength] = useState(pics?.length ?? 0);
 
   const wrapperRef = useRef() as RefObject<HTMLDivElement>;
   const bodyRef = useRef() as RefObject<HTMLDivElement>
@@ -121,12 +123,13 @@ export function Timeline({frame, width, height, limit, value, onChange, onBlur, 
     </div>
     <div className="h-16 mt-2 bg-black bg-slate-800 rounded-2xl overflow-hidden relative select-none" ref={wrapperRef} onMouseMove={updateCursor}>
       <div className="absolute inset-0 flex flex-row">
-        {picInt && pics?.map(pic => (
-          <img key={pic} src={pic} alt="" className="object-cover object-center h-full motion-safe:animate-fly-in" style={{width: `${picInt / frame.duration * 100}%`}}/>
-        ))}
+        {picInt && pics?.map((pic, index) => {
+          const className = classNames('object-cover h-full', {'motion-safe:animate-fly-in': index >= initialPicsLength});
+          return <img key={pic} src={pic} alt="" className={className} style={{width: `${picInt / frame.duration * 100}%`}}/>;
+        })}
       </div>
       <div className="absolute inset-0 shadow-inner" />
-      <div className="h-full bg-red-800/0 absolute cursor-move" ref={bodyRef} style={{left: `${left * 100}%`, right: `${100 - right * 100}%`,}}/>
+      <div className="h-full bg-red-800/0 absolute cursor-move" ref={bodyRef} style={{left: `${left * 100}%`, right: `${100 - right * 100}%`}}/>
       <div className="h-full bg-red-800/70 absolute backdrop-grayscale backdrop-contrast-200" style={{left: `0%`, right: `${100 - left * 100}%`}}/>
       <div className="h-full bg-red-800/70 absolute backdrop-grayscale backdrop-contrast-200" style={{left: `${right * 100}%`, right: `0%`}}/>
       {cursor !== undefined && <div className="w-0.5 h-full -mx-0.25 bg-black/50 absolute pointer-events-none" style={{left: `${cursor / frame.duration * 100}%`}}/>}
