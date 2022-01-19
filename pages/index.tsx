@@ -44,7 +44,7 @@ export default function Start() {
       <meta name="description" content={t('upload.description')}/>
       <meta name="og:title" content={t('upload.title')}/>
       <meta name="og:description" content={t('upload.description')}/>
-      <meta name="og:image" content="/og.png"/>
+      <meta name="og:image" content={`${process.env.NEXT_PUBLIC_HOST}/og.png`}/>
       <meta name="og:url" content={`${process.env.NEXT_PUBLIC_HOST}${router.pathname}`}/>
     </Head>
     <div className="bg-red-600 text-white">
