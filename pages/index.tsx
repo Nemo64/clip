@@ -1,3 +1,4 @@
+import classNames from "classnames";
 import Head from "next/head";
 import Router, {useRouter} from "next/router";
 import {useContext, useEffect, useState} from "react";
@@ -17,10 +18,11 @@ const DEMO_IMAGES = [...Array(28)].map((_, i) => `/demo/${(i + 1).toString().pad
 export default function Start() {
   const [video, setVideo] = useContext(VideoContext);
   const [demoCrop, setDemoCrop] = useState<Crop>({start: DEMO_TIMELINE.start, duration: DEMO_TIMELINE.duration * 0.75});
+  const [error, setError] = useState<string | undefined>();
   const {pathname} = useRouter();
 
   useEffect(() => {
-    ensureFreshFfmpegInstance();
+    ensureFreshFfmpegInstance().catch(e => setError(String(e)));
     Router.prefetch("/video").catch(console.error);
   }, []);
 
@@ -56,9 +58,12 @@ export default function Start() {
           </h1>
           <div className="text-center motion-safe:animate-fly-2">
             <Markdown>{t('upload.description')}</Markdown>
-            <input type="file" id="file" accept="video/*" onChange={e => setVideo(e.currentTarget.files?.[0], 'selected')} className="sr-only peer"/>
-            <label htmlFor="file" className="inline-block relative px-5 py-3 text-2xl rounded-3xl bg-red-900 hover:bg-red-800 shadow-lg shadow-red-900/30 text-white text-xl cursor-pointer peer-focus:ring">
-              <div className="absolute inset-0 rounded-3xl bg-red-900/20 animate-ping pointer-events-none"/>
+            <input type="file" id="file" accept="video/*" disabled={!!error} onChange={e => setVideo(e.currentTarget.files?.[0], 'selected')} className="sr-only peer"/>
+            <label htmlFor="file" className={classNames(
+              'inline-block relative px-5 py-3 text-2xl rounded-3xl bg-red-900 hover:bg-red-800 shadow-lg shadow-red-900/30 text-white text-xl cursor-pointer peer-focus:ring',
+              {'opacity-50 cursor-not-allowed': !!error},
+            )}>
+              {!error && <div className="absolute inset-0 rounded-3xl bg-red-900/20 animate-ping pointer-events-none"/>}
               <div className="relative">
                 <AddFileIcon className="align-text-bottom mr-2 -ml-1"/>
                 {t('upload.button')}
@@ -67,9 +72,14 @@ export default function Start() {
                 </span>
               </div>
             </label>
-            <p className="my-4 text-red-200 whitespace-pre-wrap">
-              {t('upload.disclaimer')}
-            </p>
+            {error
+              ? <p className="my-4 h-min-3l whitespace-pre-wrap">
+                {error}
+              </p>
+              : <p className="my-4 h-min-3l text-red-200 whitespace-pre-wrap">
+                {t('upload.disclaimer')}
+              </p>
+            }
           </div>
         </div>
 

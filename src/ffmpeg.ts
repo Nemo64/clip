@@ -59,6 +59,8 @@ export function ensureFreshFfmpegInstance () {
     lastInputFile = undefined;
     running = false;
   }
+
+  return instancePromise;
 }
 
 async function createInstance() {
