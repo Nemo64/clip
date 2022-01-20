@@ -1,10 +1,7 @@
-import {fileOpen} from "browser-fs-access";
-import classNames from "classnames";
 import Head from "next/head";
-import {useRouter} from "next/router";
+import Router, {useRouter} from "next/router";
 import {useContext, useEffect, useState} from "react";
 import {SoftwareApplication} from "schema-dts";
-import {Button} from "../components/button";
 import {AddFileIcon} from "../components/icons";
 import {Markdown} from "../components/markdown";
 import {Crop, Timeline} from "../components/timeline";
@@ -19,28 +16,13 @@ const DEMO_IMAGES = [...Array(28)].map((_, i) => `/demo/${(i + 1).toString().pad
 
 export default function Start() {
   const [video, setVideo] = useContext(VideoContext);
-  const [error, setError] = useState<string | undefined>();
   const [demoCrop, setDemoCrop] = useState<Crop>({start: DEMO_TIMELINE.start, duration: DEMO_TIMELINE.duration * 0.75});
-  const router = useRouter();
+  const {pathname} = useRouter();
 
   useEffect(() => {
     ensureFreshFfmpegInstance();
-    router.prefetch("/video").catch(console.error);
-  }, [router]);
-
-  const selectVideo = async () => {
-    try {
-      setError(undefined);
-      const file = await fileOpen({
-        startIn: "videos",
-        mimeTypes: ['video/*'],
-        id: "video-select",
-      });
-      setVideo(file, 'selected');
-    } catch (e) {
-      setError(String(e));
-    }
-  };
+    Router.prefetch("/video").catch(console.error);
+  }, []);
 
   return <>
     <Head>
@@ -49,7 +31,7 @@ export default function Start() {
       <meta name="og:title" content={t('upload.title')}/>
       <meta name="og:description" content={t('upload.description')}/>
       <meta name="og:image" content={`${process.env.NEXT_PUBLIC_HOST}/og.png`}/>
-      <meta name="og:url" content={`${process.env.NEXT_PUBLIC_HOST}${router.pathname}`}/>
+      <meta name="og:url" content={`${process.env.NEXT_PUBLIC_HOST}${pathname}`}/>
       <JsonLd<SoftwareApplication> item={{
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
@@ -74,16 +56,20 @@ export default function Start() {
           </h1>
           <div className="text-center motion-safe:animate-fly-2">
             <Markdown>{t('upload.description')}</Markdown>
-            <Button onClick={selectVideo} className="mx-auto block relative px-5 py-3 text-2xl rounded-3xl shadow-lg shadow-red-900/50 bg-red-900 hover:bg-red-800 text-white text-xl">
+            <input type="file" id="file" accept="video/*" onChange={e => setVideo(e.currentTarget.files?.[0], 'selected')} className="sr-only peer"/>
+            <label htmlFor="file" className="inline-block relative px-5 py-3 text-2xl rounded-3xl bg-red-900 hover:bg-red-800 shadow-lg shadow-red-900/30 text-white text-xl cursor-pointer peer-focus:ring">
               <div className="absolute inset-0 rounded-3xl bg-red-900/20 animate-ping pointer-events-none"/>
               <div className="relative">
                 <AddFileIcon className="align-text-bottom mr-2 -ml-1"/>
                 {t('upload.button')}
-                <span className="block text-sm text-red-200">{t('upload.drop_hint')}</span>
+                <span className="block text-sm text-red-200">
+                  {t('upload.drop_hint')}
+                </span>
               </div>
-            </Button>
-            <p className="my-4 text-red-200 whitespace-pre-wrap">{t('upload.disclaimer')}</p>
-            <p className={classNames("my-4 min-h-3l font-mono text-sm", {'animate-fly-in': error})}>{error}</p>
+            </label>
+            <p className="my-4 text-red-200 whitespace-pre-wrap">
+              {t('upload.disclaimer')}
+            </p>
           </div>
         </div>
 
