@@ -59,6 +59,7 @@ export function trackEvent(
         rec: "1",
         apiv: "1",
         rand: Math.random().toString(),
+        send_image: "0",
         _id: userId,
         ...params,
       })}`,
@@ -75,7 +76,7 @@ export function trackEvent(
     trackPageView: (path) =>
       track({
         url: path,
-        ua: navigator.userAgent,
+        urlref: document.referrer || "",
         res: `${screen.width}x${screen.height}`,
       }),
     trackEvent: (category, action, name, value) =>

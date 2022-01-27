@@ -63,19 +63,11 @@ module.exports = (phase) => ({
           },
           {
             key: "Cross-Origin-Opener-Policy",
-            value: "same-origin",
-          },
-          {
-            key: "Referrer-Policy",
-            value: "no-referrer",
+            value: "same-origin", // required for SharedArrayBuffer of the ffmpeg library
           },
           {
             key: "X-Content-Type-Options",
             value: "nosniff",
-          },
-          {
-            key: "X-DNS-Prefetch-Control",
-            value: "off",
           },
           {
             key: "X-Frame-Options",

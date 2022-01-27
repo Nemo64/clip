@@ -1,5 +1,6 @@
 import NextLink from "next/link";
 import { AnchorHTMLAttributes, ForwardedRef, forwardRef } from "react";
+import classNames from "classnames";
 
 // <a href> buttons extensions
 export interface LinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
@@ -20,13 +21,20 @@ export const Link = forwardRef(function Link(
 ) {
   if (!href?.startsWith("/")) {
     return (
-      <a rel="noreferrer" ref={ref} href={href} target="_blank" {...props} />
+      // eslint-disable-next-line react/jsx-no-target-blank
+      <a
+        href={href}
+        target="_blank"
+        rel={classNames("noopener", props.rel)}
+        {...props}
+        ref={ref}
+      />
     );
   }
 
   return (
     <NextLink href={href} prefetch={prefetch ? undefined : false}>
-      <a rel="noreferrer" ref={ref} {...props} />
+      <a ref={ref} {...props} />
     </NextLink>
   );
 });
