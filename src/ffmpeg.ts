@@ -1,13 +1,13 @@
-import {createFFmpeg, fetchFile} from "@ffmpeg/ffmpeg";
+import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 
 let running = false;
 let instancePromise: ReturnType<typeof createInstance>;
 let lastInputFile: [string, number] | undefined;
 
 export interface FfmpegProps {
-  file: File,
-  args: string[],
-  logger?: Parameters<(ReturnType<typeof createFFmpeg>["setLogger"])>[0],
+  file: File;
+  args: string[];
+  logger?: Parameters<ReturnType<typeof createFFmpeg>["setLogger"]>[0];
 }
 
 /**
@@ -15,28 +15,32 @@ export interface FfmpegProps {
  * It'll ensure that no other ffmpeg is running at the same time.
  * If there is another ffmpeg running, it'll be destroyed and a new one will be created.
  */
-export function ffmpeg({file, logger, args}: FfmpegProps) {
+export function ffmpeg({ file, logger, args }: FfmpegProps) {
   ensureFreshFfmpegInstance();
   running = true;
 
-  const isNewFile = lastInputFile === undefined || lastInputFile[0] !== file.name || lastInputFile[1] !== file.size;
-  const promise = Promise.all([instancePromise, isNewFile && fetchFile(file)])
-    .then(async ([instance, blob]) => {
+  const isNewFile =
+    lastInputFile === undefined ||
+    lastInputFile[0] !== file.name ||
+    lastInputFile[1] !== file.size;
+  const promise = Promise.all([
+    instancePromise,
+    isNewFile && fetchFile(file),
+  ]).then(async ([instance, blob]) => {
+    if (isNewFile && lastInputFile) {
+      instance.FS("unlink", lastInputFile[0]);
+    }
 
-      if (isNewFile && lastInputFile) {
-        instance.FS('unlink', lastInputFile[0]);
-      }
+    if (isNewFile && blob) {
+      instance.FS("writeFile", file.name, blob);
+      lastInputFile = [file.name, file.size];
+    }
 
-      if (isNewFile && blob) {
-        instance.FS('writeFile', file.name, blob);
-        lastInputFile = [file.name, file.size];
-      }
-
-      instance.setLogger(logger ?? (() => void 0));
-      await instance.run(...args);
-      running = false;
-      return instance;
-    });
+    instance.setLogger(logger ?? (() => void 0));
+    await instance.run(...args);
+    running = false;
+    return instance;
+  });
 
   return {
     promise: promise,
@@ -48,11 +52,11 @@ export function ffmpeg({file, logger, args}: FfmpegProps) {
  * Ensures that the ffmpeg instance is ready for a new process.
  * You don't need to call it, but it can save time.
  */
-export function ensureFreshFfmpegInstance () {
+export function ensureFreshFfmpegInstance() {
   if (running || !instancePromise) {
     if (instancePromise) {
       console.warn("ffmpeg is already running, destroying it");
-      instancePromise.then(instance => instance.exit());
+      instancePromise.then((instance) => instance.exit());
     }
 
     instancePromise = createInstance();

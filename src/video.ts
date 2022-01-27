@@ -27,7 +27,7 @@ export interface ConvertedVideo {
  * Creates a new video object and starts its dedicated worker.
  */
 export async function createVideo(file: File): Promise<NewVideo> {
-  return {status: "new", file};
+  return { status: "new", file };
 }
 
 export interface ContainerFormat {

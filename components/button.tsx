@@ -1,18 +1,26 @@
 import classNames from "classnames";
-import {ButtonHTMLAttributes, ForwardedRef, forwardRef, MouseEvent, ReactElement, useState} from "react";
-import {Link, LinkProps} from "./link";
+import {
+  ButtonHTMLAttributes,
+  ForwardedRef,
+  forwardRef,
+  MouseEvent,
+  ReactElement,
+  useState,
+} from "react";
+import { Link, LinkProps as OriginalLinkProps } from "./link";
 
 // <a href> buttons extensions
-export interface LinkAttributes extends LinkProps {
+export interface LinkProps extends OriginalLinkProps {
   href: string; // enforce href for identification
 
-  onClick?: (e: MouseEvent<HTMLAnchorElement>) => Promise<void> | void,
+  onClick?: (e: MouseEvent<HTMLAnchorElement>) => Promise<void> | void;
   disabled?: boolean; // fixates disabled style
 }
 
 // <button> buttons extensions
-export interface ButtonAttributes extends ButtonHTMLAttributes<HTMLButtonElement> {
-  onClick?: (e: MouseEvent<HTMLButtonElement>) => Promise<void> | void,
+export interface ButtonProps
+  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "href"> {
+  onClick?: (e: MouseEvent<HTMLButtonElement>) => Promise<void> | void;
   disabled?: boolean; // fixates disabled attribute and style
 }
 
@@ -30,12 +38,11 @@ export interface ButtonAttributes extends ButtonHTMLAttributes<HTMLButtonElement
  * Don't use this for inline links, use {@see Link} instead.
  */
 export const Button = forwardRef(function Button(
-  {onClick, disabled, className, ...props}: LinkAttributes | ButtonAttributes,
-  ref: ForwardedRef<HTMLAnchorElement> | ForwardedRef<HTMLButtonElement>,
+  { onClick, disabled, className, ...props }: LinkProps | ButtonProps,
+  ref: ForwardedRef<HTMLAnchorElement> | ForwardedRef<HTMLButtonElement>
 ): ReactElement {
-
   const [busy, setBusy] = useState(false);
-  const disabledOrBusy = disabled || busy;
+  const isDisabled = disabled || busy;
 
   // if onClick returns a promise, then disable the button until the promise resolves
   if (onClick !== undefined) {
@@ -51,31 +58,35 @@ export const Button = forwardRef(function Button(
     };
   }
 
-  const classes = classNames({
-    'opacity-75 pointer-events-none cursor-not-allowed': disabledOrBusy,
-  }, className);
+  const classes = classNames(className, {
+    "opacity-75 pointer-events-none cursor-not-allowed": isDisabled,
+  });
 
   if ("href" in props) {
     return (
-      <Link {...props}
-            role={props.role ?? "button"}
-            ref={ref as ForwardedRef<HTMLAnchorElement>}
-            prefetch={props.prefetch ?? !disabledOrBusy}
-            href={disabledOrBusy ? undefined : props.href}
-            onClick={disabledOrBusy ? undefined : onClick as (e: MouseEvent<HTMLAnchorElement>) => void}
-            className={classes}
-            aria-busy={busy ? true : undefined}
-            aria-disabled={disabledOrBusy ? true : undefined}/>
+      <Link
+        {...props}
+        role={props.role ?? "button"}
+        ref={ref as ForwardedRef<HTMLAnchorElement>}
+        prefetch={props.prefetch ?? !isDisabled}
+        href={isDisabled ? undefined : props.href}
+        onClick={isDisabled ? undefined : (onClick as LinkProps["onClick"])}
+        className={classes}
+        aria-busy={busy ? true : undefined}
+        aria-disabled={isDisabled ? true : undefined}
+      />
     );
   } else {
     return (
-      <button {...props}
-              type={props.type ?? "button"}
-              ref={ref as ForwardedRef<HTMLButtonElement>}
-              onClick={disabledOrBusy ? undefined : onClick as (e: MouseEvent<HTMLButtonElement>) => void}
-              className={classes}
-              aria-busy={busy ? true : undefined}
-              disabled={disabledOrBusy ? true : undefined}/>
+      <button
+        {...props}
+        type={props.type ?? "button"}
+        ref={ref as ForwardedRef<HTMLButtonElement>}
+        onClick={isDisabled ? undefined : (onClick as ButtonProps["onClick"])}
+        className={classes}
+        aria-busy={busy ? true : undefined}
+        disabled={isDisabled ? true : undefined}
+      />
     );
   }
 });
