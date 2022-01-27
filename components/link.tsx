@@ -19,7 +19,7 @@ export const Link = forwardRef(function Link(
   { href, prefetch, ...props }: LinkProps,
   ref: ForwardedRef<HTMLAnchorElement>
 ) {
-  if (!href?.startsWith("/")) {
+  if (!href?.startsWith("/") && !href?.startsWith("#")) {
     return (
       // eslint-disable-next-line react/jsx-no-target-blank
       <a

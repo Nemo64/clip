@@ -6,6 +6,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      screens: {
+        widescreen: { raw: "(max-height: 75vw)" },
+      },
       minHeight: {
         "1l": `${1 * 1.5}em`,
         "2l": `${2 * 1.5}em`,

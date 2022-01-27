@@ -279,16 +279,12 @@ function ConvertPage({
         <title>{t("conversion.title", { name: video.file.name })}</title>
         <meta name="robots" content="noindex" />
       </Head>
-      <div className="container mx-auto p-2">
-        <h1 className="text-2xl my-4 motion-safe:animate-fly-1">
-          {t("conversion.title", { name: video.file.name })}
-        </h1>
-
+      <div className="widescreen:min-h-screen container mx-auto flex flex-col justify-center">
         <form
-          className="flex flex-wrap sm:flex-nowrap justify-center gap-4"
+          className="flex flex-wrap my-16 justify-center"
           onSubmit={handleSubmit(start)}
         >
-          <div className="flex-auto max-w-lg sm:max-w-none motion-safe:animate-fly-5">
+          <div className="flex-grow p-2 max-h-screen motion-safe:animate-fly-5">
             <Controller
               control={control}
               name="container"
@@ -305,7 +301,10 @@ function ConvertPage({
               )}
             />
           </div>
-          <div className="flex-auto max-w-lg">
+          <div className="flex-auto p-2 max-w-lg">
+            <h1 className="text-2xl mb-4 motion-safe:animate-fly-1">
+              {t("conversion.title", { name: video.file.name })}
+            </h1>
             <div className="mb-2 motion-safe:animate-fly-2">
               <label htmlFor="video_format">
                 {t("conversion.video_quality.label")}

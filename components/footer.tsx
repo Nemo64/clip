@@ -19,7 +19,7 @@ export function Footer() {
   const [matomoEnabled, setMatomoEnabled] = useLocalStorage("matomo", true);
 
   return (
-    <div className="mt-16 min-h-[80vh] bg-slate-50">
+    <div className="mt-16 min-h-[80vh] pb-8 bg-slate-50 print:min-h-0">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 1200 120"

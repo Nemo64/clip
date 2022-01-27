@@ -85,7 +85,7 @@ export function Timeline({
   const startPercent = ((value.start - start) / duration) * 100;
   const endPercent = ((value.start + value.duration - start) / duration) * 100;
   return (
-    <>
+    <div className="flex flex-col max-h-full">
       <div
         className="w-full rounded-2xl overflow-hidden relative bg-slate-100"
         style={{ aspectRatio: `${width} / ${height}` }}
@@ -212,7 +212,7 @@ export function Timeline({
           />
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

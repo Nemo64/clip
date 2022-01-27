@@ -10,18 +10,11 @@ import { ensureFreshFfmpegInstance } from "../src/ffmpeg";
 import { t } from "../src/intl";
 import { VideoContext } from "./_app";
 import { JsonLd } from "react-schemaorg";
-
-const DEMO_TIMELINE: Crop = { start: 0, duration: 888 };
-const DEMO_IMAGES = [...Array(28)].map(
-  (_, i) => `/demo/${(i + 1).toString().padStart(2, "0")}.jpeg`
-);
+import { Button } from "../components/button";
+import { DemoTimeline } from "../components/demo";
 
 export default function Start() {
   const [video, setVideo] = useContext(VideoContext);
-  const [demoCrop, setDemoCrop] = useState<Crop>({
-    start: DEMO_TIMELINE.start,
-    duration: DEMO_TIMELINE.duration * 0.75,
-  });
   const [error, setError] = useState<string | undefined>();
   const { pathname } = useRouter();
 
@@ -62,8 +55,9 @@ export default function Start() {
           }}
         />
       </Head>
-      <div className="bg-red-600 text-white">
-        <div className="container mx-auto md:py-16 flex flex-row-reverse flex-wrap items-center justify-center">
+
+      <div className="bg-red-600 text-white break-inside-avoid">
+        <div className="container mx-auto md:py-16 widescreen:min-h-screen flex flex-row-reverse flex-wrap items-center justify-center relative">
           <div className="md:w-7/12 p-2">
             <h1 className="text-5xl font-semibold whitespace-pre-wrap text-center my-8 motion-safe:animate-fly-1">
               {t("upload.title")}
@@ -88,7 +82,7 @@ export default function Start() {
                 )}
               >
                 {!error && (
-                  <div className="absolute inset-0 rounded-3xl bg-red-900/20 animate-ping pointer-events-none" />
+                  <div className="absolute inset-0 rounded-3xl bg-red-900/20 animate-ping pointer-events-none print:hidden motion-reduce:hidden" />
                 )}
                 <div className="relative">
                   <AddFileIcon className="align-text-bottom mr-2 -ml-1" />
@@ -108,27 +102,40 @@ export default function Start() {
               </p>
             </div>
           </div>
-
           <div
             className="md:w-5/12 p-8 drop-shadow-xl motion-safe:animate-fly-3"
             role="img"
           >
             <div className="-skew-y-6">
-              <Timeline
-                frame={DEMO_TIMELINE}
-                width={640}
-                height={272}
-                value={demoCrop}
-                onChange={setDemoCrop}
-                pics={DEMO_IMAGES}
-                picInt={DEMO_TIMELINE.duration / DEMO_IMAGES.length}
-              />
+              <DemoTimeline />
             </div>
           </div>
+          <Button
+            className="absolute left-1/2 bottom-0 p-16 -mx-16 hidden widescreen:block"
+            aria-label="scroll down"
+            onClick={() => {
+              window.scrollBy({
+                top: window.innerHeight,
+                behavior: "smooth",
+              });
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              className="h-6 w-6 -m-3 stroke-red-100"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </Button>
         </div>
-
         <svg
-          data-name="Layer 1"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 1200 120"
           preserveAspectRatio="none"
@@ -140,7 +147,8 @@ export default function Start() {
           />
         </svg>
       </div>
-      <div className="max-w-lg mx-auto p-2">
+
+      <div className="max-w-lg mx-auto p-2 break-inside-avoid">
         <Markdown>{t("upload.text.use_cases")}</Markdown>
       </div>
     </>
