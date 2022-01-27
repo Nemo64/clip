@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { RefObject, useEffect, useRef, useState } from "react";
+import { MouseEvent, useState } from "react";
 import { t } from "../src/intl";
 
 export interface Crop {
@@ -20,6 +20,8 @@ export interface TimelineProps {
   picInt?: number;
 }
 
+const fractionDigits = 3;
+
 export function Timeline({
   frame: { duration, start },
   width,
@@ -35,131 +37,63 @@ export function Timeline({
   const maxDuration = limit ? Math.min(limit, duration) : duration;
   const [initialPicsLength] = useState(pics?.length ?? 0);
 
-  const wrapperRef = useRef() as RefObject<HTMLDivElement>;
-  const bodyRef = useRef() as RefObject<HTMLDivElement>;
-  const leftRef = useRef() as RefObject<HTMLDivElement>;
-  const rightRef = useRef() as RefObject<HTMLDivElement>;
-  const valueRef = useRef(value);
-  valueRef.current = value;
-
-  useEffect(() => {
-    const wrapper = wrapperRef.current;
-    const body = bodyRef.current;
-    const left = leftRef.current;
-    const right = rightRef.current;
-    if (!wrapper || !body || !left || !right) {
-      return;
-    }
-
-    interface DragEvent {
-      initialValue: Crop;
-      valueChange: number;
-    }
-
-    const createDragHandler = (moveHandler: (event: DragEvent) => Crop) => {
-      return ({ clientX }: MouseEvent) => {
-        const rect = wrapper.getBoundingClientRect();
-        const initialValue = { ...valueRef.current };
-        const initialPosition =
-          ((clientX - rect.left) / rect.width) * duration + start;
-        const wrappedHandler = ({ clientX }: MouseEvent) => {
-          const position =
-            ((clientX - rect.left) / rect.width) * duration + start;
-          const valueChange = position - initialPosition;
-          valueRef.current = moveHandler({ initialValue, valueChange });
-          onChange?.(valueRef.current);
-        };
-        const document = wrapper.ownerDocument;
-        const detachHandler = () => {
-          document.removeEventListener("mousemove", wrappedHandler);
-          document.removeEventListener("mouseup", detachHandler);
-          document.defaultView?.removeEventListener("blur", detachHandler);
-          onBlur?.(valueRef.current);
-        };
-        document.addEventListener("mousemove", wrappedHandler);
-        document.addEventListener("mouseup", detachHandler);
-        document.defaultView?.addEventListener("blur", detachHandler);
-      };
+  const startBodyDrag = createDragHandler(onChange, onBlur, ({ changeX }) => {
+    const limitedChange = clamp(
+      changeX * duration + start,
+      -value.start,
+      duration - value.duration - value.start
+    );
+    return {
+      start: value.start + limitedChange,
+      duration: value.duration,
     };
+  });
 
-    const bodyHandler = createDragHandler(({ initialValue, valueChange }) => {
-      return {
-        start: clamp(
-          initialValue.start + valueChange,
-          start,
-          start + duration - initialValue.duration
-        ),
-        duration: initialValue.duration,
-      };
-    });
-
-    const leftHandler = createDragHandler(({ initialValue, valueChange }) => {
-      const maxDecrease = Math.max(
-        initialValue.duration - maxDuration,
-        -initialValue.start
-      );
-      const limitedChange = clamp(
-        valueChange,
-        maxDecrease,
-        initialValue.duration
-      );
-      return {
-        start: initialValue.start + limitedChange,
-        duration: initialValue.duration - limitedChange,
-      };
-    });
-
-    const rightHandler = createDragHandler(({ initialValue, valueChange }) => {
-      const maxIncrease = Math.min(
-        maxDuration - initialValue.duration,
-        start + duration - initialValue.start - initialValue.duration
-      );
-      const limitedChange = clamp(
-        valueChange,
-        -initialValue.duration,
-        maxIncrease
-      );
-      return {
-        start: initialValue.start,
-        duration: initialValue.duration + limitedChange,
-      };
-    });
-
-    body.addEventListener("mousedown", bodyHandler);
-    left.addEventListener("mousedown", leftHandler);
-    right.addEventListener("mousedown", rightHandler);
-    return () => {
-      body.removeEventListener("mousedown", bodyHandler);
-      left.removeEventListener("mousedown", leftHandler);
-      right.removeEventListener("mousedown", rightHandler);
+  const startLeftDrag = createDragHandler(onChange, onBlur, ({ changeX }) => {
+    const limitedChange = clamp(
+      changeX * duration + start,
+      Math.max(-value.start, value.duration - maxDuration),
+      value.duration
+    );
+    return {
+      start: value.start + limitedChange,
+      duration: value.duration - limitedChange,
     };
-  }, [start, duration, maxDuration, onChange, onBlur]);
+  });
 
-  const [cursor, setCursor] = useState<number | undefined>();
-  const updateCursor = ({ clientX }: { clientX: number }) => {
-    const rect = wrapperRef.current?.getBoundingClientRect();
-    if (!rect) {
-      return;
-    }
+  const startRightDrag = createDragHandler(onChange, onBlur, ({ changeX }) => {
+    const limitedChange = clamp(
+      changeX * duration + start,
+      -value.duration,
+      Math.min(
+        maxDuration - value.duration,
+        start + duration - value.start - value.duration
+      )
+    );
+    return {
+      start: value.start,
+      duration: value.duration + limitedChange,
+    };
+  });
 
+  const [cursor, setCursor] = useState(0);
+  const updateCursor = ({ clientX, currentTarget }: MouseEvent) => {
+    const rect = currentTarget.getBoundingClientRect();
     setCursor(((clientX - rect.left) / rect.width) * duration + start);
   };
 
-  const left = (value.start - start) / duration;
-  const right = (value.start + value.duration - start) / duration;
-  const aspectRatio = `${width} / ${height}`;
+  const startPercent = ((value.start - start) / duration) * 100;
+  const endPercent = ((value.start + value.duration - start) / duration) * 100;
   return (
     <>
       <div
         className="w-full rounded-2xl overflow-hidden relative bg-slate-100"
-        style={{ aspectRatio }}
+        style={{ aspectRatio: `${width} / ${height}` }}
       >
-        {pics?.length ? (
+        {pics?.length && picInt ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={
-              (cursor && picInt && pics[Math.floor(cursor / picInt)]) || pics[0]
-            }
+            src={pics[Math.floor(cursor / picInt)] || pics[0]}
             alt="preview"
             className="absolute w-full h-full object-contain"
           />
@@ -169,7 +103,6 @@ export function Timeline({
       </div>
       <div
         className="h-16 mt-2 bg-black bg-slate-800 rounded-2xl overflow-hidden relative select-none"
-        ref={wrapperRef}
         onMouseMove={updateCursor}
       >
         <div className="absolute inset-0 flex flex-row">
@@ -179,7 +112,8 @@ export function Timeline({
               <img
                 key={pic}
                 src={pic}
-                alt={index.toString()}
+                role="none"
+                alt=""
                 style={{ width: `${(picInt / duration) * 100}%` }}
                 className={classNames({
                   "object-cover h-full": true,
@@ -191,16 +125,16 @@ export function Timeline({
         <div className="absolute inset-0 shadow-inner" />
         <div
           className="h-full bg-red-800/0 absolute cursor-move"
-          ref={bodyRef}
-          style={{ left: `${left * 100}%`, right: `${100 - right * 100}%` }}
+          style={{ left: `${startPercent}%`, right: `${100 - endPercent}%` }}
+          onMouseDown={startBodyDrag}
         />
         <div
-          className="h-full bg-red-800/70 absolute backdrop-grayscale backdrop-contrast-200"
-          style={{ left: `0%`, right: `${100 - left * 100}%` }}
+          className="h-full bg-red-800/70 absolute backdrop-contrast-200"
+          style={{ left: `0%`, right: `${100 - startPercent}%` }}
         />
         <div
-          className="h-full bg-red-800/70 absolute backdrop-grayscale backdrop-contrast-200"
-          style={{ left: `${right * 100}%`, right: `0%` }}
+          className="h-full bg-red-800/70 absolute backdrop-contrast-200"
+          style={{ left: `${endPercent}%`, right: `0%` }}
         />
         {cursor !== undefined && (
           <div
@@ -210,13 +144,13 @@ export function Timeline({
         )}
         <div
           className="h-full w-2 bg-red-800 absolute cursor-col-resize"
-          ref={leftRef}
-          style={{ left: `${left * 100}%` }}
+          style={{ left: `${startPercent}%` }}
+          onMouseDown={startLeftDrag}
         />
         <div
           className="h-full w-2 bg-red-800 absolute cursor-col-resize"
-          ref={rightRef}
-          style={{ right: `${100 - right * 100}%` }}
+          style={{ right: `${100 - endPercent}%` }}
+          onMouseDown={startRightDrag}
         />
       </div>
       <div className="flex flex-row justify-between">
@@ -227,16 +161,16 @@ export function Timeline({
             id="start"
             disabled={disabled}
             className="w-20 bg-transparent text-right"
-            value={value.start.toFixed(3)}
-            step="0.001"
-            min={start.toFixed(3)}
-            max={(start + duration - value.duration).toFixed(3)}
-            onInput={(e) =>
+            value={value.start.toFixed(fractionDigits)}
+            step={1 / 10 ** fractionDigits}
+            min={start.toFixed(fractionDigits)}
+            max={(start + duration - value.duration).toFixed(fractionDigits)}
+            onInput={(e) => {
               onChange?.({
                 start: parseFloat(e.currentTarget.value),
                 duration: value.duration,
-              })
-            }
+              });
+            }}
           />
         </div>
         <div>
@@ -246,16 +180,16 @@ export function Timeline({
             id="duration"
             disabled={disabled}
             className="w-20 bg-transparent text-right"
-            value={value.duration.toFixed(3)}
-            step="0.001"
-            min="0.000"
-            max={maxDuration.toFixed(3)}
-            onInput={(e) =>
+            value={value.duration.toFixed(fractionDigits)}
+            step={1 / 10 ** fractionDigits}
+            min={(0).toFixed(fractionDigits)}
+            max={maxDuration.toFixed(fractionDigits)}
+            onInput={(e) => {
               onChange?.({
                 start: value.start,
                 duration: parseFloat(e.currentTarget.value),
-              })
-            }
+              });
+            }}
           />
         </div>
         <div>
@@ -265,16 +199,16 @@ export function Timeline({
             id="end"
             disabled={disabled}
             className="w-20 bg-transparent text-right"
-            value={(value.start + value.duration).toFixed(3)}
-            step="0.001"
-            min={start.toFixed(3)}
-            max={(start + duration).toFixed(3)}
-            onInput={(e) =>
+            value={(value.start + value.duration).toFixed(fractionDigits)}
+            step={1 / 10 ** fractionDigits}
+            min={start.toFixed(fractionDigits)}
+            max={(start + duration).toFixed(fractionDigits)}
+            onInput={(e) => {
               onChange?.({
                 start: value.start,
                 duration: parseFloat(e.currentTarget.value) - value.duration,
-              })
-            }
+              });
+            }}
           />
         </div>
       </div>
@@ -284,4 +218,42 @@ export function Timeline({
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
+}
+
+function createDragHandler<T>(
+  onChange: ((value: T) => void) | undefined,
+  onBlur: ((value: T) => void) | undefined,
+  handler: (event: { changeX: number; changeY: number }) => T
+) {
+  return ({ clientX, clientY, currentTarget }: MouseEvent) => {
+    const rect = currentTarget.parentElement?.getBoundingClientRect();
+    if (!rect) {
+      return;
+    }
+
+    const initialX = (clientX - rect.left) / rect.width;
+    const initialY = (clientY - rect.top) / rect.height;
+    let value = handler({ changeX: 0, changeY: 0 });
+
+    const wrappedHandler = ({ clientX }: { clientX: number }) => {
+      const positionX = (clientX - rect.left) / rect.width;
+      const positionY = (clientY - rect.top) / rect.height;
+      value = handler({
+        changeX: positionX - initialX,
+        changeY: positionY - initialY,
+      });
+      onChange?.(value);
+    };
+
+    const document = currentTarget.ownerDocument;
+    const detachHandler = () => {
+      document.removeEventListener("mousemove", wrappedHandler);
+      document.removeEventListener("mouseup", detachHandler);
+      document.defaultView?.removeEventListener("blur", detachHandler);
+      onBlur?.(value);
+    };
+    document.addEventListener("mousemove", wrappedHandler);
+    document.addEventListener("mouseup", detachHandler);
+    document.defaultView?.addEventListener("blur", detachHandler);
+  };
 }
