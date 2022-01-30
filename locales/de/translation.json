@@ -77,7 +77,7 @@
   },
   "upload": {
     "button": "Video auswählen",
-    "description": "Die einfachste Art Videos zu optimieren.  \nKeine Software installation notwendig.\n\nWähle einfach ein Video aus, schneide es zu  \nund wähle eine passende Qualitäts-Einstellung.",
+    "description": "Die einfachste Art Videos zu optimieren.  \nKeine Software installation notwendig.",
     "disclaimer": "Das Video wird im Browser verarbeitet  \nund niemals an einen Server übertragen. ",
     "drop_hint": "(oder Ziehe ein Video hier hin)",
     "text": {

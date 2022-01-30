@@ -23,6 +23,7 @@ import {
   Video,
 } from "../src/video";
 import { VideoContext, VideoState } from "./_app";
+import { useBinarySrc } from "../src/react";
 
 export default function VideoPage() {
   const [video, setVideo] = useContext(VideoContext);
@@ -179,6 +180,7 @@ function ConvertPage({
   video: KnownVideo;
   start: (format: Format) => Promise<void>;
 }) {
+  const videoUrl = useBinarySrc(video.file);
   const picInt = Math.max(video.metadata.container.duration / 30, 0.5);
   const [pics, setPics] = useState<string[]>([]);
 
@@ -293,6 +295,8 @@ function ConvertPage({
                   frame={video.metadata.container}
                   width={video.metadata.video.width}
                   height={video.metadata.video.height}
+                  fps={video.metadata.video.fps}
+                  videoSrc={videoUrl}
                   pics={pics}
                   picInt={picInt}
                   limit={MAX_DURATION}
@@ -406,13 +410,7 @@ function ProgressPage({
 }
 
 function DownloadPage({ file, video }: { file: File; video: KnownVideo }) {
-  const [url, setUrl] = useState("");
-  useEffect(() => {
-    const url = URL.createObjectURL(file);
-    setUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file, setUrl]);
-
+  const src = useBinarySrc(file);
   const aspectRatio = `${video.metadata.video.width} / ${video.metadata.video.height}`;
   const maxWidth = `${
     (80 * video.metadata.video.width) / video.metadata.video.height
@@ -427,12 +425,12 @@ function DownloadPage({ file, video }: { file: File; video: KnownVideo }) {
         className="block w-full max-h-[80vh] min-w-full bg-slate-300"
         style={{ aspectRatio }}
       >
-        {url ? (
+        {src ? (
           <video
             className="mx-auto h-full bg-slate-500 motion-safe:animate-fly-1"
             controls
             autoPlay={true}
-            src={url}
+            src={src}
             style={{ aspectRatio }}
           />
         ) : (
@@ -449,7 +447,7 @@ function DownloadPage({ file, video }: { file: File; video: KnownVideo }) {
 
         <div className="flex flex-row items-baseline gap-2 motion-safe:animate-fly-3">
           <Button
-            href={url}
+            href={src}
             download={file.name}
             className="table px-4 py-2 rounded-2xl bg-red-800 hover:bg-red-700 text-white"
           >

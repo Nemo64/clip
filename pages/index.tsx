@@ -3,9 +3,8 @@ import Head from "next/head";
 import Router, { useRouter } from "next/router";
 import { useContext, useEffect, useState } from "react";
 import { SoftwareApplication } from "schema-dts";
-import { AddFileIcon } from "../components/icons";
+import { AddFileIcon, ChevronDownIcon } from "../components/icons";
 import { Markdown } from "../components/markdown";
-import { Crop, Timeline } from "../components/timeline";
 import { ensureFreshFfmpegInstance } from "../src/ffmpeg";
 import { t } from "../src/intl";
 import { VideoContext } from "./_app";
@@ -43,7 +42,7 @@ export default function Start() {
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
             name: "Clip",
-            url: process.env.NEXT_PUBLIC_HOST,
+            url: `${process.env.NEXT_PUBLIC_HOST}/`,
             image: `${process.env.NEXT_PUBLIC_HOST}/og.png`,
             description: t("upload.description"),
             applicationCategory: "MultimediaApplication",
@@ -70,9 +69,9 @@ export default function Start() {
                 accept="video/*"
                 disabled={!!error}
                 className="sr-only peer"
-                onChange={(e) =>
-                  setVideo(e.currentTarget.files?.[0], "selected")
-                }
+                onChange={({ currentTarget }) => {
+                  setVideo(currentTarget.files?.[0], "selected");
+                }}
               />
               <label
                 htmlFor="file"
@@ -93,8 +92,7 @@ export default function Start() {
                 </div>
               </label>
               <p
-                className={classNames({
-                  "my-4 h-min-3l whitespace-pre-wrap": true,
+                className={classNames("my-4 h-min-3l whitespace-pre-wrap", {
                   "text-red-200": error !== undefined,
                 })}
               >
@@ -106,9 +104,7 @@ export default function Start() {
             className="md:w-5/12 p-8 drop-shadow-xl motion-safe:animate-fly-3"
             role="img"
           >
-            <div className="-skew-y-6">
-              <DemoTimeline />
-            </div>
+            <DemoTimeline className="-skew-y-6" />
           </div>
           <Button
             className="absolute left-1/2 bottom-0 p-16 -mx-16 hidden widescreen:block"
@@ -120,19 +116,7 @@ export default function Start() {
               });
             }}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              className="h-6 w-6 -m-3 stroke-red-100"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+            <ChevronDownIcon />
           </Button>
         </div>
         <svg

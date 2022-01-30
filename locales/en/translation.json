@@ -77,7 +77,7 @@
   },
   "upload": {
     "button": "Select video",
-    "description": "The easiest way to optimize videos.  \nNo software installation necessary.\n\nJust select a video, trim it  \nand choose a suitable quality setting.",
+    "description": "The easiest way to optimize videos.  \nNo software installation necessary.",
     "disclaimer": "The video will be processed within your browser  \nand will never be transmitted to a server. ",
     "drop_hint": "(or drop a video here)",
     "text": {

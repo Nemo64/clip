@@ -26,4 +26,4 @@ npm run l10n
 
 This will update the files in the [`locales`](locales) folder.
 You can then either edit those files directly
-or use a tool like [texel](https://texel.marco.zone/) 
+or use a tool like [texel](https://texel.marco.zone/)
