@@ -82,7 +82,7 @@ export function Timeline({
         start + duration - value.start - value.duration
       )
     );
-    setCursor(value.start + value.duration + limitedChange);
+    setCursor(value.start + value.duration + limitedChange - endSeekOffset);
     return {
       start: value.start,
       duration: value.duration + limitedChange,
@@ -196,6 +196,9 @@ export function Timeline({
           className="w-4 px-1.5 -mx-2 -inset-y-1 bg-clip-content bg-red-800 absolute cursor-col-resize"
           style={{ left: `${startPercent}%` }}
           onMouseDown={startLeftDrag}
+          onMouseEnter={() => {
+            setCursor(value.start);
+          }}
         />
         <Button
           className="absolute top-full w-6 h-6 -mx-3 my-1 text-red-800 hover:text-red-700"
@@ -210,6 +213,9 @@ export function Timeline({
           className="w-4 px-1.5 -mx-2 -inset-y-1 bg-clip-content bg-red-800 absolute cursor-col-resize"
           style={{ right: `${100 - endPercent}%` }}
           onMouseDown={startRightDrag}
+          onMouseEnter={() => {
+            setCursor(value.start + value.duration - endSeekOffset);
+          }}
         />
         <Button
           className="absolute top-full w-6 h-6 -mx-3 my-1 text-red-800 hover:text-red-700"
@@ -283,7 +289,7 @@ export function Timeline({
               setCursor(newValue - endSeekOffset);
               onChange?.({
                 start: value.start,
-                duration: newValue - value.duration,
+                duration: newValue - value.start,
               });
             }}
           />
