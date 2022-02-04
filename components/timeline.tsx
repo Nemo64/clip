@@ -26,8 +26,6 @@ export interface TimelineProps {
   picInt?: number;
 }
 
-const fractionDigits = 3;
-
 export function Timeline({
   frame: { duration, start },
   width,
@@ -46,48 +44,6 @@ export function Timeline({
   const maxDuration = limit ? Math.min(limit, duration) : duration;
   const [initialPicsLength] = useState(pics?.length ?? 0);
   const ref = useRef() as RefObject<HTMLElement>;
-
-  const startBodyDrag = createDragHandler(onChange, onBlur, ({ changeX }) => {
-    const limitedChange = clamp(
-      changeX * duration + start,
-      -value.start,
-      duration - value.duration - value.start
-    );
-    setCursor(value.start + limitedChange);
-    return {
-      start: value.start + limitedChange,
-      duration: value.duration,
-    };
-  });
-
-  const startLeftDrag = createDragHandler(onChange, onBlur, ({ changeX }) => {
-    const limitedChange = clamp(
-      changeX * duration + start,
-      Math.max(-value.start, value.duration - maxDuration),
-      value.duration
-    );
-    setCursor(value.start + limitedChange);
-    return {
-      start: value.start + limitedChange,
-      duration: value.duration - limitedChange,
-    };
-  });
-
-  const startRightDrag = createDragHandler(onChange, onBlur, ({ changeX }) => {
-    const limitedChange = clamp(
-      changeX * duration + start,
-      -value.duration,
-      Math.min(
-        maxDuration - value.duration,
-        start + duration - value.start - value.duration
-      )
-    );
-    setCursor(value.start + value.duration + limitedChange - endSeekOffset);
-    return {
-      start: value.start,
-      duration: value.duration + limitedChange,
-    };
-  });
 
   const [cursor, setCursor] = useState(0);
   const updateCursor = ({ clientX, currentTarget }: MouseEvent) => {
@@ -170,35 +126,57 @@ export function Timeline({
             ))}
         </div>
         <div className="absolute inset-0 shadow-inner" />
-        <div
+        <div // body range ~ the active part of the timeline
           className="h-full bg-red-800/0 absolute cursor-move"
           style={{ left: `${startPercent}%`, right: `${100 - endPercent}%` }}
-          onMouseDown={startBodyDrag}
           onMouseMove={updateCursor}
+          onMouseDown={createDragHandler(onChange, onBlur, ({ changeX }) => {
+            const limitedChange = clamp(
+              changeX * duration + start,
+              -value.start,
+              duration - value.duration - value.start
+            );
+            setCursor(value.start + limitedChange);
+            return {
+              start: value.start + limitedChange,
+              duration: value.duration,
+            };
+          })}
         />
-        <div
+        <div // left cut range ~ the part of the timeline before the body
           className="h-full rounded-l-2xl bg-gradient-to-l from-red-800 bg-red-800/50 bg-[length:4rem_100%] bg-right bg-no-repeat absolute backdrop-contrast-200 backdrop-grayscale"
           style={{ left: `0%`, right: `${100 - startPercent}%` }}
           onMouseMove={updateCursor}
         />
-        <div
+        <div // right cut range ~ the part of the timeline after the body
           className="h-full rounded-r-2xl bg-gradient-to-r from-red-800 bg-red-800/50 bg-[length:4rem_100%] bg-left bg-no-repeat absolute backdrop-contrast-200 backdrop-grayscale"
           style={{ left: `${endPercent}%`, right: `0%` }}
           onMouseMove={updateCursor}
         />
         {cursor !== undefined && (
-          <div
+          <div // the small cursor line
             className="w-1 -mx-0.5 -inset-y-1 border-x border-black/50 bg-white/50 absolute pointer-events-none"
             style={{ left: `${(cursor / duration) * 100}%` }}
           />
         )}
-        <div
+        <div // left drag handler ~ on the left side of the body
           className="w-4 px-1.5 -mx-2 -inset-y-1 bg-clip-content bg-red-800 absolute cursor-col-resize"
           style={{ left: `${startPercent}%` }}
-          onMouseDown={startLeftDrag}
           onMouseEnter={() => {
             setCursor(value.start);
           }}
+          onMouseDown={createDragHandler(onChange, onBlur, ({ changeX }) => {
+            const limitedChange = clamp(
+              changeX * duration + start,
+              Math.max(-value.start, value.duration - maxDuration),
+              value.duration
+            );
+            setCursor(value.start + limitedChange);
+            return {
+              start: value.start + limitedChange,
+              duration: value.duration - limitedChange,
+            };
+          })}
         />
         <Button
           className="absolute top-full w-6 h-6 -mx-3 my-1 text-red-800 hover:text-red-700"
@@ -209,13 +187,29 @@ export function Timeline({
         >
           <PlayIcon />
         </Button>
-        <div
+        <div // right drag handler ~ on the right side of the body
           className="w-4 px-1.5 -mx-2 -inset-y-1 bg-clip-content bg-red-800 absolute cursor-col-resize"
           style={{ right: `${100 - endPercent}%` }}
-          onMouseDown={startRightDrag}
           onMouseEnter={() => {
             setCursor(value.start + value.duration - endSeekOffset);
           }}
+          onMouseDown={createDragHandler(onChange, onBlur, ({ changeX }) => {
+            const limitedChange = clamp(
+              changeX * duration + start,
+              -value.duration,
+              Math.min(
+                maxDuration - value.duration,
+                start + duration - value.start - value.duration
+              )
+            );
+            setCursor(
+              value.start + value.duration + limitedChange - endSeekOffset
+            );
+            return {
+              start: value.start,
+              duration: value.duration + limitedChange,
+            };
+          })}
         />
         <Button
           className="absolute top-full w-6 h-6 -mx-3 my-1 text-red-800 hover:text-red-700"
