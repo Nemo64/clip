@@ -12,6 +12,11 @@ export type AudioProps = { formats: AudioFormat[] } & Omit<
 >;
 
 export function VideoFormatSelect({ formats, ...props }: VideoProps) {
+  const isSizeTarget = (formatOption: VideoFormat) =>
+    formatOption.preset?.startsWith("size");
+  const isCrfOption = (formatOption: VideoFormat) =>
+    formatOption.preset?.startsWith("crf");
+
   return (
     <Select
       {...props}
@@ -20,19 +25,23 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
       options={[
         {
           label: t("conversion.video_quality.size_label"),
-          options: formats.filter((formatOption) =>
-            formatOption.preset?.startsWith("size")
-          ),
+          options: formats.filter(isSizeTarget),
         },
         {
           label: t("conversion.video_quality.crf_label"),
-          options: formats.filter((formatOption) =>
-            formatOption.preset?.startsWith("crf")
+          options: formats.filter(isCrfOption),
+        },
+        {
+          label: t("conversion.video_quality.other"),
+          options: formats.filter(
+            (formatOption) =>
+              !isSizeTarget(formatOption) && !isCrfOption(formatOption)
           ),
         },
       ]}
+      formatGroupLabel={(group) => <div className="sr-only">{group.label}</div>}
       formatOptionLabel={(option) => (
-        <>
+        <div className="leading-4 pt-1">
           {option.preset === "crf_1080p" &&
             t("conversion.video_quality.crf_1080p")}
           {option.preset === "crf_720p" &&
@@ -49,29 +58,42 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
           {option.preset === "size_8mb" &&
             t("conversion.video_quality.size_8mb")}
 
+          {option.preset === "gif_600p" &&
+            t("conversion.video_quality.gif_600p")}
+
           {option.original && t("conversion.video_quality.original")}
 
           {option.preset?.startsWith("crf") &&
             (!option.implausible ? (
-              <div className="opacity-60 text-sm">
+              <div className="opacity-60 text-sm font-light">
                 {t("conversion.video_quality.crf_details", option)}
               </div>
             ) : (
-              <div className="text-red-500 text-sm">
+              <div className="text-red-500 text-sm font-light">
                 {t("conversion.video_quality.crf_implausible", option)}
               </div>
             ))}
           {option.preset?.startsWith("size") &&
             (!option.implausible ? (
-              <div className="opacity-60 text-sm">
+              <div className="opacity-60 text-sm font-light">
                 {t("conversion.video_quality.size_details", option)}
               </div>
             ) : (
-              <div className="text-red-500 text-sm">
+              <div className="text-red-500 text-sm font-light">
                 {t("conversion.video_quality.size_implausible", option)}
               </div>
             ))}
-        </>
+          {option.preset?.startsWith("gif") &&
+            (!option.implausible ? (
+              <div className="opacity-60 text-sm font-light">
+                {t("conversion.video_quality.gif_details", option)}
+              </div>
+            ) : (
+              <div className="text-red-500 text-sm font-light">
+                {t("conversion.video_quality.gif_implausible", option)}
+              </div>
+            ))}
+        </div>
       )}
     />
   );
@@ -84,7 +106,7 @@ export function AudioFormatSelect({ formats, ...props }: AudioProps) {
       getOptionValue={(option) => String(option?.preset)}
       options={formats}
       formatOptionLabel={(option) => (
-        <>
+        <div className="leading-4 pt-1">
           {option.preset === "none" && t("conversion.audio_quality.none")}
           {option.preset === "bitrate_low" &&
             t("conversion.audio_quality.bitrate_low")}
@@ -95,25 +117,25 @@ export function AudioFormatSelect({ formats, ...props }: AudioProps) {
 
           {option.preset?.startsWith("none") &&
             (!option.implausible ? (
-              <div className="opacity-60 text-sm">
+              <div className="opacity-60 text-sm font-light">
                 {t("conversion.audio_quality.none_details")}
               </div>
             ) : (
-              <div className="text-red-500 text-sm">
+              <div className="text-red-500 text-sm font-light">
                 {t("conversion.audio_quality.none_implausible")}
               </div>
             ))}
           {option.preset?.startsWith("bitrate") &&
             (!option.implausible ? (
-              <div className="opacity-60 text-sm">
+              <div className="opacity-60 text-sm font-light">
                 {t("conversion.audio_quality.bitrate_details", option)}
               </div>
             ) : (
-              <div className="text-red-500 text-sm">
+              <div className="text-red-500 text-sm font-light">
                 {t("conversion.audio_quality.bitrate_implausible")}
               </div>
             ))}
-        </>
+        </div>
       )}
     />
   );

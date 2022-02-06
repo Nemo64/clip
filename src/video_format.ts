@@ -1,118 +1,9 @@
-import { AudioFormat, Format, VideoFormat } from "./video";
+import { AudioFormat, Format, Video, VideoFormat } from "./video";
 
 /**
  * The amount the target size is undershoot to accommodate overheads and average bitrate variance.
  */
 export const SIZE_UNDERSHOOT_FACTOR = 0.9;
-
-export function possibleVideoFormats(format: Format): VideoFormat[] {
-  const options: VideoFormat[] = [];
-  const audioOverheadSize = format.audio?.expectedSize ?? 0;
-  const containerOverheadSize = format.container.duration; // I just assume 1 kb/s
-  const overheadSize = audioOverheadSize + containerOverheadSize;
-
-  const resolutions = [
-    // calculateDimensions(format, 1920, 1080),
-    createResolution(format, 1280, 720),
-    createResolution(format, 854, 480),
-    createResolution(format, 640, 360),
-  ].filter(({ width }, index, list) => list[index + 1]?.width !== width);
-
-  for (const sizeTarget of [8000, 16000, 50000]) {
-    const adjustedSizeTarget = sizeTarget - overheadSize;
-
-    const resolution = resolutions.find((resolution) => {
-      return (
-        adjustedSizeTarget >=
-        calculateExpectedSize(resolution, format.container.duration, 28)
-      );
-    });
-
-    const bitrates = [
-      (adjustedSizeTarget * 8 * SIZE_UNDERSHOOT_FACTOR) /
-        format.container.duration,
-    ];
-    if (resolution) {
-      const biggestSizeForBitrate = calculateExpectedSize(
-        resolution,
-        format.container.duration,
-        18
-      );
-      bitrates.push((biggestSizeForBitrate * 8) / format.container.duration);
-    }
-
-    const original =
-      format.video.codec.startsWith("h264") &&
-      format.video.color === "yuv420p" &&
-      format.video.width === resolution?.width &&
-      format.video.height === resolution?.height &&
-      format.video.fps <= resolution?.fps &&
-      sizeTarget >= format.video.expectedSize;
-
-    if (original) {
-      options.push({
-        ...format.video,
-        preset: `size_${sizeTarget / 1000}mb`,
-        original: original,
-        expectedSize: sizeTarget,
-      });
-    } else {
-      options.push({
-        preset: `size_${sizeTarget / 1000}mb`,
-        implausible: !resolution,
-        original: original,
-        codec: "h264 (High)",
-        color: "yuv420p",
-        width: resolution ? resolution.width : 0,
-        height: resolution ? resolution.height : 0,
-        bitrate: Math.floor(Math.min(...bitrates)),
-        expectedSize: adjustedSizeTarget,
-        fps:
-          format.video.fps /
-          Math.ceil(format.video.fps / (resolution?.fps ?? 30)),
-      });
-    }
-  }
-
-  for (const resolution of resolutions.reverse()) {
-    const expectedSize = calculateExpectedSize(
-      resolution,
-      format.container.duration,
-      21
-    );
-
-    const original =
-      format.video.codec.startsWith("h264") &&
-      format.video.color === "yuv420p" &&
-      format.video.width === resolution?.width &&
-      format.video.height === resolution?.height &&
-      format.video.fps <= resolution?.fps &&
-      expectedSize >= format.video.expectedSize;
-
-    if (original) {
-      options.push({
-        ...format.video,
-        preset: `crf_${resolution.expectedHeight}p`,
-        original: original,
-        expectedSize: expectedSize,
-      });
-    } else {
-      options.push({
-        preset: `crf_${resolution.expectedHeight}p`,
-        original: original,
-        codec: "h264 (High)",
-        color: "yuv420p",
-        width: resolution.width,
-        height: resolution.height,
-        crf: 21,
-        expectedSize: expectedSize,
-        fps: format.video.fps / Math.ceil(format.video.fps / resolution.fps),
-      });
-    }
-  }
-
-  return options;
-}
 
 export interface Resolution {
   width: number;
@@ -120,10 +11,6 @@ export interface Resolution {
   fps: number;
   expectedWidth: number;
   expectedHeight: number;
-}
-
-function calculateExpectedSize(res: Resolution, duration: number, crf: number) {
-  return (res.width * res.height * duration) / Math.log2(res.fps) / 20 / crf; // TODO better calculation
 }
 
 export function createResolution(
@@ -142,7 +29,24 @@ export function createResolution(
   };
 }
 
-export function possibleAudioFormats(format: Format): AudioFormat[] {
+export function possibleVideoFormats(source: Format): VideoFormat[] {
+  const resolutions = [
+    // calculateDimensions(source, 1920, 1080),
+    createResolution(source, 1280, 720),
+    createResolution(source, 854, 480),
+    createResolution(source, 640, 360),
+  ].filter(({ width }, index, list) => list[index + 1]?.width !== width);
+
+  const gifResolutions = [createResolution(source, 600, 600)];
+
+  return [
+    ...videoFileSizeTargets(source, resolutions),
+    ...videoGifTargets(source, gifResolutions),
+    ...videoResolutionTargets(source, resolutions),
+  ];
+}
+
+export function possibleAudioFormats(source: Format): AudioFormat[] {
   const options: AudioFormat[] = [];
 
   options.push({
@@ -151,43 +55,158 @@ export function possibleAudioFormats(format: Format): AudioFormat[] {
     sampleRate: 0,
     channelSetup: "none",
     bitrate: 0,
-    expectedSize: 0,
   });
 
-  if (!format.audio) {
+  if (source.audio.codec === "none") {
     return options;
   }
 
   options.push({
     preset: "bitrate_low",
-    implausible: !format.audio,
     codec: "aac (HE-AACv2)",
     sampleRate: 48000,
     channelSetup: "stereo",
     bitrate: 32,
-    expectedSize: (32 / 8) * format.container.duration,
   });
 
-  if (
-    format.audio.codec.startsWith("aac") &&
-    format.audio.bitrate < 260 /* ~256 */
-  ) {
+  const originalSuitable =
+    source.audio.codec.startsWith("aac") &&
+    source.audio.bitrate < 260; /* ~256 */
+
+  if (originalSuitable) {
     options.push({
-      ...format.audio,
+      ...source.audio,
       preset: "bitrate_high",
-      expectedSize: (format.audio.bitrate / 8) * format.container.duration,
     });
   } else {
     options.push({
       preset: "bitrate_high",
-      implausible: !format.audio,
       codec: "aac (LC)",
       sampleRate: 48000,
       channelSetup: "stereo",
       bitrate: 192,
-      expectedSize: (192 / 8) * format.container.duration,
     });
   }
 
   return options;
+}
+
+export function videoFileSizeTargets(
+  source: Format,
+  resolutions: Resolution[]
+): VideoFormat[] {
+  const options: VideoFormat[] = [];
+
+  for (const totalSizeTarget of [8000, 16000, 50000]) {
+    let sizeTarget = totalSizeTarget * SIZE_UNDERSHOOT_FACTOR;
+    let bitrateTarget = (sizeTarget * 8) / source.container.duration;
+
+    const resolution = resolutions.find(
+      (res) => sizeTarget >= calculateSize(res, source.container.duration, 28)
+    );
+    if (resolution) {
+      const maxSize = calculateSize(resolution, source.container.duration, 18);
+      const maxBitrate = (maxSize * 8) / source.container.duration;
+      if (maxBitrate < bitrateTarget) {
+        sizeTarget = maxSize;
+        bitrateTarget = maxBitrate;
+      }
+    }
+
+    const originalSuitable =
+      source.video.codec.startsWith("h264") &&
+      source.video.color === "yuv420p" &&
+      source.video.bitrate !== undefined &&
+      (source.video.bitrate * source.container.duration) / 8 <= sizeTarget;
+
+    if (originalSuitable) {
+      options.push({
+        ...source.video,
+        preset: `size_${totalSizeTarget / 1000}mb`,
+        original: true,
+      });
+    } else {
+      const fpsDivisor = Math.ceil(source.video.fps / (resolution?.fps ?? 30));
+      options.push({
+        preset: `size_${totalSizeTarget / 1000}mb`,
+        implausible: !resolution,
+        codec: "h264 (High)",
+        color: "yuv420p",
+        width: resolution ? resolution.width : 0,
+        height: resolution ? resolution.height : 0,
+        bitrate: Math.floor(bitrateTarget),
+        fps: source.video.fps / fpsDivisor,
+      });
+    }
+  }
+
+  return options;
+}
+
+export function videoResolutionTargets(
+  source: Format,
+  resolutions: Resolution[]
+): VideoFormat[] {
+  const options: VideoFormat[] = [];
+
+  for (const resolution of resolutions.reverse()) {
+    const expectedSize = calculateSize(
+      resolution,
+      source.container.duration,
+      21
+    );
+
+    const originalSuitable =
+      source.video.codec.startsWith("h264") &&
+      source.video.color === "yuv420p" &&
+      source.video.width === resolution?.width &&
+      source.video.height === resolution?.height &&
+      source.video.fps <= resolution?.fps &&
+      source.video.bitrate !== undefined &&
+      (source.video.bitrate * source.container.duration) / 8 <= expectedSize;
+
+    if (originalSuitable) {
+      options.push({
+        ...source.video,
+        preset: `crf_${resolution.expectedHeight}p`,
+        original: originalSuitable,
+      });
+    } else {
+      options.push({
+        preset: `crf_${resolution.expectedHeight}p`,
+        original: originalSuitable,
+        codec: "h264 (High)",
+        color: "yuv420p",
+        width: resolution.width,
+        height: resolution.height,
+        crf: 21,
+        fps: source.video.fps / Math.ceil(source.video.fps / resolution.fps),
+      });
+    }
+  }
+  return options;
+}
+
+export function videoGifTargets(
+  source: Format,
+  resolutions: Resolution[]
+): VideoFormat[] {
+  const options: VideoFormat[] = [];
+
+  for (const resolution of resolutions.reverse()) {
+    options.push({
+      preset: `gif_${resolution.expectedHeight}p`,
+      codec: "gif",
+      color: "bgra",
+      width: resolution.width,
+      height: resolution.height,
+      fps: 100 / 6,
+    });
+  }
+
+  return options;
+}
+
+function calculateSize(res: Resolution, duration: number, crf: number) {
+  return (res.width * res.height * duration) / Math.log2(res.fps) / 20 / crf; // TODO better calculation
 }

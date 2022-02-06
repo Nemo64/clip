@@ -7,7 +7,7 @@
   },
   "conversion": {
     "audio_quality": {
-      "bitrate_details": "{{codec}} mit {{bitrate, number}} kbit/s; {{expectedSize, number(maximumFractionDigits: 0)}} kB",
+      "bitrate_details": "{{codec}} mit {{bitrate, number}} kbit/s",
       "bitrate_high": "Hohe Qualität",
       "bitrate_implausible": "",
       "bitrate_low": "Niedrige Qualität (reicht für Sprache und Soundeffekte)",
@@ -27,11 +27,15 @@
       "crf_360p": "360p Auflösung",
       "crf_480p": "480p SD Auflösung",
       "crf_720p": "720p HD Auflösung",
-      "crf_details": "CRF {{crf}}; Auflösung {{width}}x{{height}}@{{fps, number}}; ~{{expectedSize, number(maximumFractionDigits: 1)}} kB (grob geschätzt)",
+      "crf_details": "CRF {{crf}}; Auflösung {{width}}x{{height}}@{{fps, number}}",
       "crf_implausible": "Auflösung mit dem Ursprungsvideo nicht verfügbar",
       "crf_label": "Auflösungsorientiert",
+      "gif_600p": "Animiertes GIF",
+      "gif_details": "Auflösung {{width}}x{{height}}@{{fps, number}}",
+      "gif_implausible": "",
       "label": "Qualität",
       "original": " (aus Quelldatei; schnell und verlustlos)",
+      "other": "",
       "size_16mb": "16 Mb Dateigröße (bspw. für WhatApp)",
       "size_50mb": "50 Mb Dateigröße (bspw. für Discord Nitro)",
       "size_8mb": "8 Mb Dateigröße (bspw. für Discord, E-Mail…)",
@@ -41,7 +45,8 @@
     }
   },
   "download": {
-    "button": "Speichere Video ({{size, number}} kB)",
+    "image_button": "Speichere Bild ({{size, number}} kB)",
+    "video_button": "Speichere Video ({{size, number}} kB)",
     "loading": "Lade...",
     "title": "Fertiggestellt: {{name}}"
   },

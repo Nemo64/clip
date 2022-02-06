@@ -1,6 +1,12 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useContext, useEffect, useMemo, useState } from "react";
+import {
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  HTMLAttributes,
+} from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Button } from "../components/button";
 import { BoltIcon, DownloadIcon, Spinner } from "../components/icons";
@@ -309,6 +315,7 @@ function ConvertPage({
             <h1 className="text-2xl mb-4 motion-safe:animate-fly-1">
               {t("conversion.title", { name: video.file.name })}
             </h1>
+
             <div className="mb-2 motion-safe:animate-fly-2">
               <label htmlFor="video_format">
                 {t("conversion.video_quality.label")}
@@ -327,23 +334,25 @@ function ConvertPage({
               />
             </div>
 
-            <div className="my-2 motion-safe:animate-fly-3">
-              <label htmlFor="audio_format">
-                {t("conversion.audio_quality.label")}
-              </label>
-              <Controller
-                control={control}
-                name="audio"
-                rules={formatRules}
-                render={({ field: { ref, ...field } }) => (
-                  <AudioFormatSelect
-                    formats={audioFormats}
-                    id="audio_format"
-                    {...field}
-                  />
-                )}
-              />
-            </div>
+            {!watch("video")?.codec.startsWith("gif") && (
+              <div className="my-2 motion-safe:animate-fly-3">
+                <label htmlFor="audio_format">
+                  {t("conversion.audio_quality.label")}
+                </label>
+                <Controller
+                  control={control}
+                  name="audio"
+                  rules={formatRules}
+                  render={({ field: { ref, ...field } }) => (
+                    <AudioFormatSelect
+                      formats={audioFormats}
+                      id="audio_format"
+                      {...field}
+                    />
+                  )}
+                />
+              </div>
+            )}
 
             <div className="flex gap-2 mt-4 motion-safe:animate-fly-4">
               <Button
@@ -425,17 +434,11 @@ function DownloadPage({ file, video }: { file: File; video: KnownVideo }) {
         className="block w-full max-h-[80vh] min-w-full bg-slate-300"
         style={{ aspectRatio }}
       >
-        {src ? (
-          <video
-            className="mx-auto h-full bg-slate-500 motion-safe:animate-fly-1"
-            controls
-            autoPlay={true}
-            src={src}
-            style={{ aspectRatio }}
-          />
-        ) : (
-          t("download.loading")
-        )}
+        <Result
+          className="mx-auto h-full bg-slate-500 motion-safe:animate-fly-1"
+          file={file}
+          src={src}
+        />
       </div>
       <div
         className="mx-auto p-2 flex flex-row items-baseline justify-between flex-wrap gap-2 box-content"
@@ -452,7 +455,13 @@ function DownloadPage({ file, video }: { file: File; video: KnownVideo }) {
             className="table px-4 py-2 rounded-2xl bg-red-800 hover:bg-red-700 text-white"
           >
             <DownloadIcon className="align-bottom mr-2 -ml-1" />
-            {t("download.button", { size: Math.ceil(file.size / 1000) })}
+            {file.type.startsWith("image/")
+              ? t("download.image_button", {
+                  size: Math.ceil(file.size / 1000),
+                })
+              : t("download.video_button", {
+                  size: Math.ceil(file.size / 1000),
+                })}
           </Button>
 
           <Button
@@ -465,4 +474,21 @@ function DownloadPage({ file, video }: { file: File; video: KnownVideo }) {
       </div>
     </>
   );
+}
+
+interface ResultProps extends HTMLAttributes<HTMLElement> {
+  file: File;
+  src: string;
+}
+
+function Result({ file, src, ...props }: ResultProps) {
+  if (!src) {
+    return <>{t("download.loading")}</>;
+  }
+
+  if (file.type.startsWith("video/")) {
+    return <video controls autoPlay={true} src={src} {...props} />;
+  }
+
+  return <img src={src} alt="" {...props} />;
 }

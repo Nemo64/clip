@@ -39,7 +39,6 @@ export interface GenericStreamFormat {
   preset?: string; // arbitrary name
   original?: boolean; // indicate if the stream is from the source
   implausible?: boolean; // if true, this format is not suitable for the video
-  expectedSize: number; // in kilobytes
 }
 
 export interface VideoFormat extends GenericStreamFormat {
@@ -63,7 +62,7 @@ export interface AudioFormat extends GenericStreamFormat {
 export interface Format {
   container: ContainerFormat;
   video: VideoFormat;
-  audio?: AudioFormat;
+  audio: AudioFormat;
 }
 
 export * from "./video_analyse";

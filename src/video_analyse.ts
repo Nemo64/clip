@@ -9,19 +9,24 @@ import { Format, KnownVideo, NewVideo } from "./video";
  * so abuse ffmpeg for that. {@see https://github.com/ffmpegwasm/ffmpeg.wasm/issues/121}
  */
 export async function analyzeVideo({ file }: NewVideo): Promise<KnownVideo> {
-  const metadata: Partial<Format> = {};
+  const metadata: Partial<Format> = {
+    audio: {
+      codec: "none",
+      channelSetup: "none",
+      sampleRate: 0,
+      bitrate: 0,
+    },
+  };
   const strings = [] as string[];
 
-  const run = ffmpeg({
+  await ffmpeg({
     file: file,
     args: ["-hide_banner", "-v", "info", "-i", file.name],
     logger: ({ message }) => {
       strings.push(message);
       parseMetadata(message, metadata);
     },
-  });
-
-  await run.promise;
+  }).promise;
 
   if (!metadata.container || !metadata.video) {
     const message = strings
@@ -31,6 +36,8 @@ export async function analyzeVideo({ file }: NewVideo): Promise<KnownVideo> {
       `Could not analyze video ${JSON.stringify(metadata)}\n${message}`
     );
   }
+
+  console.log(`Analyzed video`, metadata);
 
   return { status: "known", file, metadata: metadata as Format };
 }
@@ -53,7 +60,7 @@ export function parseMetadata(message: string, metadata: Partial<Format>) {
   }
 
   const videoMatch = message.match(
-    /Stream #[^:,]+:[^:,]+: Video: (?<codec>[^(),]+(\(\S+\))?).*, (?<color>yuv.+|rgb.+), (?<width>\d+)x(?<height>\d+).*(, (?<bitrate>[\d.]+) kb\/s)?,.* (?<fps>[\d.]+) fps, (?<tbr>[\d.]+) tbr/
+    /Stream #[^:,]+:[^:,]+: Video: (?<codec>[^(),]+(\(\S+\))?).*, (?<color>yuv.+|[rgba]{3,4}), (?<width>\d+)x(?<height>\d+).*(, (?<bitrate>[\d.]+) kb\/s)?,.* (?<fps>[\d.]+) fps, (?<tbr>[\d.]+) tbr/
   );
   if (videoMatch?.groups && metadata.container) {
     metadata.video = {
@@ -62,12 +69,7 @@ export function parseMetadata(message: string, metadata: Partial<Format>) {
       color: videoMatch.groups.color,
       width: parseFloat(videoMatch.groups.width),
       height: parseFloat(videoMatch.groups.height),
-      bitrate: videoMatch.groups.bitrate
-        ? parseFloat(videoMatch.groups.bitrate)
-        : undefined,
-      expectedSize:
-        (parseFloat(videoMatch.groups.bitrate) * metadata.container.duration) /
-        8,
+      bitrate: parseFloat(videoMatch.groups.bitrate),
       fps: Math.max(
         parseFloat(videoMatch.groups.fps),
         parseFloat(videoMatch.groups.tbr)
@@ -86,9 +88,6 @@ export function parseMetadata(message: string, metadata: Partial<Format>) {
       sampleRate: parseFloat(audioMatch.groups.sampleRate),
       channelSetup: audioMatch.groups.channelSetup,
       bitrate: parseFloat(audioMatch.groups.bitrate),
-      expectedSize:
-        (parseFloat(audioMatch.groups.bitrate) * metadata.container.duration) /
-        8,
     };
     return;
   }

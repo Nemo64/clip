@@ -99,7 +99,7 @@ export function Timeline({
             onChange={setCursor}
             min={start}
             max={duration}
-            divisor={fps}
+            divisor={Math.floor(fps)}
             className="absolute px-2 bottom-0 rounded-t-2xl bg-black/50 text-white"
             style={{
               left: `${(cursor / duration / timeStampMoveFactor) * 100}%`,
@@ -231,7 +231,7 @@ export function Timeline({
             value={value.start}
             min={start}
             max={start + duration - value.duration}
-            divisor={fps}
+            divisor={Math.floor(fps)}
             onFocus={() => {
               setCursor(value.start);
             }}
@@ -253,7 +253,7 @@ export function Timeline({
             value={value.duration}
             min={0}
             max={maxDuration}
-            divisor={fps}
+            divisor={Math.floor(fps)}
             onFocus={() => {
               setCursor(value.start + value.duration - endSeekOffset);
             }}
@@ -275,7 +275,7 @@ export function Timeline({
             value={value.start + value.duration}
             min={start}
             max={start + duration}
-            divisor={fps}
+            divisor={Math.floor(fps)}
             onFocus={() => {
               setCursor(value.start + value.duration - endSeekOffset);
             }}
