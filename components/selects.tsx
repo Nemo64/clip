@@ -1,6 +1,7 @@
 import Select, { Props } from "react-select";
 import { t } from "../src/intl";
 import { AudioFormat, VideoFormat } from "../src/video";
+import classNames from "classnames";
 
 export type VideoProps = { formats: VideoFormat[] } & Omit<
   Props<VideoFormat>,
@@ -40,7 +41,7 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
         },
       ]}
       formatGroupLabel={(group) => <div className="sr-only">{group.label}</div>}
-      formatOptionLabel={(option) => (
+      formatOptionLabel={(option, { context }) => (
         <div className="leading-4 pt-1">
           {option.preset === "crf_1080p" &&
             t("conversion.video_quality.crf_1080p")}
@@ -61,7 +62,9 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
           {option.preset === "gif_600p" &&
             t("conversion.video_quality.gif_600p")}
 
-          {option.original && t("conversion.video_quality.original")}
+          <span className={context === "value" ? "text-green-700" : ""}>
+            {option.original && t("conversion.video_quality.original")}
+          </span>
 
           {option.preset?.startsWith("crf") &&
             (!option.implausible ? (
@@ -105,7 +108,7 @@ export function AudioFormatSelect({ formats, ...props }: AudioProps) {
       {...props}
       getOptionValue={(option) => String(option?.preset)}
       options={formats}
-      formatOptionLabel={(option) => (
+      formatOptionLabel={(option, { context }) => (
         <div className="leading-4 pt-1">
           {option.preset === "none" && t("conversion.audio_quality.none")}
           {option.preset === "bitrate_low" &&
@@ -113,7 +116,9 @@ export function AudioFormatSelect({ formats, ...props }: AudioProps) {
           {option.preset === "bitrate_high" &&
             t("conversion.audio_quality.bitrate_high")}
 
-          {option.original && t("conversion.audio_quality.original")}
+          <span className={context === "value" ? "text-green-700" : ""}>
+            {option.original && t("conversion.audio_quality.original")}
+          </span>
 
           {option.preset?.startsWith("none") &&
             (!option.implausible ? (
