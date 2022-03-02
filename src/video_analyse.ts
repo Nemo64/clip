@@ -1,4 +1,4 @@
-import { ffmpeg } from "./ffmpeg";
+import { ffmpeg, sanitizeFileName } from "./ffmpeg";
 import { Format, KnownVideo, NewVideo } from "./video";
 
 /**
@@ -21,7 +21,7 @@ export async function analyzeVideo({ file }: NewVideo): Promise<KnownVideo> {
 
   await ffmpeg({
     file: file,
-    args: ["-hide_banner", "-v", "info", "-i", file.name],
+    args: ["-hide_banner", "-v", "info", "-i", sanitizeFileName(file.name)],
     logger: ({ message }) => {
       strings.push(message);
       parseMetadata(message, metadata);

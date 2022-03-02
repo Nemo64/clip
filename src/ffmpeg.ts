@@ -32,8 +32,9 @@ export function ffmpeg({ file, logger, args }: FfmpegProps) {
     }
 
     if (isNewFile && blob) {
-      instance.FS("writeFile", file.name, blob);
-      lastInputFile = [file.name, file.size];
+      const filename = sanitizeFileName(file.name);
+      instance.FS("writeFile", filename, blob);
+      lastInputFile = [filename, file.size];
     }
 
     instance.setLogger(logger ?? (() => void 0));
@@ -74,4 +75,8 @@ async function createInstance() {
   });
   await instance.load();
   return instance;
+}
+
+export function sanitizeFileName(name: string) {
+  return name.replace(/[^\x00-\x7F]/g, "_");
 }

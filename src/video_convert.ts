@@ -14,7 +14,8 @@ export async function convertVideo(
   format: Format,
   onProgress: (progress: ProgressEvent) => void
 ): Promise<ConvertedVideo> {
-  const safeBaseName = file.name.replace(/\.\w{2,4}$|$/, ".clip");
+  const fileName = sanitizeFileName(file.name);
+  const safeBaseName = fileName.replace(/\.\w{2,4}$|$/, ".clip");
   const args: string[] = ["-hide_banner", "-y", "-sws_flags", "bilinear"];
 
   args.push(...seekArguments(metadata, format));
@@ -24,10 +25,10 @@ export async function convertVideo(
   if (format.video.codec.startsWith("h264")) {
     if (format.audio.codec.startsWith("none")) {
       args.push("-an"); // no audio
-      args.push("-i", file.name);
+      args.push("-i", fileName);
       args.push(...h264Arguments(metadata, format));
     } else if (format.audio.codec.startsWith("aac")) {
-      args.push("-i", file.name);
+      args.push("-i", fileName);
       args.push(...aacArguments(metadata, format));
       args.push(...h264Arguments(metadata, format));
     } else {
@@ -56,7 +57,7 @@ export async function convertVideo(
     // phase1: create color palette
     const args1 = args.slice();
     args1.push("-skip_frame", "nokey"); // palette does not need all frames
-    args1.push("-i", file.name);
+    args1.push("-i", fileName);
     args1.push(
       "-vf",
       [
@@ -70,7 +71,7 @@ export async function convertVideo(
 
     // phase2: create gif
     const args2 = args.slice();
-    args2.push("-i", file.name);
+    args2.push("-i", fileName);
     args2.push("-i", `${safeBaseName}.png`); // the palette
     args2.push(
       "-filter_complex",
@@ -147,7 +148,7 @@ export function createPreviews(
   args.push("-an"); // no audio
   args.push("-sn"); // no subtitles
   args.push("-dn"); // no data streams
-  args.push("-i", file.name);
+  args.push("-i", sanitizeFileName(file.name));
   args.push("-r", `1/${interval}`);
   args.push("-sws_flags", "fast_bilinear");
   args.push("-s:v", `${width}x${height}`);
