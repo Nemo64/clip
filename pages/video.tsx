@@ -234,11 +234,7 @@ function ConvertPage({
       defaultValues: {
         container: {
           start: video.metadata.container.start,
-          duration: Math.min(
-            video.metadata.container.duration,
-            MAX_DURATION,
-            60
-          ), // start with 60 seconds
+          duration: Math.min(video.metadata.container.duration, MAX_DURATION),
         },
         video: undefined,
         audio: undefined,
