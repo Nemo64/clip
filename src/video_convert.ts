@@ -1,5 +1,11 @@
-import { ffmpeg } from "./ffmpeg";
-import { ConvertedVideo, createResolution, Format, KnownVideo } from "./video";
+import { ffmpeg, sanitizeFileName } from "./ffmpeg";
+import {
+  computeSize,
+  ConvertedVideo,
+  createResolution,
+  Format,
+  KnownVideo,
+} from "./video";
 
 export interface ProgressEvent {
   percent: number;
@@ -235,17 +241,21 @@ function h264Arguments(metadata: Format, format: Format) {
   // args.push('-level:v', '4.0'); // https://en.wikipedia.org/wiki/Advanced_Video_Coding#Levels
   args.push("-profile:v", "high");
 
+  const bufferDuration = Math.min(10, format.container.duration / 4);
   if (format.video.crf) {
-    args.push("-crf:v", format.video.crf.toString());
-  } else if (format.video.bitrate) {
-    args.push("-b:v", `${format.video.bitrate}k`);
-    args.push("-maxrate:v", `${format.video.bitrate}k`);
-    args.push(
-      "-bufsize:v",
-      `${Math.floor(
-        format.video.bitrate * Math.min(10, format.container.duration / 4)
-      )}k`
+    const bitrate = Math.floor(
+      computeSize(format.video, 8, format.video.crf - 4)
     );
+    const bufsize = Math.floor(bitrate * bufferDuration);
+    args.push("-crf:v", format.video.crf.toString());
+    args.push("-maxrate:v", `${bitrate}k`);
+    args.push("-bufsize:v", `${bufsize}k`);
+  } else if (format.video.bitrate) {
+    const bitrate = format.video.bitrate;
+    const bufsize = Math.floor(bitrate * bufferDuration);
+    args.push("-b:v", `${bitrate}k`);
+    args.push("-maxrate:v", `${bitrate}k`);
+    args.push("-bufsize:v", `${bufsize}k`);
   } else {
     throw new Error("No video bitrate or crf specified");
   }

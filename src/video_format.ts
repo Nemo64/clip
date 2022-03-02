@@ -1,9 +1,9 @@
-import { AudioFormat, Format, Video, VideoFormat } from "./video";
+import { AudioFormat, Format, VideoFormat } from "./video";
 
 /**
  * The amount the target size is undershoot to accommodate overheads and average bitrate variance.
  */
-export const SIZE_UNDERSHOOT_FACTOR = 0.9;
+export const SIZE_UNDERSHOOT_FACTOR = 0.88;
 
 export interface Resolution {
   width: number;
@@ -102,10 +102,10 @@ export function videoFileSizeTargets(
     let bitrateTarget = (sizeTarget * 8) / source.container.duration;
 
     const resolution = resolutions.find(
-      (res) => sizeTarget >= calculateSize(res, source.container.duration, 28)
+      (res) => sizeTarget >= computeSize(res, source.container.duration, 28)
     );
     if (resolution) {
-      const maxSize = calculateSize(resolution, source.container.duration, 18);
+      const maxSize = computeSize(resolution, source.container.duration, 18);
       const maxBitrate = (maxSize * 8) / source.container.duration;
       if (maxBitrate < bitrateTarget) {
         sizeTarget = maxSize;
@@ -150,11 +150,7 @@ export function videoResolutionTargets(
   const options: VideoFormat[] = [];
 
   for (const resolution of resolutions.reverse()) {
-    const expectedSize = calculateSize(
-      resolution,
-      source.container.duration,
-      21
-    );
+    const expectedSize = computeSize(resolution, source.container.duration, 21);
 
     const originalSuitable =
       source.video.codec.startsWith("h264") &&
@@ -207,6 +203,10 @@ export function videoGifTargets(
   return options;
 }
 
-function calculateSize(res: Resolution, duration: number, crf: number) {
-  return (res.width * res.height * duration) / Math.log2(res.fps) / 20 / crf; // TODO better calculation
+export function computeSize(
+  res: { width: number; height: number; fps: number },
+  duration: number,
+  crf: number
+) {
+  return (res.width * res.height * duration * Math.log2(res.fps)) / 768 / crf; // TODO better calculation
 }
