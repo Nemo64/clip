@@ -3,7 +3,8 @@ import { MouseEvent, RefObject, useEffect, useRef, useState } from "react";
 import { t } from "../src/intl";
 import { DurationInput } from "./input";
 import { Button } from "./button";
-import { PlayIcon, StopIcon } from "./icons";
+import { PauseIcon, PlayIcon, StopIcon } from "./icons";
+import { useHotkeys } from "react-hotkeys-hook";
 
 export interface Crop {
   start: number;
@@ -46,6 +47,7 @@ export function Timeline({
   const ref = useRef() as RefObject<HTMLElement>;
 
   const [cursor, setCursor] = useState(0);
+  const [paused, setPaused] = useState(false);
   const updateCursor = ({ clientX, currentTarget }: MouseEvent) => {
     const rect = currentTarget.parentElement?.getBoundingClientRect();
     if (rect) {
@@ -59,13 +61,27 @@ export function Timeline({
     }
   };
 
+  useHotkeys(
+    "space",
+    (keyboardEvent) => {
+      keyboardEvent.preventDefault();
+      setPaused(!paused);
+    },
+    [paused]
+  );
+
   const startPercent = ((value.start - start) / duration) * 100;
   const endPercent = ((value.start + value.duration - start) / duration) * 100;
-  const endSeekOffset = Math.min(1, value.duration);
+  const endSeekOffset = paused ? 0 : Math.min(1, value.duration);
 
   const timeStampWidth = ref.current?.clientWidth ?? 0;
   const timeStampArea = ref.current?.parentElement?.clientWidth ?? 1;
   const timeStampMoveFactor = timeStampArea / (timeStampArea - timeStampWidth);
+
+  const playing =
+    !paused &&
+    cursor >= value.start - 1 / fps &&
+    cursor <= value.start + value.duration - 1 / fps;
 
   return (
     <div
@@ -83,10 +99,7 @@ export function Timeline({
             fps={fps}
             cursor={cursor}
             setCursor={setCursor}
-            play={
-              cursor >= value.start - 1 / fps &&
-              cursor <= value.start + value.duration - 1 / fps
-            }
+            play={playing}
             className="absolute w-full h-full object-contain"
           />
         ) : (
@@ -181,17 +194,38 @@ export function Timeline({
         <Button
           className="absolute top-full w-6 h-6 -mx-3 my-1 text-red-800 hover:text-red-700"
           style={{ left: `${startPercent}%` }}
+          onMouseDown={createDragHandler(onChange, onBlur, ({ changeX }) => {
+            const limitedChange = clamp(
+              changeX * duration + start,
+              Math.max(-value.start, value.duration - maxDuration),
+              value.duration
+            );
+            setCursor(value.start + limitedChange);
+            return {
+              start: value.start + limitedChange,
+              duration: value.duration - limitedChange,
+            };
+          })}
           onClick={() => {
-            setCursor(value.start);
+            if (playing) {
+              setPaused(true);
+            } else {
+              setPaused(false);
+              if (cursor < value.start) {
+                setCursor(value.start);
+              } else if (cursor >= value.start + value.duration) {
+                setCursor(value.start);
+              }
+            }
           }}
         >
-          <PlayIcon />
+          {playing ? <PauseIcon /> : <PlayIcon />}
         </Button>
         <div // right drag handler ~ on the right side of the body
           className="w-4 px-1.5 -mx-2 -inset-y-1 bg-clip-content bg-red-800 absolute cursor-col-resize"
           style={{ right: `${100 - endPercent}%` }}
           onMouseEnter={() => {
-            setCursor(value.start + value.duration - endSeekOffset);
+            setCursor(value.start + value.duration);
           }}
           onMouseDown={createDragHandler(onChange, onBlur, ({ changeX }) => {
             const limitedChange = clamp(
@@ -202,18 +236,34 @@ export function Timeline({
                 start + duration - value.start - value.duration
               )
             );
-            setCursor(
-              value.start + value.duration + limitedChange - endSeekOffset
-            );
+            setCursor(value.start + value.duration + limitedChange);
             return {
               start: value.start,
               duration: value.duration + limitedChange,
             };
           })}
+          onMouseUp={() => {
+            setCursor(value.start + value.duration - endSeekOffset);
+          }}
         />
         <Button
           className="absolute top-full w-6 h-6 -mx-3 my-1 text-red-800 hover:text-red-700"
           style={{ right: `${100 - endPercent}%` }}
+          onMouseDown={createDragHandler(onChange, onBlur, ({ changeX }) => {
+            const limitedChange = clamp(
+              changeX * duration + start,
+              -value.duration,
+              Math.min(
+                maxDuration - value.duration,
+                start + duration - value.start - value.duration
+              )
+            );
+            setCursor(value.start + value.duration + limitedChange);
+            return {
+              start: value.start,
+              duration: value.duration + limitedChange,
+            };
+          })}
           onClick={() => {
             setCursor(value.start + value.duration);
           }}

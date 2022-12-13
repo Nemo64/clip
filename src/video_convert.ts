@@ -22,7 +22,7 @@ export async function convertVideo(
 ): Promise<ConvertedVideo> {
   const fileName = sanitizeFileName(file.name);
   const safeBaseName = fileName.replace(/\.\w{2,4}$|$/, ".clip");
-  const args: string[] = ["-hide_banner", "-y", "-sws_flags", "bilinear"];
+  const args: string[] = ["-y", "-sws_flags", "bilinear"];
 
   args.push(...seekArguments(metadata, format));
   args.push("-sn"); // no subtitles
@@ -140,7 +140,7 @@ export function createPreviews(
   { file, metadata }: KnownVideo,
   interval: number
 ): AsyncIterableIterator<File> {
-  const args: string[] = ["-hide_banner", "-y"];
+  const args: string[] = ["-y"];
 
   // use some tricks to decode faster for the preview
   args.push("-skip_frame", interval >= 2 ? "nokey" : "default", "-vsync", "2");
@@ -187,10 +187,11 @@ export function createPreviews(
         } else if (done) {
           i++; // increase even with read error
         } else {
-          done = !(await Promise.race([
-            new Promise((r) => setTimeout(r, 200, true)),
+          const resolve = await Promise.race([
+            new Promise((r) => setTimeout(r, 200, "timer")),
             run.promise,
-          ]));
+          ]);
+          done = resolve !== "timer";
         }
       }
     }

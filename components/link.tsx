@@ -23,10 +23,10 @@ export const Link = forwardRef(function Link(
     return (
       // eslint-disable-next-line react/jsx-no-target-blank
       <a
-        href={href}
-        target="_blank"
-        rel={classNames("noopener", props.rel)}
         {...props}
+        href={href}
+        target={props.target ?? "_blank"}
+        rel={classNames("noopener", props.rel)}
         ref={ref}
       />
     );
@@ -34,7 +34,7 @@ export const Link = forwardRef(function Link(
 
   return (
     <NextLink href={href} prefetch={prefetch ? undefined : false}>
-      <a ref={ref} {...props} />
+      <a {...props} ref={ref} />
     </NextLink>
   );
 });
