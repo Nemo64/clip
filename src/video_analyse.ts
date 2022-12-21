@@ -60,7 +60,7 @@ export function parseMetadata(message: string, metadata: Partial<Format>) {
   }
 
   const videoMatch = message.match(
-    /Stream #[^:,]+:[^:,]+: Video: (?<codec>[^(),]+(\(\S+\))?).*, (?<color>yuv.+|[rgba]{3,4}), (?<width>\d+)x(?<height>\d+).*(, (?<bitrate>[\d.]+) kb\/s)?,.* (?<fps>[\d.]+) fps, (?<tbr>[\d.]+) tbr/
+    /Stream #[^:,]+:[^:,]+: Video: (?<codec>[^(),]+(\(\S+\))?).*?, (?<color>yuv\d+\w?|[rgba]{3,4}).*?, (?<width>\d+)x(?<height>\d+).*?(, (?<bitrate>[\d.]+) kb\/s)?,.* (?<fps>[\d.]+) fps, (?<tbr>[\d.]+) tbr/
   );
   if (videoMatch?.groups && metadata.container) {
     metadata.video = {

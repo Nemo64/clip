@@ -11,14 +11,18 @@ import { Controller, useForm } from "react-hook-form";
 import { Button } from "../components/button";
 import { BoltIcon, DownloadIcon, Spinner } from "../components/icons";
 import { ProgressBar } from "../components/progress";
-import { AudioFormatSelect, VideoFormatSelect } from "../components/selects";
-import { Timeline } from "../components/timeline";
+import {
+  AudioFormatSelect,
+  VideoFormatSelect,
+} from "../components/video_format_selects";
+import { VideoTimeline } from "../components/video_timeline";
 import { ensureFreshFfmpegInstance } from "../src/ffmpeg";
 import { t } from "../src/intl";
 import { trackEvent } from "../src/tracker";
 import {
   BrokenVideo,
   convertVideo,
+  createCommands,
   createPreviews,
   Format,
   KnownVideo,
@@ -28,8 +32,9 @@ import {
   ProgressEvent,
   Video,
 } from "../src/video";
-import { VideoContext, VideoState } from "./_app";
-import { useBinarySrc } from "../src/react";
+import { VideoContext } from "./_app";
+import { useObjectURL } from "../src/use_object_url";
+import { VideoConversionDetails } from "../components/video_details";
 
 export default function VideoPage() {
   const [video, setVideo] = useContext(VideoContext);
@@ -186,7 +191,7 @@ function ConvertPage({
   video: KnownVideo;
   start: (format: Format) => Promise<void>;
 }) {
-  const videoUrl = useBinarySrc(video.file);
+  const videoUrl = useObjectURL(video.file);
   const picInt = Math.max(video.metadata.container.duration / 30, 0.5);
   const [pics, setPics] = useState<string[]>([]);
 
@@ -277,6 +282,12 @@ function ConvertPage({
       !format?.implausible,
   };
 
+  const targetFormat: Format = {
+    container: watch("container"),
+    video: watch("video"),
+    audio: watch("audio"),
+  };
+
   return (
     <>
       <Head>
@@ -293,7 +304,7 @@ function ConvertPage({
               control={control}
               name="container"
               render={({ field: { ref, ...field } }) => (
-                <Timeline
+                <VideoTimeline
                   frame={video.metadata.container}
                   width={video.metadata.video.width}
                   height={video.metadata.video.height}
@@ -366,6 +377,35 @@ function ConvertPage({
                 {t("conversion.button.change")}
               </Button>
             </div>
+
+            <details className="mt-4">
+              <summary>{t("conversion.info.details")}</summary>
+              <VideoConversionDetails
+                source={video.metadata}
+                target={targetFormat}
+              />
+            </details>
+
+            <details className="mt-4">
+              <summary>{t("conversion.info.command")}</summary>
+              {(() => {
+                try {
+                  return createCommands(video, targetFormat);
+                } catch {
+                  return [];
+                }
+              })().map(({ args }, i) => (
+                <pre key={i} className="text-sm">
+                  {`ffmpeg ${args
+                    .map((arg, index, array) =>
+                      arg.startsWith("-") || index === array.length - 1
+                        ? `\n  ${arg}`
+                        : arg
+                    )
+                    .join(" ")}`}
+                </pre>
+              ))}
+            </details>
           </div>
         </form>
       </div>
@@ -415,7 +455,7 @@ function ProgressPage({
 }
 
 function DownloadPage({ file, video }: { file: File; video: KnownVideo }) {
-  const src = useBinarySrc(file);
+  const src = useObjectURL(file);
   const aspectRatio = `${video.metadata.video.width} / ${video.metadata.video.height}`;
   const maxWidth = `${
     (80 * video.metadata.video.width) / video.metadata.video.height

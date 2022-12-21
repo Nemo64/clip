@@ -21,6 +21,10 @@
       "change": "Select a different file",
       "start": "Start"
     },
+    "info": {
+      "command": "ffmpeg command",
+      "details": "Video details"
+    },
     "title": "Convert file {{name}}.",
     "video_quality": {
       "crf_1080p": "1080p full HD",
@@ -34,7 +38,6 @@
       "gif_details": "Resolution {{width}}x{{height}}@{{fps, number}}",
       "gif_implausible": "",
       "label": "Quality",
-      "original": " (copy from source; fast and lossless)",
       "other": "",
       "size_16mb": "16 Mb Filesize (e.g. for WhatApp)",
       "size_50mb": "50 Mb Filesize (e.g. for Discord Nitro)",
@@ -44,11 +47,31 @@
       "size_label": "File size focus"
     }
   },
+  "details": {
+    "audio_bitrate_label": "Audio bitrate",
+    "audio_bitrate_value": "~{{value, number}} kbit/s",
+    "audio_codec_label": "Audio codec",
+    "bitrate_label": "Bitrate",
+    "bitrate_value": "~{{value, number}} kbit/s",
+    "bitrate_value_crf": "<{{value, number}} kbit/s",
+    "duration_label": "Duration",
+    "duration_value": "{{value, number(minimumFractionDigits: 2; maximumFractionDigits: 2)}} s",
+    "framerate_label": "Frame rate",
+    "framerate_value": "{{value, number}} fps",
+    "headline": {
+      "source": "Source",
+      "target": "Target"
+    },
+    "video_codec_label": "Codec",
+    "video_color_format_label": "Color format",
+    "video_resolution_label": "Resolution",
+    "video_resolution_value": "{{width}}x{{height}}"
+  },
   "download": {
     "image_button": "Save image ({{size, number}} kB)",
-    "video_button": "Save video ({{size, number}} kB)",
     "loading": "loading...",
-    "title": "Finished: {{name}}"
+    "title": "Finished: {{name}}",
+    "video_button": "Save video ({{size, number}} kB)"
   },
   "drop_video": "Drop video here",
   "footer": {

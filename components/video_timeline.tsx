@@ -27,7 +27,7 @@ export interface TimelineProps {
   picInt?: number;
 }
 
-export function Timeline({
+export function VideoTimeline({
   frame: { duration, start },
   width,
   height,

@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import { computeSize } from "./video_format";
+import { estimateSize } from "./video_format";
 
 const testCases = [
   { width: 1280, height: 720, fps: 30, crf: 28, expectedBitrate: 1680 },
@@ -25,7 +25,7 @@ const testCases = [
 
 for (const testCase of testCases) {
   test(`${testCase.width}x${testCase.height}@${testCase.fps} crf:${testCase.crf}`, () => {
-    const bitrate = computeSize(testCase, 8, testCase.crf);
+    const bitrate = estimateSize(testCase, 8, testCase.crf);
     expect(Math.round(bitrate / 10) * 10).toBe(testCase.expectedBitrate);
   });
 }

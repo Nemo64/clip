@@ -102,10 +102,10 @@ export function videoFileSizeTargets(
     let bitrateTarget = (sizeTarget * 8) / source.container.duration;
 
     const resolution = resolutions.find(
-      (res) => sizeTarget >= computeSize(res, source.container.duration, 28)
+      (res) => sizeTarget >= estimateSize(res, source.container.duration, 28)
     );
     if (resolution) {
-      const maxSize = computeSize(resolution, source.container.duration, 18);
+      const maxSize = estimateSize(resolution, source.container.duration, 18);
       const maxBitrate = (maxSize * 8) / source.container.duration;
       if (maxBitrate < bitrateTarget) {
         sizeTarget = maxSize;
@@ -150,7 +150,11 @@ export function videoResolutionTargets(
   const options: VideoFormat[] = [];
 
   for (const resolution of resolutions.reverse()) {
-    const expectedSize = computeSize(resolution, source.container.duration, 21);
+    const expectedSize = estimateSize(
+      resolution,
+      source.container.duration,
+      21
+    );
 
     const originalSuitable =
       source.video.codec.startsWith("h264") &&
@@ -203,7 +207,7 @@ export function videoGifTargets(
   return options;
 }
 
-export function computeSize(
+export function estimateSize(
   res: { width: number; height: number; fps: number },
   duration: number,
   crf: number

@@ -62,10 +62,6 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
           {option.preset === "gif_600p" &&
             t("conversion.video_quality.gif_600p")}
 
-          <span className={context === "value" ? "text-green-700" : ""}>
-            {option.original && t("conversion.video_quality.original")}
-          </span>
-
           {option.preset?.startsWith("crf") &&
             (!option.implausible ? (
               <div className="opacity-60 text-sm font-light">

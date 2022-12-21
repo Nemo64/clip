@@ -33,7 +33,11 @@ export const Link = forwardRef(function Link(
   }
 
   return (
-    <NextLink href={href} prefetch={prefetch ? undefined : false}>
+    <NextLink
+      href={href}
+      prefetch={prefetch ? undefined : false}
+      legacyBehavior
+    >
       <a {...props} ref={ref} />
     </NextLink>
   );

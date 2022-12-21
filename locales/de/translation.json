@@ -21,6 +21,10 @@
       "change": "Andere Datei auswählen",
       "start": "Start"
     },
+    "info": {
+      "command": "ffmpeg Befehl",
+      "details": "Video details"
+    },
     "title": "Konvertiere {{name}}.",
     "video_quality": {
       "crf_1080p": "1080p full HD",
@@ -34,7 +38,6 @@
       "gif_details": "Auflösung {{width}}x{{height}}@{{fps, number}}",
       "gif_implausible": "",
       "label": "Qualität",
-      "original": " (aus Quelldatei; schnell und verlustlos)",
       "other": "",
       "size_16mb": "16 Mb Dateigröße (bspw. für WhatApp)",
       "size_50mb": "50 Mb Dateigröße (bspw. für Discord Nitro)",
@@ -44,11 +47,31 @@
       "size_label": "Dateigrößenorientiert"
     }
   },
+  "details": {
+    "audio_bitrate_label": "Audio Bitrate",
+    "audio_bitrate_value": "~{{value, number}} kbit/s",
+    "audio_codec_label": "Audio Codec",
+    "bitrate_label": "Bitrate",
+    "bitrate_value": "~{{value, number}} kbit/s",
+    "bitrate_value_crf": "<{{value, number}} kbit/s",
+    "duration_label": "Laufzeit",
+    "duration_value": "{{value, number(minimumFractionDigits: 2; maximumFractionDigits: 2)}} s",
+    "framerate_label": "Bildrate",
+    "framerate_value": "{{value, number}} fps",
+    "headline": {
+      "source": "Quelle",
+      "target": "Ziel"
+    },
+    "video_codec_label": "Codec",
+    "video_color_format_label": "Farbformat",
+    "video_resolution_label": "Auflösung",
+    "video_resolution_value": "{{width}}x{{height}}"
+  },
   "download": {
     "image_button": "Speichere Bild ({{size, number}} kB)",
-    "video_button": "Speichere Video ({{size, number}} kB)",
     "loading": "Lade...",
-    "title": "Fertiggestellt: {{name}}"
+    "title": "Fertiggestellt: {{name}}",
+    "video_button": "Speichere Video ({{size, number}} kB)"
   },
   "drop_video": "Video hier fallen lassen",
   "footer": {

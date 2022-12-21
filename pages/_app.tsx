@@ -6,6 +6,7 @@ import { Footer } from "../components/footer";
 import { trackEvent, trackPageView } from "../src/tracker";
 import { analyzeVideo, createVideo, Video } from "../src/video";
 import "../styles/globals.css";
+import { setLocale } from "../src/intl";
 
 export type VideoState = [
   Video | undefined,
@@ -17,9 +18,7 @@ export const VideoContext = createContext<VideoState>([
 ]);
 
 export default function MyApp({ Component, pageProps, router }: AppProps) {
-  if (i18next.languages[0] !== router.locale) {
-    i18next.changeLanguage(router.locale).catch(console.error);
-  }
+  setLocale(router.locale ?? "en");
 
   const canonicalUrl = `${process.env.NEXT_PUBLIC_HOST}/${router.locale}${router.pathname}`;
   useEffect(() => {

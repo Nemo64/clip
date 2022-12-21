@@ -1,11 +1,12 @@
 import { ffmpeg, sanitizeFileName } from "./ffmpeg";
 import {
-  computeSize,
+  estimateSize,
   ConvertedVideo,
   createResolution,
   Format,
   KnownVideo,
 } from "./video";
+import { FFmpeg } from "@ffmpeg/ffmpeg";
 
 export interface ProgressEvent {
   percent: number;
@@ -13,13 +14,9 @@ export interface ProgressEvent {
 }
 
 /**
- * Starts the converting process from a known video using the given format.
+ * Create ffmpeg commands
  */
-export async function convertVideo(
-  { file, metadata }: KnownVideo,
-  format: Format,
-  onProgress: (progress: ProgressEvent) => void
-): Promise<ConvertedVideo> {
+export function createCommands({ file, metadata }: KnownVideo, format: Format) {
   const fileName = sanitizeFileName(file.name);
   const safeBaseName = fileName.replace(/\.\w{2,4}$|$/, ".clip");
   const args: string[] = ["-y", "-sws_flags", "bilinear"];
@@ -45,16 +42,7 @@ export async function convertVideo(
     args.push("-movflags", "+faststart"); // moves metadata to the beginning of the mp4 container ~ useful for streaming
     args.push(`${safeBaseName}.mp4`);
 
-    const logger = loggerToProgress(0, format.container.duration, onProgress);
-    const instance = await ffmpeg({ file, args, logger }).promise;
-    const result = instance.FS("readFile", `${safeBaseName}.mp4`);
-    instance.FS("unlink", `${safeBaseName}.mp4`);
-
-    return {
-      status: "converted",
-      file: new File([result], `${safeBaseName}.mp4`, { type: "video/mp4" }),
-      metadata: format,
-    };
+    return [{ args, fileName: `${safeBaseName}.mp4`, fileType: "video/mp4" }];
   }
 
   if (format.video.codec.startsWith("gif")) {
@@ -64,49 +52,70 @@ export async function convertVideo(
     const args1 = args.slice();
     args1.push("-skip_frame", "nokey"); // palette does not need all frames
     args1.push("-i", fileName);
-    args1.push(
-      "-vf",
-      [
-        `scale=${format.video.width}:${format.video.height}`,
-        `palettegen=stats_mode=diff`,
-      ].join(",")
-    );
+    const palettegenFilters = [
+      `scale=${format.video.width}:${format.video.height}`,
+      `palettegen=stats_mode=diff`,
+    ];
+    args1.push("-vf", palettegenFilters.join(","));
     args1.push(`${safeBaseName}.png`);
-    const l1 = loggerToProgress(0, format.container.duration / 0.2, onProgress);
-    await ffmpeg({ file, args: args1, logger: l1 }).promise;
 
     // phase2: create gif
     const args2 = args.slice();
     args2.push("-i", fileName);
     args2.push("-i", `${safeBaseName}.png`); // the palette
-    args2.push(
-      "-filter_complex",
-      [
-        `fps=100/6`,
-        `scale=${format.video.width}:${format.video.height}`,
-        `mpdecimate=lo=64:frac=0.1`,
-        `paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle`,
-      ].join(",")
-    );
+    const paletteuseFilters = [
+      `fps=100/6`,
+      `scale=${format.video.width}:${format.video.height}`,
+      `mpdecimate=lo=64:frac=0.1`,
+      `paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle`,
+    ];
+    args2.push("-filter_complex", paletteuseFilters.join(","));
     args2.push(`${safeBaseName}.gif`);
-    const l2 = loggerToProgress(
-      format.container.duration * -0.2,
-      format.container.duration,
-      onProgress
-    );
-    const instance = await ffmpeg({ file, args: args2, logger: l2 }).promise;
-    const result = instance.FS("readFile", `${safeBaseName}.gif`);
-    instance.FS("unlink", `${safeBaseName}.png`);
-    instance.FS("unlink", `${safeBaseName}.gif`);
 
-    return {
-      status: "converted",
-      file: new File([result], `${safeBaseName}.gif`, { type: "image/gif" }),
-      metadata: format,
-    };
+    return [
+      { args: args1, fileName: `${safeBaseName}.png`, fileType: "image/png" },
+      { args: args2, fileName: `${safeBaseName}.gif`, fileType: "image/gif" },
+    ];
   }
 
   throw new Error(`Unsupported video codec: ${format.video.codec}`);
+}
+
+/**
+ * Starts the converting process from a known video using the given format.
+ */
+export async function convertVideo(
+  video: KnownVideo,
+  format: Format,
+  onProgress: (progress: ProgressEvent) => void
+): Promise<ConvertedVideo> {
+  const commands = createCommands(video, format);
+  let instance: FFmpeg;
+  for (let i = 0; i < commands.length; ++i) {
+    instance = await ffmpeg({
+      file: video.file,
+      args: commands[i].args,
+      logger: loggerToProgress(
+        format.container.duration * (0 - i),
+        format.container.duration * (commands.length - i),
+        onProgress
+      ),
+    }).promise;
+  }
+
+  const { fileName, fileType } = commands[commands.length - 1];
+  const uint8Array = instance!.FS("readFile", fileName);
+  const file = new File([uint8Array], fileName, { type: fileType });
+
+  for (const command of commands) {
+    instance!.FS("unlink", command.fileName);
+  }
+
+  return {
+    status: "converted",
+    file: file,
+    metadata: format,
+  };
 }
 
 /**
@@ -244,11 +253,10 @@ function h264Arguments(metadata: Format, format: Format) {
 
   const bufferDuration = Math.min(10, format.container.duration / 4);
   if (format.video.crf) {
-    const bitrate = Math.floor(
-      computeSize(format.video, 8, format.video.crf - 4)
-    );
+    const crf = format.video.crf;
+    const bitrate = Math.floor(estimateSize(format.video, 8, crf - 5));
     const bufsize = Math.floor(bitrate * bufferDuration);
-    args.push("-crf:v", format.video.crf.toString());
+    args.push("-crf:v", crf.toString());
     args.push("-maxrate:v", `${bitrate}k`);
     args.push("-bufsize:v", `${bufsize}k`);
   } else if (format.video.bitrate) {
