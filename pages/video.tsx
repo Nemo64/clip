@@ -39,6 +39,7 @@ import { VideoConversionDetails } from "../components/video_details";
 export default function VideoPage() {
   const [video] = useContext(VideoContext);
   const [progress, setProgress] = useState<ProgressEvent | undefined>();
+  const [error, setError] = useState<string | undefined>();
   const [result, setResult] = useState<File>();
 
   // reset result when video changes
@@ -87,7 +88,7 @@ export default function VideoPage() {
         String(e),
         (Date.now() - startTime) / 1000
       );
-      setProgress(undefined);
+      setError(String(e));
       throw e;
     }
   };
@@ -96,10 +97,15 @@ export default function VideoPage() {
     ensureFreshFfmpegInstance();
     setProgress(undefined);
     setResult(undefined);
+    setError(undefined);
   };
 
   if (result && video?.status === "known") {
     return <DownloadPage video={video} file={result} reset={stop} />;
+  }
+
+  if (error && video?.status === "known") {
+    return <ErrorConvert video={video} error={error} reset={stop} />;
   }
 
   if (progress && video) {
@@ -165,6 +171,41 @@ function ErrorVideo({ video }: { video: BrokenVideo }) {
             className="px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-400 text-white"
           >
             {t("conversion.button.change")}
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function ErrorConvert({
+  video,
+  error,
+  reset,
+}: {
+  video: KnownVideo;
+  error: string;
+  reset: () => void;
+}) {
+  return (
+    <>
+      <Head>
+        <title>{t("broken.title", { name: video.file.name })}</title>
+        <meta name="robots" content="noindex" />
+      </Head>
+      <div className="max-w-lg mx-auto">
+        <h1 className="text-2xl text-center my-4 animate-fly-1">
+          {t("broken.title", { name: video.file.name })}
+        </h1>
+        <div className="motion-safe:animate-fly-2">
+          {error && <p className="my-4 text-red-800">{error}</p>}
+        </div>
+        <div className="text-center animate-fly-3">
+          <Button
+            onClick={reset}
+            className="table relative px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-400 text-white"
+          >
+            {t("conversion.button.change_parameters")}
           </Button>
         </div>
       </div>

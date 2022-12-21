@@ -42,7 +42,11 @@ export async function analyzeVideo({ file }: NewVideo): Promise<KnownVideo> {
   return { status: "known", file, metadata: metadata as Format };
 }
 
-export function parseMetadata(message: string, metadata: Partial<Format>) {
+export function parseMetadata(message: any, metadata: Partial<Format>) {
+  if (typeof message !== "string") {
+    return;
+  }
+
   const metadataMatch = message.match(
     /Duration: (?<duration>\d+:\d+:\d+\.\d+), start: (?<start>[\d.]+), bitrate: (?<bitrate>[\d.]+) kb\/s/
   );
@@ -60,7 +64,7 @@ export function parseMetadata(message: string, metadata: Partial<Format>) {
   }
 
   const videoMatch = message.match(
-    /Stream #[^:,]+:[^:,]+: Video: (?<codec>[^(),]+(\(\S+\))?).*?, (?<color>yuv\d+\w?|[rgba]{3,4}).*?, (?<width>\d+)x(?<height>\d+).*?(, (?<bitrate>[\d.]+) kb\/s)?,.* (?<fps>[\d.]+) fps, (?<tbr>[\d.]+) tbr/
+    /Stream #[^:,]+:[^:,]+: Video: (?<codec>[^(),]+(\(\S+\))?).*?, (?<color>[^(),]+).*?, (?<width>\d+)x(?<height>\d+).*?(, (?<bitrate>[\d.]+) kb\/s)?,.* (?<fps>[\d.]+) fps, (?<tbr>[\d.]+) tbr/
   );
   if (videoMatch?.groups && metadata.container) {
     metadata.video = {

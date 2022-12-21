@@ -53,27 +53,38 @@ export function ffmpeg({ file, logger, args }: FfmpegProps) {
  * Ensures that the ffmpeg instance is ready for a new process.
  * You don't need to call it, but it can save time.
  */
-export function ensureFreshFfmpegInstance() {
-  if (running || !instancePromise) {
-    if (instancePromise) {
-      console.warn("ffmpeg is already running, destroying it");
-      instancePromise.then((instance) => instance.exit());
-    }
+export function ensureFreshFfmpegInstance(onError?: (error: any) => void) {
+  if (running && instancePromise) {
+    console.warn("ffmpeg is already running, destroying it");
+    instancePromise.then((instance) => instance.exit());
+  }
 
+  if (running || !instancePromise) {
+    console.log("create new ffmpeg instance");
     instancePromise = createInstance();
     lastInputFile = undefined;
     running = false;
   }
 
-  return instancePromise;
+  if (onError) {
+    instancePromise.catch(onError);
+  }
 }
 
 async function createInstance() {
   const instance = createFFmpeg({
     log: true,
-    corePath: `${process.env.NEXT_PUBLIC_FFMPEG_URL}/ffmpeg-core.js`,
+    corePath: new URL(
+      `${process.env.NEXT_PUBLIC_FFMPEG_URL}/ffmpeg-core.js`,
+      document.location as any
+    ).href,
   });
+
   await instance.load();
+
+  // @ts-ignore GLOBAL EXPOSE
+  global.ffmpeg = instance;
+
   return instance;
 }
 

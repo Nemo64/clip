@@ -19,7 +19,7 @@ export interface ProgressEvent {
 export function createCommands({ file, metadata }: KnownVideo, format: Format) {
   const fileName = sanitizeFileName(file.name);
   const safeBaseName = fileName.replace(/\.\w{2,4}$|$/, ".clip");
-  const args: string[] = ["-y", "-sws_flags", "bilinear"];
+  const args: string[] = [];
 
   args.push(...seekArguments(metadata, format));
   args.push("-sn"); // no subtitles
@@ -32,8 +32,8 @@ export function createCommands({ file, metadata }: KnownVideo, format: Format) {
       args.push(...h264Arguments(metadata, format));
     } else if (format.audio.codec.startsWith("aac")) {
       args.push("-i", fileName);
-      args.push(...aacArguments(metadata, format));
       args.push(...h264Arguments(metadata, format));
+      args.push(...aacArguments(metadata, format));
     } else {
       throw new Error(`Unsupported audio codec: ${format.audio.codec}`);
     }
@@ -53,7 +53,7 @@ export function createCommands({ file, metadata }: KnownVideo, format: Format) {
     args1.push("-skip_frame", "nokey"); // palette does not need all frames
     args1.push("-i", fileName);
     const palettegenFilters = [
-      `scale=${format.video.width}:${format.video.height}`,
+      `scale=${format.video.width}:${format.video.height}:flags=bilinear`,
       `palettegen=stats_mode=diff`,
     ];
     args1.push("-vf", palettegenFilters.join(","));
@@ -65,7 +65,7 @@ export function createCommands({ file, metadata }: KnownVideo, format: Format) {
     args2.push("-i", `${safeBaseName}.png`); // the palette
     const paletteuseFilters = [
       `fps=100/6`,
-      `scale=${format.video.width}:${format.video.height}`,
+      `scale=${format.video.width}:${format.video.height}:flags=bilinear`,
       `mpdecimate=lo=64:frac=0.1`,
       `paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle`,
     ];
@@ -118,58 +118,24 @@ export async function convertVideo(
   };
 }
 
-/**
- * This function converts the logger events from ffmpeg
- * into a generic {@see ProgressEvent} based on the timing.
- *
- * This can also be used to abstract away 2 pass encodings
- */
-function loggerToProgress(
-  timeFrom: number,
-  timeTo: number,
-  onProgress: (progress: ProgressEvent) => void
-): Parameters<typeof ffmpeg>[0]["logger"] {
-  return ({ message }) => {
-    // example line: frame= 1199 fps= 23 q=31.0 size=    4096kB time=00:00:40.26 bitrate= 833.4kbits/s dup=0 drop=685 speed=0.773x
-    const match = message.match(/time=\s*(?<time>\d+:\d+:\d+\.\d+)/);
-    if (match?.groups?.time) {
-      const time = match.groups.time
-        .split(":")
-        .map(parseFloat)
-        .reduce((acc, val) => acc * 60 + val);
-      onProgress({
-        percent: ((time - timeFrom) / (timeTo - timeFrom)) * 100,
-        message: message,
-      });
-    }
-  };
-}
-
 export function createPreviews(
   { file, metadata }: KnownVideo,
   interval: number
 ): AsyncIterableIterator<File> {
-  const args: string[] = ["-y"];
+  const args: string[] = [];
 
   // use some tricks to decode faster for the preview
   args.push("-skip_frame", interval >= 2 ? "nokey" : "default", "-vsync", "2");
   args.push("-flags2", "fast"); // https://stackoverflow.com/a/54873148
   const { width, height } = createResolution(metadata, 640, 360);
-  // lowres is not supported by h264 ~ but I add it anyway in case someone drops an mpeg2 video
-  const lowres = Math.floor(Math.log2(metadata.video.width / width));
-  if (lowres >= 1) {
-    args.push("-lowres:v", Math.min(3, lowres).toString());
-  }
   args.push("-an"); // no audio
   args.push("-sn"); // no subtitles
   args.push("-dn"); // no data streams
   args.push("-i", sanitizeFileName(file.name));
-  args.push("-r", `1/${interval}`);
-  args.push("-sws_flags", "fast_bilinear");
-  args.push("-s:v", `${width}x${height}`);
+  args.push("-vf", `fps=1/${interval},scale=${width}:${height}:flags=bilinear`);
   args.push("-f", `image2`);
-  args.push("-q:v", `10`); // 1-31, lower is better quality
-  args.push("frame_%d.jpg");
+  // args.push("-q:v", `10`); // 1-31, lower is better quality
+  args.push("frame_%d.png");
 
   const run = ffmpeg({ file, args });
 
@@ -180,14 +146,14 @@ export function createPreviews(
     let lastFrame = Date.now();
     for (let i = 1; i <= frames; ) {
       try {
-        const blob = instance.FS("readFile", `frame_${i}.jpg`);
+        const blob = instance.FS("readFile", `frame_${i}.png`);
         if (blob.length <= 0) {
-          console.warn(`frame_${i}.jpg is empty`);
-          throw new Error(`frame_${i}.jpg is empty`);
+          console.warn(`frame_${i}.png is empty`);
+          throw new Error(`frame_${i}.png is empty`);
         }
-        instance.FS("unlink", `frame_${i}.jpg`);
+        instance.FS("unlink", `frame_${i}.png`);
         i++;
-        yield new File([blob], `frame_${i}.jpg`, { type: "image/jpeg" });
+        yield new File([blob], `frame_${i}.png`, { type: "image/png" });
         lastFrame = Date.now();
       } catch {
         if (lastFrame + 10000 < Date.now()) {
@@ -207,19 +173,45 @@ export function createPreviews(
   })();
 }
 
+/**
+ * This function converts the logger events from ffmpeg
+ * into a generic {@see ProgressEvent} based on the timing.
+ *
+ * This can also be used to abstract away 2 pass encodings
+ */
+function loggerToProgress(
+  timeFrom: number,
+  timeTo: number,
+  onProgress: (progress: ProgressEvent) => void
+): Parameters<typeof ffmpeg>[0]["logger"] {
+  return ({ message }) => {
+    // example line: frame= 1199 fps= 23 q=31.0 size=    4096kB time=00:00:40.26 bitrate= 833.4kbits/s dup=0 drop=685 speed=0.773x
+    const match = message?.match(/time=\s*(?<time>\d+:\d+:\d+\.\d+)/);
+    if (match?.groups?.time) {
+      const time = match.groups.time
+        .split(":")
+        .map(parseFloat)
+        .reduce((acc, val) => acc * 60 + val);
+      onProgress({
+        percent: ((time - timeFrom) / (timeTo - timeFrom)) * 100,
+        message: message,
+      });
+    }
+  };
+}
+
 function seekArguments(metadata: Format, format: Format) {
   const args: string[] = [];
+  const source = metadata.container;
+  const target = format.container;
 
   // TODO: check what it means if the source video has a start time !== 0
-  if (format.container.start > metadata.container.start) {
-    args.push("-ss", format.container.start.toFixed(3));
+  if (target.start > source.start) {
+    args.push("-ss", target.start.toFixed(3));
   }
 
-  if (
-    format.container.duration <
-    metadata.container.duration - format.container.start
-  ) {
-    args.push("-t", format.container.duration.toFixed(3));
+  if (target.duration < source.duration - target.start) {
+    args.push("-t", target.duration.toFixed(3));
   }
 
   return args;
@@ -227,40 +219,36 @@ function seekArguments(metadata: Format, format: Format) {
 
 function h264Arguments(metadata: Format, format: Format) {
   const args: string[] = [];
+  const source = metadata.video;
+  const target = format.video;
 
-  if (format.video.original) {
+  if (target.original) {
     args.push("-c:v", "copy");
     return args;
   }
 
-  args.push("-pix_fmt:v", format.video.color);
+  const filter = [
+    `fps=${target.fps}`,
+    `scale=${target.width}:${target.height}:flags=bilinear`,
+    `format=${target.color}`,
+  ];
 
-  if (format.video.fps < metadata.video.fps) {
-    args.push("-r:v", format.video.fps.toString());
-  }
-
-  if (
-    format.video.width < metadata.video.width ||
-    format.video.height < metadata.video.height
-  ) {
-    args.push("-s:v", `${format.video.width}x${format.video.height}`);
-  }
-
+  args.push("-vf", filter.join(","));
   args.push("-c:v", "libx264");
   args.push("-preset:v", "medium");
   // args.push('-level:v', '4.0'); // https://en.wikipedia.org/wiki/Advanced_Video_Coding#Levels
   args.push("-profile:v", "high");
 
   const bufferDuration = Math.min(10, format.container.duration / 4);
-  if (format.video.crf) {
-    const crf = format.video.crf;
-    const bitrate = Math.floor(estimateH264Size(format.video, 8, crf - 5));
+  if (target.crf) {
+    const crf = target.crf;
+    const bitrate = Math.floor(estimateH264Size(target, 8, crf - 5));
     const bufsize = Math.floor(bitrate * bufferDuration);
     args.push("-crf:v", crf.toString());
     args.push("-maxrate:v", `${bitrate}k`);
     args.push("-bufsize:v", `${bufsize}k`);
-  } else if (format.video.bitrate) {
-    const bitrate = format.video.bitrate;
+  } else if (target.bitrate) {
+    const bitrate = target.bitrate;
     const bufsize = Math.floor(bitrate * bufferDuration);
     args.push("-b:v", `${bitrate}k`);
     args.push("-maxrate:v", `${bitrate}k`);
@@ -274,21 +262,26 @@ function h264Arguments(metadata: Format, format: Format) {
 
 function aacArguments(metadata: Format, format: Format) {
   const args: string[] = [];
+  const target = format.audio;
 
   args.push("-async", "1");
 
-  if (format.audio.original) {
+  if (target.original) {
     args.push("-c:a", "copy");
     return args;
   }
 
+  const aformat = [
+    `sample_rates=${target.sampleRate}`,
+    `channel_layouts=${target.channelSetup}`,
+  ];
+
+  args.push("-af", `aformat=${aformat.join(":")}`);
   args.push("-c:a", "libfdk_aac");
-  args.push("-b:a", `${format.audio.bitrate}k`);
-  args.push("-ar", format.audio.sampleRate.toString());
-  args.push("-ac", "2"); // always force stereo (mono untested)
-  if (format.audio.bitrate <= 48) {
+  args.push("-b:a", `${target.bitrate}k`);
+  if (target.bitrate <= 48) {
     args.push("-profile:a", "aac_he_v2");
-  } else if (format.audio.bitrate <= 72) {
+  } else if (target.bitrate <= 72) {
     args.push("-profile:a", "aac_he");
   }
 

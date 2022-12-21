@@ -35,7 +35,7 @@ export function possibleAudioFormats(source: Format): AudioFormat[] {
   options.push({
     preset: "bitrate_low",
     codec: "aac (HE-AACv2)",
-    sampleRate: 48000,
+    sampleRate: source.audio.sampleRate === 44100 ? 44100 : 48000,
     channelSetup: "stereo",
     bitrate: 32,
   });
@@ -53,7 +53,7 @@ export function possibleAudioFormats(source: Format): AudioFormat[] {
     options.push({
       preset: "bitrate_high",
       codec: "aac (LC)",
-      sampleRate: 48000,
+      sampleRate: source.audio.sampleRate === 44100 ? 44100 : 48000,
       channelSetup: "stereo",
       bitrate: 192,
     });

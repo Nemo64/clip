@@ -1,9 +1,7 @@
 const { PHASE_DEVELOPMENT_SERVER } = require("next/constants");
-const CopyPlugin = require("copy-webpack-plugin");
-const path = require("path");
 const classNames = require("classnames");
 
-const FFMPEG_PATH = "dist/ffmpeg";
+const FFMPEG_PATH = "ffmpeg";
 
 /** @type {import('next').NextConfig} */
 module.exports = (phase) => ({
@@ -16,19 +14,6 @@ module.exports = (phase) => ({
   env: {
     NEXT_PUBLIC_FFMPEG_URL: `/${FFMPEG_PATH}`,
     NEXT_PUBLIC_HOST: "https://clip.marco.zone",
-  },
-  webpack(config) {
-    config.plugins.push(
-      new CopyPlugin({
-        patterns: [
-          {
-            from: path.join(__dirname, "node_modules/@ffmpeg/core/dist"),
-            to: path.join(__dirname, "public", FFMPEG_PATH),
-          },
-        ],
-      })
-    );
-    return config;
   },
   headers() {
     return [

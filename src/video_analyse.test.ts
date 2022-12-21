@@ -9,6 +9,8 @@ const videoStrings = [
   "Stream #0:0(und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(tv, bt709), 1180x842, 183 kb/s, 30 fps, 30 tbr, 15360 tbn, 60 tbc (default)",
   "Stream #0:0[0x1011]: Video: h264 (High) (HDMV / 0x564D4448), yuv420p(top first), 1440x1080 [SAR 4:3 DAR 16:9], 25 fps, 50 tbr, 90k tbn, 50 tbc",
   "Stream #0:0: Video: gif, bgra, 600x338, 16.67 fps, 16.67 tbr, 100 tbn, 100 tbc",
+  "Stream #0:0(eng): Video: vp9, none, 512x288, SAR 1:1 DAR 16:9, 25 fps, 25 tbr, 1k tbn, 1k tbc (default)",
+  "Stream #0:0(und): Video: hevc (Main) (hvc1 / 0x31637668), yuvj420p(pc, smpte170m/smpte432/bt709), 1920x1440, 9924 kb/s, 30 fps, 30 tbr, 600 tbn, 600 tbc (default)",
 ];
 
 for (let i = 0; i < videoStrings.length; ++i) {
@@ -21,6 +23,7 @@ for (let i = 0; i < videoStrings.length; ++i) {
     expect(metadata.video?.width).toBeGreaterThan(0);
     expect(metadata.video?.height).toBeGreaterThan(0);
     expect(metadata.video?.fps).toBeGreaterThan(0);
+    expect(metadata.video?.color).toBeDefined();
     if (videoStrings[i].includes("kb/s")) {
       expect(metadata.video?.bitrate).toBeGreaterThan(0);
     }

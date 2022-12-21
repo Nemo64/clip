@@ -18,7 +18,7 @@ export default function Start() {
   const { pathname } = useRouter();
 
   useEffect(() => {
-    ensureFreshFfmpegInstance().catch((e) => setError(String(e)));
+    ensureFreshFfmpegInstance((e) => setError(String(e)));
     Router.prefetch("/video").catch(console.error);
   }, []);
 
