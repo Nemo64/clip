@@ -1,34 +1,5 @@
 import { AudioFormat, Format, VideoFormat } from "./video";
 
-/**
- * The amount the target size is undershoot to accommodate overheads and average bitrate variance.
- */
-export const SIZE_UNDERSHOOT_FACTOR = 0.88;
-
-export interface Resolution {
-  width: number;
-  height: number;
-  fps: number;
-  expectedWidth: number;
-  expectedHeight: number;
-}
-
-export function createResolution(
-  { video }: Format,
-  width: number,
-  height: number,
-  fps = 30
-): Resolution {
-  const scaleFactor = Math.min(1.0, width / video.width, height / video.height);
-  return {
-    width: Math.round((video.width * scaleFactor) / 2) * 2, // divisible by 2 for yuv420p colorspace
-    height: Math.round((video.height * scaleFactor) / 2) * 2, // divisible by 2 for yuv420p colorspace
-    fps: fps,
-    expectedWidth: width,
-    expectedHeight: height,
-  };
-}
-
 export function possibleVideoFormats(source: Format): VideoFormat[] {
   const resolutions = [
     // calculateDimensions(source, 1920, 1080),
@@ -93,29 +64,48 @@ export function possibleAudioFormats(source: Format): AudioFormat[] {
 
 export function videoFileSizeTargets(
   source: Format,
-  resolutions: Resolution[]
+  resolutions: Resolution[] // expected to be in descending order
 ): VideoFormat[] {
   const options: VideoFormat[] = [];
 
   for (const totalSizeTarget of [8000, 16000, 50000]) {
-    let sizeTarget = totalSizeTarget * SIZE_UNDERSHOOT_FACTOR;
+    // we have to undershoot the file size target to account for overheads and average bitrate variance
+    // 0.88 is just a guess, but it seems to work well
+    let sizeTarget = totalSizeTarget * 0.88;
     let bitrateTarget = (sizeTarget * 8) / source.container.duration;
 
     const resolution = resolutions.find(
-      (res) => sizeTarget >= estimateSize(res, source.container.duration, 28)
+      (res) =>
+        sizeTarget >= estimateH264Size(res, source.container.duration, 28)
     );
-    if (resolution) {
-      const maxSize = estimateSize(resolution, source.container.duration, 18);
-      const maxBitrate = (maxSize * 8) / source.container.duration;
-      if (maxBitrate < bitrateTarget) {
-        sizeTarget = maxSize;
-        bitrateTarget = maxBitrate;
-      }
+    if (!resolution) {
+      const worst = resolutions[resolutions.length - 1];
+      options.push({
+        preset: `size_${totalSizeTarget / 1000}mb`,
+        implausible: true,
+        codec: "h264 (High)",
+        color: "yuv420p",
+        width: worst.width,
+        height: worst.height,
+        bitrate: Math.floor(bitrateTarget),
+        fps: source.video.fps / Math.ceil(source.video.fps / worst.fps),
+      });
+      continue;
+    }
+
+    const maxSize = estimateH264Size(resolution, source.container.duration, 18);
+    const maxBitrate = (maxSize * 8) / source.container.duration;
+    if (maxBitrate < bitrateTarget) {
+      sizeTarget = maxSize;
+      bitrateTarget = maxBitrate;
     }
 
     const originalSuitable =
       source.video.codec.startsWith("h264") &&
       source.video.color === "yuv420p" &&
+      source.video.width <= resolution.width * 2 &&
+      source.video.height <= resolution.height * 2 &&
+      source.video.fps <= resolution.fps &&
       source.video.bitrate !== undefined &&
       (source.video.bitrate * source.container.duration) / 8 <= sizeTarget;
 
@@ -126,16 +116,14 @@ export function videoFileSizeTargets(
         original: true,
       });
     } else {
-      const fpsDivisor = Math.ceil(source.video.fps / (resolution?.fps ?? 30));
       options.push({
         preset: `size_${totalSizeTarget / 1000}mb`,
-        implausible: !resolution,
         codec: "h264 (High)",
         color: "yuv420p",
-        width: resolution ? resolution.width : 0,
-        height: resolution ? resolution.height : 0,
+        width: resolution.width,
+        height: resolution.height,
         bitrate: Math.floor(bitrateTarget),
-        fps: source.video.fps / fpsDivisor,
+        fps: source.video.fps / Math.ceil(source.video.fps / resolution.fps),
       });
     }
   }
@@ -145,25 +133,21 @@ export function videoFileSizeTargets(
 
 export function videoResolutionTargets(
   source: Format,
-  resolutions: Resolution[]
+  resolutions: Resolution[] // expected to be in descending order
 ): VideoFormat[] {
   const options: VideoFormat[] = [];
 
   for (const resolution of resolutions.reverse()) {
-    const expectedSize = estimateSize(
-      resolution,
-      source.container.duration,
-      21
-    );
+    const size = estimateH264Size(resolution, source.container.duration, 18);
 
     const originalSuitable =
       source.video.codec.startsWith("h264") &&
       source.video.color === "yuv420p" &&
-      source.video.width === resolution?.width &&
-      source.video.height === resolution?.height &&
-      source.video.fps <= resolution?.fps &&
+      source.video.width <= resolution.width &&
+      source.video.height <= resolution.height &&
+      source.video.fps <= resolution.fps &&
       source.video.bitrate !== undefined &&
-      (source.video.bitrate * source.container.duration) / 8 <= expectedSize;
+      (source.video.bitrate * source.container.duration) / 8 <= size;
 
     if (originalSuitable) {
       options.push({
@@ -189,7 +173,7 @@ export function videoResolutionTargets(
 
 export function videoGifTargets(
   source: Format,
-  resolutions: Resolution[]
+  resolutions: Resolution[] // expected to be in descending order
 ): VideoFormat[] {
   const options: VideoFormat[] = [];
 
@@ -207,10 +191,42 @@ export function videoGifTargets(
   return options;
 }
 
-export function estimateSize(
+/**
+ * Estimate the size of an h264 video stream.
+ * This can vary widely depending on the content.
+ * But it can be used for sanity checks.
+ *
+ * Sensible values for the crf are 18-28.
+ * 18 is a pretty good quality while 28 is a very low quality.
+ */
+export function estimateH264Size(
   res: { width: number; height: number; fps: number },
   duration: number,
   crf: number
 ) {
   return (res.width * res.height * duration * Math.log2(res.fps)) / 768 / crf; // TODO better calculation
+}
+
+export interface Resolution {
+  width: number;
+  height: number;
+  fps: number;
+  expectedWidth: number;
+  expectedHeight: number;
+}
+
+export function createResolution(
+  { video }: Format,
+  width: number,
+  height: number,
+  fps = 30
+): Resolution {
+  const scaleFactor = Math.min(1.0, width / video.width, height / video.height);
+  return {
+    width: Math.round((video.width * scaleFactor) / 2) * 2, // divisible by 2 for yuv420p colorspace
+    height: Math.round((video.height * scaleFactor) / 2) * 2, // divisible by 2 for yuv420p colorspace
+    fps: fps,
+    expectedWidth: width,
+    expectedHeight: height,
+  };
 }

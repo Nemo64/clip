@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useRouter } from "next/router";
+import Router from "next/router";
 import {
   useContext,
   useEffect,
@@ -37,23 +37,18 @@ import { useObjectURL } from "../src/use_object_url";
 import { VideoConversionDetails } from "../components/video_details";
 
 export default function VideoPage() {
-  const [video, setVideo] = useContext(VideoContext);
+  const [video] = useContext(VideoContext);
   const [progress, setProgress] = useState<ProgressEvent | undefined>();
   const [result, setResult] = useState<File>();
-  const router = useRouter();
 
   // reset result when video changes
   useEffect(() => {
     setProgress(undefined);
     setResult(undefined);
-  }, [video]);
-
-  // redirect to startpage if video is not known
-  useEffect(() => {
     if (!video) {
-      router.push("/");
+      Router.push("/").catch(console.error);
     }
-  }, [video, router]);
+  }, [video]);
 
   const start = async (format: Format) => {
     if (video?.status !== "known") {
@@ -97,21 +92,18 @@ export default function VideoPage() {
     }
   };
 
+  const stop = () => {
+    ensureFreshFfmpegInstance();
+    setProgress(undefined);
+    setResult(undefined);
+  };
+
   if (result && video?.status === "known") {
-    return <DownloadPage video={video} file={result} />;
+    return <DownloadPage video={video} file={result} reset={stop} />;
   }
 
   if (progress && video) {
-    return (
-      <ProgressPage
-        video={video}
-        progress={progress}
-        cancel={() => {
-          ensureFreshFfmpegInstance();
-          setProgress(undefined);
-        }}
-      />
-    );
+    return <ProgressPage video={video} progress={progress} cancel={stop} />;
   }
 
   if (video?.status === "new") {
@@ -127,12 +119,10 @@ export default function VideoPage() {
   }
 
   return (
-    <>
-      <Head>
-        <title>Just a sec...</title>
-        <meta name="robots" content="noindex" />
-      </Head>
-    </>
+    <Head>
+      <title>Just a sec...</title>
+      <meta name="robots" content="noindex" />
+    </Head>
   );
 }
 
@@ -454,7 +444,15 @@ function ProgressPage({
   );
 }
 
-function DownloadPage({ file, video }: { file: File; video: KnownVideo }) {
+function DownloadPage({
+  file,
+  video,
+  reset,
+}: {
+  file: File;
+  video: KnownVideo;
+  reset: () => void;
+}) {
   const src = useObjectURL(file);
   const aspectRatio = `${video.metadata.video.width} / ${video.metadata.video.height}`;
   const maxWidth = `${
@@ -473,7 +471,7 @@ function DownloadPage({ file, video }: { file: File; video: KnownVideo }) {
         <Result
           className="mx-auto h-full bg-slate-500 motion-safe:animate-fly-1"
           file={file}
-          src={src}
+          src={src!}
         />
       </div>
       <div
@@ -505,6 +503,13 @@ function DownloadPage({ file, video }: { file: File; video: KnownVideo }) {
             className="table relative px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-400 text-white"
           >
             {t("conversion.button.change")}
+          </Button>
+
+          <Button
+            onClick={reset}
+            className="table relative px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-400 text-white"
+          >
+            {t("conversion.button.change_parameters")}
           </Button>
         </div>
       </div>

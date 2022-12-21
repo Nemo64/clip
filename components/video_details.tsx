@@ -1,4 +1,4 @@
-import { estimateSize, Format } from "../src/video";
+import { estimateH264Size, Format } from "../src/video";
 import { t } from "../src/intl";
 
 export function VideoConversionDetails({
@@ -75,7 +75,7 @@ export function VideoConversionDetails({
               target.video.crf
                 ? t("details.bitrate_value_crf", {
                     value: Math.ceil(
-                      estimateSize(target.video, 8, target.video.crf - 5)
+                      estimateH264Size(target.video, 8, target.video.crf - 5)
                     ),
                   })
                 : t("details.bitrate_value", { value: target.video.bitrate })
@@ -89,6 +89,11 @@ export function VideoConversionDetails({
             label={t("details.audio_codec_label")}
             source={source.audio.codec}
             target={target.audio.codec}
+          />
+          <Comparison
+            label={t("details.audio_channel_label")}
+            source={source.audio.channelSetup}
+            target={target.audio.channelSetup}
           />
           <Comparison
             label={t("details.audio_bitrate_label")}

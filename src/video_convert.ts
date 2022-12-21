@@ -1,6 +1,6 @@
 import { ffmpeg, sanitizeFileName } from "./ffmpeg";
 import {
-  estimateSize,
+  estimateH264Size,
   ConvertedVideo,
   createResolution,
   Format,
@@ -212,7 +212,7 @@ function seekArguments(metadata: Format, format: Format) {
 
   // TODO: check what it means if the source video has a start time !== 0
   if (format.container.start > metadata.container.start) {
-    args.push("-ss", format.container.start.toFixed(3), "-accurate_seek");
+    args.push("-ss", format.container.start.toFixed(3));
   }
 
   if (
@@ -254,7 +254,7 @@ function h264Arguments(metadata: Format, format: Format) {
   const bufferDuration = Math.min(10, format.container.duration / 4);
   if (format.video.crf) {
     const crf = format.video.crf;
-    const bitrate = Math.floor(estimateSize(format.video, 8, crf - 5));
+    const bitrate = Math.floor(estimateH264Size(format.video, 8, crf - 5));
     const bufsize = Math.floor(bitrate * bufferDuration);
     args.push("-crf:v", crf.toString());
     args.push("-maxrate:v", `${bitrate}k`);

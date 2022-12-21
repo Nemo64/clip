@@ -1,56 +1,39 @@
 import { useEffect } from "react";
 
-type FileObject = Parameters<typeof URL.createObjectURL>[0];
-interface FileUrlInfo {
-  url: string;
-  refs: number;
-  cleanup?: ReturnType<typeof setTimeout>;
-}
-
 // a global map of files that have an object URL
-const globalUrlMap = new Map<FileObject, FileUrlInfo>();
+type FileObject = Parameters<typeof URL.createObjectURL>[0];
+const urlMap = new Map<FileObject, { url: string; refCounter: number }>();
 
-export function useObjectURL<T extends FileObject | undefined>(
-  file: T
-): T extends undefined ? string | undefined : string {
+export function useObjectURL(file: FileObject | undefined) {
   // if there isn't already an object url for the given file, create one
-  if (file && !globalUrlMap.has(file)) {
+  if (file && !urlMap.has(file)) {
     const url = URL.createObjectURL(file);
-    globalUrlMap.set(file, { url: url, refs: 0 });
+    urlMap.set(file, { url, refCounter: 0 });
     console.log("URL.createObjectURL", url, file);
   }
 
   // to ensure proper cleanup, we need to keep track of how many times
   // the hook has been called for a given file
   useEffect(() => {
-    const fileInfo = file && globalUrlMap.get(file);
+    const fileInfo = file && urlMap.get(file);
     if (!fileInfo) {
       return;
     }
 
-    // increment the reference counter,
-    // so we know how many times this url is used
-    fileInfo.refs++;
-
-    // check if there is a cleanup scheduled and cancel it
-    if (fileInfo.cleanup) {
-      clearTimeout(fileInfo.cleanup);
-      fileInfo.cleanup = undefined;
-    }
+    fileInfo.refCounter++;
 
     return () => {
-      // decrement the reference counter
-      fileInfo.refs--;
+      fileInfo.refCounter--;
 
       // if there are no more references, schedule a cleanup
       // the cleanup must not happen immediately, because:
-      // 1. the url might be used again in the same render cycle
+      // 1. the url might be used again in the next render cycle
       // 2. react does trigger effects twice in development mode
-      if (fileInfo.refs === 0 && !fileInfo.cleanup) {
-        fileInfo.cleanup = setTimeout(() => {
-          if (fileInfo.refs === 0) {
+      if (fileInfo.refCounter === 0) {
+        setTimeout(() => {
+          if (fileInfo.refCounter === 0 && urlMap.get(file) === fileInfo) {
             URL.revokeObjectURL(fileInfo.url);
-            globalUrlMap.delete(file);
+            urlMap.delete(file);
             console.log("URL.revokeObjectURL", fileInfo.url, file);
           }
         }, 5_000);
@@ -59,8 +42,8 @@ export function useObjectURL<T extends FileObject | undefined>(
   }, [file]);
 
   if (file === undefined) {
-    return undefined!;
+    return undefined;
   }
 
-  return globalUrlMap.get(file)!.url;
+  return urlMap.get(file)!.url;
 }

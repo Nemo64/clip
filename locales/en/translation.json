@@ -19,6 +19,7 @@
     },
     "button": {
       "change": "Select a different file",
+      "change_parameters": "Try different parameters",
       "start": "Start"
     },
     "info": {
@@ -50,6 +51,7 @@
   "details": {
     "audio_bitrate_label": "Audio bitrate",
     "audio_bitrate_value": "~{{value, number}} kbit/s",
+    "audio_channel_label": "Audio channel",
     "audio_codec_label": "Audio codec",
     "bitrate_label": "Bitrate",
     "bitrate_value": "~{{value, number}} kbit/s",
