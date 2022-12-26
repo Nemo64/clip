@@ -76,7 +76,7 @@ export function possibleAudioFormats(source: Format): AudioFormat[] {
 }
 
 export function videoFileSizeTargets(
-  source: Format,
+  { container, audio, video }: Format,
   resolutions: Resolution[] // expected to be in descending order
 ): VideoFormat[] {
   const options: VideoFormat[] = [];
@@ -84,12 +84,12 @@ export function videoFileSizeTargets(
   for (const totalSizeTarget of [8000, 16000, 50000]) {
     // we have to undershoot the file size target to account for overheads and average bitrate variance
     // 0.88 is just a guess, but it seems to work well
+    const audioBitrate = audio?.bitrate || 0;
     let sizeTarget = totalSizeTarget * 0.88;
-    let bitrateTarget = (sizeTarget * 8) / source.container.duration;
+    let bitrateTarget = (sizeTarget * 8) / container.duration - audioBitrate;
 
     const resolution = resolutions.find(
-      (res) =>
-        sizeTarget >= estimateH264Size(res, source.container.duration, 28)
+      (res) => sizeTarget >= estimateH264Size(res, container.duration, 28)
     );
     if (!resolution) {
       const worst = resolutions[resolutions.length - 1];
@@ -101,30 +101,30 @@ export function videoFileSizeTargets(
         width: worst.width,
         height: worst.height,
         bitrate: Math.floor(bitrateTarget),
-        fps: source.video.fps / Math.ceil(source.video.fps / worst.fps),
+        fps: video.fps / Math.ceil(video.fps / worst.fps),
       });
       continue;
     }
 
-    const maxSize = estimateH264Size(resolution, source.container.duration, 12);
-    const maxBitrate = (maxSize * 8) / source.container.duration;
+    const maxSize = estimateH264Size(resolution, container.duration, 12);
+    const maxBitrate = (maxSize * 8) / container.duration;
     if (maxBitrate < bitrateTarget) {
       sizeTarget = maxSize;
       bitrateTarget = maxBitrate;
     }
 
     const originalSuitable =
-      source.video.codec.startsWith("h264") &&
-      source.video.color === "yuv420p" &&
-      source.video.width <= resolution.width * 2 &&
-      source.video.height <= resolution.height * 2 &&
-      source.video.fps <= resolution.fps &&
-      source.video.bitrate !== undefined &&
-      (source.video.bitrate * source.container.duration) / 8 <= sizeTarget;
+      video.codec.startsWith("h264") &&
+      video.color === "yuv420p" &&
+      video.width <= resolution.width * 2 &&
+      video.height <= resolution.height * 2 &&
+      video.fps <= resolution.fps &&
+      video.bitrate !== undefined &&
+      (video.bitrate * container.duration) / 8 <= sizeTarget;
 
     if (originalSuitable) {
       options.push({
-        ...source.video,
+        ...video,
         preset: `size_${totalSizeTarget / 1000}mb`,
         original: true,
       });
@@ -136,7 +136,7 @@ export function videoFileSizeTargets(
         width: resolution.width,
         height: resolution.height,
         bitrate: Math.floor(bitrateTarget),
-        fps: source.video.fps / Math.ceil(source.video.fps / resolution.fps),
+        fps: video.fps / Math.ceil(video.fps / resolution.fps),
       });
     }
   }
