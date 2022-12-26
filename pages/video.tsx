@@ -456,7 +456,10 @@ function ProgressPage({
   return (
     <>
       <Head>
-        <title>{t("progress.value", progress)}</title>
+        <title>
+          {"".padEnd(Math.round(progress.percent / 10), "▇").padEnd(10, "▁")}{" "}
+          {t("progress.value", progress)}
+        </title>
         <meta name="robots" content="noindex" />
       </Head>
       <div className="max-w-lg mx-auto p-2">
