@@ -11,6 +11,7 @@ import { VideoContext } from "./_app";
 import { JsonLd } from "react-schemaorg";
 import { Button } from "../components/button";
 import { DemoTimeline } from "../components/demo";
+import { Link } from "../components/link";
 
 export default function Start() {
   const [video, setVideo] = useContext(VideoContext);

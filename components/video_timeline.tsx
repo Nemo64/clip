@@ -23,6 +23,7 @@ export interface TimelineProps {
   width: number;
   height: number;
   className?: string;
+  videoClassName?: string;
   limit?: number;
   value: Crop;
   videoSrc?: string;
@@ -30,6 +31,7 @@ export interface TimelineProps {
   onChange?: (crop: Crop) => void;
   onBlur?: (crop: Crop) => void;
   disabled?: boolean;
+  muted?: boolean;
   pics?: string[];
   picInt?: number;
 }
@@ -39,6 +41,7 @@ export function VideoTimeline({
   width,
   height,
   className,
+  videoClassName = "object-contain bg-slate-100",
   limit,
   value,
   videoSrc,
@@ -46,6 +49,7 @@ export function VideoTimeline({
   onChange,
   onBlur,
   disabled,
+  muted,
   pics = [],
   picInt = frame.duration / pics.length,
 }: TimelineProps) {
@@ -107,7 +111,7 @@ export function VideoTimeline({
   return (
     <div className={classNames("flex flex-col font-mono", className)}>
       <div
-        className="w-full rounded-2xl overflow-hidden relative bg-slate-100"
+        className="w-full rounded-2xl overflow-hidden relative"
         style={{ aspectRatio: `${width} / ${height}` }}
       >
         {pics?.length && picInt ? (
@@ -117,10 +121,11 @@ export function VideoTimeline({
             picInt={picInt}
             fps={fps}
             play={playing}
+            muted={muted}
             cursor={cursor}
             setCursor={setCursor}
             onClick={togglePlay}
-            className="absolute w-full h-full object-contain"
+            className={classNames("absolute w-full h-full", videoClassName)}
           />
         ) : (
           <div className="p-4 text-center">{t("timeline.no_preview")}</div>
@@ -325,6 +330,7 @@ interface VideoWithFallbackProps
   setCursor: (cursor: number) => void;
   className: string;
   play?: boolean;
+  muted?: boolean;
   onClick?: () => void;
 }
 
@@ -337,6 +343,7 @@ function VideoWithFallback({
   setCursor,
   className,
   play,
+  muted,
   ...additionalProps
 }: VideoWithFallbackProps) {
   const videoRef = useRef() as RefObject<HTMLVideoElement>;
@@ -385,6 +392,8 @@ function VideoWithFallback({
       poster={poster}
       className={className}
       autoPlay={play}
+      muted={muted}
+      playsInline={true}
       ref={videoRef}
       onTimeUpdate={({ currentTarget }) => {
         setCursor(currentTarget.currentTime);

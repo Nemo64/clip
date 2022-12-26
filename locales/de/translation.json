@@ -85,7 +85,8 @@
     "author": {
       "github": "GitHub",
       "headline": "Entwickelt von {{name}}",
-      "twitter": "Twitter"
+      "twitter": "Twitter",
+      "website": "Webseite"
     },
     "contribute": {
       "check": "Code überprüfen",

@@ -2,7 +2,7 @@ import i18next from "i18next";
 import type { AppProps } from "next/app";
 import Head from "next/head";
 import { createContext, useCallback, useEffect, useState } from "react";
-import { Footer } from "../components/footer";
+import { Page_footer } from "../components/page_footer";
 import { trackEvent, trackPageView } from "../src/tracker";
 import { analyzeVideo, createVideo, Video } from "../src/video";
 import "../styles/globals.css";
@@ -83,7 +83,7 @@ export default function MyApp({ Component, pageProps, router }: AppProps) {
       <VideoContext.Provider value={[video, setVideoFile]}>
         <Component {...pageProps} />
       </VideoContext.Provider>
-      <Footer />
+      <Page_footer />
       <DragArea setVideo={setVideoFile} />
     </>
   );

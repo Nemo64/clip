@@ -215,8 +215,6 @@ function ErrorConvert({
   );
 }
 
-const MAX_DURATION = 5 * 60;
-
 function ConvertPage({
   video,
   start,
@@ -272,7 +270,7 @@ function ConvertPage({
       defaultValues: {
         container: {
           start: video.metadata.container.start,
-          duration: Math.min(video.metadata.container.duration, MAX_DURATION),
+          duration: Math.min(video.metadata.container.duration, 2 * 60),
         },
         video: undefined,
         audio: undefined,
@@ -346,7 +344,7 @@ function ConvertPage({
                   videoSrc={videoUrl}
                   pics={pics}
                   picInt={picInt}
-                  limit={MAX_DURATION}
+                  limit={15 * 60}
                   {...field}
                 />
               )}
