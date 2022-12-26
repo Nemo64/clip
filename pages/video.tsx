@@ -35,6 +35,8 @@ import {
 import { VideoContext } from "./_app";
 import { useObjectURL } from "../src/use_object_url";
 import { VideoConversionDetails } from "../components/video_details";
+import { FormattedCommand } from "../components/cli";
+import { Markdown } from "../components/markdown";
 
 export default function VideoPage() {
   const [video] = useContext(VideoContext);
@@ -327,15 +329,16 @@ function ConvertPage({
       </Head>
       <div className="widescreen:min-h-screen container mx-auto flex flex-col justify-center">
         <form
-          className="flex flex-wrap my-16 justify-center"
+          className="flex flex-wrap justify-center"
           onSubmit={handleSubmit(start)}
         >
-          <div className="flex-grow p-2 max-h-screen motion-safe:animate-fly-5">
+          <div className="flex-grow px-2 motion-safe:animate-fly-5">
             <Controller
               control={control}
               name="container"
               render={({ field: { ref, ...field } }) => (
                 <VideoTimeline
+                  className="max-h-[80vh] lg:max-h-screen py-2 lg:py-16 sticky top-0"
                   frame={video.metadata.container}
                   width={video.metadata.video.width}
                   height={video.metadata.video.height}
@@ -349,7 +352,7 @@ function ConvertPage({
               )}
             />
           </div>
-          <div className="flex-auto p-2 max-w-lg">
+          <div className="flex-auto p-2 lg:py-16 max-w-lg">
             <h1 className="text-2xl mb-4 motion-safe:animate-fly-1">
               {t("conversion.title", { name: video.file.name })}
             </h1>
@@ -410,32 +413,31 @@ function ConvertPage({
             </div>
 
             <details className="mt-4">
-              <summary>{t("conversion.info.details")}</summary>
-              <VideoConversionDetails
-                source={video.metadata}
-                target={targetFormat}
-              />
-            </details>
-
-            <details className="mt-4">
-              <summary>{t("conversion.info.command")}</summary>
-              {(() => {
-                try {
-                  return createCommands(video, targetFormat);
-                } catch {
-                  return [];
-                }
-              })().map(({ args }, i) => (
-                <pre key={i} className="text-sm">
-                  {`ffmpeg ${args
-                    .map((arg, index, array) =>
-                      arg.startsWith("-") || index === array.length - 1
-                        ? `\n  ${arg}`
-                        : arg
-                    )
-                    .join(" ")}`}
-                </pre>
-              ))}
+              <summary>{t("conversion.details.headline")}</summary>
+              <div className="overflow-auto flex-grow">
+                <Markdown>{t("conversion.details.params_intro")}</Markdown>
+                <VideoConversionDetails
+                  source={video.metadata}
+                  target={targetFormat}
+                />
+                <Markdown>{t("conversion.details.command_intro")}</Markdown>
+                <div className="overflow-auto">
+                  {(() => {
+                    try {
+                      return createCommands(video, targetFormat).map(
+                        ({ args }, i) => (
+                          <FormattedCommand key={i}>
+                            {["ffmpeg", ...args]}
+                          </FormattedCommand>
+                        )
+                      );
+                    } catch {
+                      return [];
+                    }
+                  })()}
+                </div>
+                <Markdown>{t("conversion.details.command_outro")}</Markdown>
+              </div>
             </details>
           </div>
         </form>
@@ -510,7 +512,7 @@ function DownloadPage({
         style={{ aspectRatio }}
       >
         <Result
-          className="mx-auto h-full bg-slate-500 motion-safe:animate-fly-1"
+          className="mx-auto h-full object-contain bg-slate-500 motion-safe:animate-fly-1"
           file={file}
           src={src!}
         />

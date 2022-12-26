@@ -18,7 +18,7 @@ export interface ProgressEvent {
  */
 export function createCommands({ file, metadata }: KnownVideo, format: Format) {
   const fileName = sanitizeFileName(file.name);
-  const safeBaseName = fileName.replace(/\.\w{2,4}$|$/, ".clip");
+  const baseName = fileName.replace(/\.\w{2,4}$|$/, "");
   const args: string[] = [];
 
   args.push(...seekArguments(metadata, format));
@@ -40,9 +40,9 @@ export function createCommands({ file, metadata }: KnownVideo, format: Format) {
 
     args.push("-f", "mp4"); // use mp4 since it has the best compatibility as long as all streams are supported
     args.push("-movflags", "+faststart"); // moves metadata to the beginning of the mp4 container ~ useful for streaming
-    args.push(`${safeBaseName}.mp4`);
+    args.push(`${baseName}.clip.mp4`);
 
-    return [{ args, fileName: `${safeBaseName}.mp4`, fileType: "video/mp4" }];
+    return [{ args: args, file: `${baseName}.clip.mp4`, type: "video/mp4" }];
   }
 
   if (format.video.codec.startsWith("gif")) {
@@ -57,12 +57,12 @@ export function createCommands({ file, metadata }: KnownVideo, format: Format) {
       `palettegen=stats_mode=diff`,
     ];
     args1.push("-vf", palettegenFilters.join(","));
-    args1.push(`${safeBaseName}.png`);
+    args1.push(`${baseName}.palette.png`);
 
     // phase2: create gif
     const args2 = args.slice();
     args2.push("-i", fileName);
-    args2.push("-i", `${safeBaseName}.png`); // the palette
+    args2.push("-i", `${baseName}.palette.png`); // the palette
     const paletteuseFilters = [
       `fps=100/6`,
       `scale=${format.video.width}:${format.video.height}:flags=bilinear`,
@@ -70,11 +70,11 @@ export function createCommands({ file, metadata }: KnownVideo, format: Format) {
       `paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle`,
     ];
     args2.push("-filter_complex", paletteuseFilters.join(","));
-    args2.push(`${safeBaseName}.gif`);
+    args2.push(`${baseName}.clip.gif`);
 
     return [
-      { args: args1, fileName: `${safeBaseName}.png`, fileType: "image/png" },
-      { args: args2, fileName: `${safeBaseName}.gif`, fileType: "image/gif" },
+      { args: args1, file: `${baseName}.palette.png`, type: "image/png" },
+      { args: args2, file: `${baseName}.clip.gif`, type: "image/gif" },
     ];
   }
 
@@ -103,12 +103,12 @@ export async function convertVideo(
     }).promise;
   }
 
-  const { fileName, fileType } = commands[commands.length - 1];
+  const { file: fileName, type } = commands[commands.length - 1];
   const uint8Array = instance!.FS("readFile", fileName);
-  const file = new File([uint8Array], fileName, { type: fileType });
+  const file = new File([uint8Array], fileName, { type: type });
 
   for (const command of commands) {
-    instance!.FS("unlink", command.fileName);
+    instance!.FS("unlink", command.file);
   }
 
   return {
@@ -235,7 +235,7 @@ function h264Arguments(metadata: Format, format: Format) {
 
   args.push("-vf", filter.join(","));
   args.push("-c:v", "libx264");
-  args.push("-preset:v", "medium");
+  // args.push("-preset:v", "medium");
   // args.push('-level:v', '4.0'); // https://en.wikipedia.org/wiki/Advanced_Video_Coding#Levels
   args.push("-profile:v", "high");
 

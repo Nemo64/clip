@@ -1,19 +1,32 @@
 import { AudioFormat, Format, VideoFormat } from "./video";
 
 export function possibleVideoFormats(source: Format): VideoFormat[] {
-  const resolutions = [
-    // calculateDimensions(source, 1920, 1080),
+  const filterSensibleResolutions = (
+    { width }: Resolution,
+    index: number,
+    list: Resolution[]
+  ) => list[index + 1]?.width !== width;
+
+  // these resolutions are for the user to select from
+  const roughResolutions = [
+    createResolution(source, 1280, 720), // 16:9 small HD resolution
+    createResolution(source, 640, 480), // 4:3 PAL resolution
+  ].filter(filterSensibleResolutions);
+
+  // these are all sensible resolutions to automatically select
+  const fineResolutions = [
     createResolution(source, 1280, 720),
     createResolution(source, 854, 480),
     createResolution(source, 640, 360),
-  ].filter(({ width }, index, list) => list[index + 1]?.width !== width);
+    createResolution(source, 426, 240),
+  ].filter(filterSensibleResolutions);
 
   const gifResolutions = [createResolution(source, 600, 600)];
 
   return [
-    ...videoFileSizeTargets(source, resolutions),
+    ...videoFileSizeTargets(source, fineResolutions),
     ...videoGifTargets(source, gifResolutions),
-    ...videoResolutionTargets(source, resolutions),
+    ...videoResolutionTargets(source, roughResolutions),
   ];
 }
 
@@ -93,7 +106,7 @@ export function videoFileSizeTargets(
       continue;
     }
 
-    const maxSize = estimateH264Size(resolution, source.container.duration, 18);
+    const maxSize = estimateH264Size(resolution, source.container.duration, 12);
     const maxBitrate = (maxSize * 8) / source.container.duration;
     if (maxBitrate < bitrateTarget) {
       sizeTarget = maxSize;
@@ -204,7 +217,7 @@ export function estimateH264Size(
   duration: number,
   crf: number
 ) {
-  return (res.width * res.height * duration * Math.log2(res.fps)) / 768 / crf; // TODO better calculation
+  return (res.width * res.height * duration * Math.log2(res.fps)) / 512 / crf; // TODO better calculation
 }
 
 export interface Resolution {

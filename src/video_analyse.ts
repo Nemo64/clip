@@ -95,4 +95,23 @@ export function parseMetadata(message: any, metadata: Partial<Format>) {
     };
     return;
   }
+
+  // some cameras (like the iphone) don't rotate the video
+  // they just add metadata that the video should be rotated
+  // ffmpeg does automatically rotate the video for us:
+  // - https://stackoverflow.com/a/30899179/1973256
+  // - https://github.com/FFmpeg/FFmpeg/blob/45ab5307a6e8c04b4ea91b1e1ccf71ba38195f7c/fftools/ffmpeg_filter.c#L710
+  // but it reports none rotated dimensions, so i need to rotate them here
+  const rotationMatch = message.match(
+    /displaymatrix: rotation of (?<rotation>-90|90|-270|270).00 degrees/
+  );
+  if (rotationMatch && metadata.video) {
+    // noinspection JSSuspiciousNameCombination
+    metadata.video = {
+      ...metadata.video,
+      width: metadata.video.height,
+      height: metadata.video.width,
+    };
+    return;
+  }
 }

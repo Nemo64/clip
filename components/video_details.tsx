@@ -1,5 +1,6 @@
 import { estimateH264Size, Format } from "../src/video";
 import { t } from "../src/intl";
+import classNames from "classnames";
 
 export function VideoConversionDetails({
   source,
@@ -14,13 +15,13 @@ export function VideoConversionDetails({
         <tr>
           <th />
           <th
-            className="text-right font-normal pt-3 px-2"
+            className="text-center text-xl font-normal pt-3 px-2"
             title={JSON.stringify(source, undefined, 2)}
           >
             {t("details.headline.source")}
           </th>
           <th
-            className="text-right font-normal pt-3 px-2"
+            className="text-center text-xl font-normal pt-3 px-2"
             title={JSON.stringify(target, undefined, 2)}
           >
             {t("details.headline.target")}
@@ -42,6 +43,9 @@ export function VideoConversionDetails({
       )}
       {source.video && target.video && (
         <tbody>
+          <tr>
+            <th className="text-center pt-4 text-xl font-normal">Video</th>
+          </tr>
           <Comparison
             label={t("details.video_codec_label")}
             source={source.video.codec}
@@ -70,7 +74,11 @@ export function VideoConversionDetails({
           />
           <Comparison
             label={t("details.bitrate_label")}
-            source={t("details.bitrate_value", { value: source.video.bitrate })}
+            source={
+              Number.isFinite(source.video.bitrate)
+                ? t("details.bitrate_value", { value: source.video.bitrate })
+                : t("details.bitrate_value_unknown")
+            }
             target={
               target.video.crf
                 ? t("details.bitrate_value_crf", {
@@ -85,25 +93,43 @@ export function VideoConversionDetails({
       )}
       {source.audio?.codec && target.audio && (
         <tbody>
+          <tr>
+            <th className="text-center pt-4 text-xl font-normal">Audio</th>
+          </tr>
           <Comparison
             label={t("details.audio_codec_label")}
             source={source.audio.codec}
             target={target.audio.codec}
           />
-          <Comparison
-            label={t("details.audio_channel_label")}
-            source={source.audio.channelSetup}
-            target={target.audio.channelSetup}
-          />
-          <Comparison
-            label={t("details.audio_bitrate_label")}
-            source={t("details.audio_bitrate_value", {
-              value: source.audio.bitrate,
-            })}
-            target={t("details.audio_bitrate_value", {
-              value: target.audio.bitrate,
-            })}
-          />
+          {source.audio.codec !== "none" && (
+            <Comparison
+              label={t("details.audio_sample_rate_label")}
+              source={t("details.audio_sample_rate_value", {
+                value: source.audio.sampleRate,
+              })}
+              target={t("details.audio_sample_rate_value", {
+                value: target.audio.sampleRate,
+              })}
+            />
+          )}
+          {source.audio.codec !== "none" && (
+            <Comparison
+              label={t("details.audio_channel_label")}
+              source={source.audio.channelSetup}
+              target={target.audio.channelSetup}
+            />
+          )}
+          {source.audio.codec !== "none" && (
+            <Comparison
+              label={t("details.audio_bitrate_label")}
+              source={t("details.audio_bitrate_value", {
+                value: source.audio.bitrate,
+              })}
+              target={t("details.audio_bitrate_value", {
+                value: target.audio.bitrate,
+              })}
+            />
+          )}
         </tbody>
       )}
     </table>
@@ -119,11 +145,15 @@ function Comparison({
   source: string;
   target: string;
 }) {
+  const columnClassName = "text-center px-2";
+  const valueClassName = classNames(columnClassName, {
+    "text-red-700": source !== target,
+  });
   return (
-    <tr className={source !== target ? "font-bold" : undefined}>
-      <th className="text-right font-normal">{label}</th>
-      <td className="text-right px-2">{source}</td>
-      <td className="text-right px-2">{target}</td>
+    <tr>
+      <th className="text-center font-normal">{label}</th>
+      <td className={columnClassName}>{source}</td>
+      <td className={valueClassName}>{target}</td>
     </tr>
   );
 }

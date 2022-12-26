@@ -9,13 +9,17 @@ const components: Parameters<typeof ReactMarkdown>[0]["components"] = {
       {...props}
     />
   ),
-  a: ({ node, href, ref, ...props }) => (
-    <Link href={href} ref={ref as any} {...props} />
+  a: ({ node, className, href, ...props }) => (
+    <Link
+      className={classNames("my-4 text-red-800 hover:text-red-700", className)}
+      href={href}
+      {...props}
+    />
   ),
   p: ({ node, className, ...props }) => (
     <p className={classNames("my-4", className)} {...props} />
   ),
-  ul: ({ node, className, ...props }) => (
+  ul: ({ node, className, ordered, ...props }) => (
     <ul className={classNames("my-4 pl-8 list-disc", className)} {...props} />
   ),
 };
