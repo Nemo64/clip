@@ -19,7 +19,7 @@ export function ProgressBar({
       aria-valuemax={100}
       aria-valuenow={progress}
       className={classNames(
-        "block h-8 bg-red-200 rounded-2xl overflow-hidden relative",
+        "block h-8 bg-red-200 dark:bg-red-800 rounded-2xl overflow-hidden relative",
         className
       )}
     >

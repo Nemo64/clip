@@ -1,7 +1,8 @@
-import Select, { Props } from "react-select";
+import Select, { ClassNamesConfig, Props } from "react-select";
 import { t } from "../src/intl";
 import { AudioFormat, VideoFormat } from "../src/video";
 import classNames from "classnames";
+import { PublicBaseSelectProps } from "react-select/base";
 
 export type VideoProps = { formats: VideoFormat[] } & Omit<
   Props<VideoFormat>,
@@ -12,6 +13,26 @@ export type AudioProps = { formats: AudioFormat[] } & Omit<
   "options" | "getOptionValue" | "formatOptionLabel"
 >;
 
+const selectStyles = {
+  unstyled: true,
+  classNames: {
+    control: ({ isFocused }) =>
+      classNames(
+        "px-4 py-2 rounded-xl border bg-white text-neutral-800 dark:bg-neutral-800 dark:text-white",
+        { ring: isFocused }
+      ),
+    menu: () =>
+      "my-2 py-2 rounded-xl overflow-hidden border shadow-xl fly-in bg-white text-neutral-800 dark:bg-neutral-800 dark:text-white",
+    group: () => "pt-2 first:pt-0",
+    option: ({ className, isSelected }) =>
+      classNames(
+        className,
+        "px-4 py-2 hover:bg-red-100 dark:hover:bg-red-900",
+        { "bg-red-100 dark:bg-red-900": isSelected }
+      ),
+  } as ClassNamesConfig<any>,
+} as const;
+
 export function VideoFormatSelect({ formats, ...props }: VideoProps) {
   const isSizeTarget = (formatOption: VideoFormat) =>
     formatOption.preset?.startsWith("size");
@@ -21,6 +42,7 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
   return (
     <Select
       {...props}
+      {...selectStyles}
       maxMenuHeight={480}
       getOptionValue={(option) => String(option.preset)}
       options={[
@@ -64,7 +86,7 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
 
           {option.preset?.startsWith("crf") &&
             (!option.implausible ? (
-              <div className="opacity-60 text-sm font-light">
+              <div className="text-slate-400 text-sm font-light">
                 {t("conversion.video_quality.crf_details", option)}
               </div>
             ) : (
@@ -74,7 +96,7 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
             ))}
           {option.preset?.startsWith("size") &&
             (!option.implausible ? (
-              <div className="opacity-60 text-sm font-light">
+              <div className="text-slate-400 text-sm font-light">
                 {t("conversion.video_quality.size_details", option)}
               </div>
             ) : (
@@ -84,7 +106,7 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
             ))}
           {option.preset?.startsWith("gif") &&
             (!option.implausible ? (
-              <div className="opacity-60 text-sm font-light">
+              <div className="text-slate-400 text-sm font-light">
                 {t("conversion.video_quality.gif_details", option)}
               </div>
             ) : (
@@ -102,6 +124,7 @@ export function AudioFormatSelect({ formats, ...props }: AudioProps) {
   return (
     <Select
       {...props}
+      {...selectStyles}
       getOptionValue={(option) => String(option?.preset)}
       options={formats}
       formatOptionLabel={(option, { context }) => (
@@ -118,7 +141,7 @@ export function AudioFormatSelect({ formats, ...props }: AudioProps) {
 
           {option.preset?.startsWith("none") &&
             (!option.implausible ? (
-              <div className="opacity-60 text-sm font-light">
+              <div className="text-slate-400 text-sm font-light">
                 {t("conversion.audio_quality.none_details")}
               </div>
             ) : (
@@ -128,7 +151,7 @@ export function AudioFormatSelect({ formats, ...props }: AudioProps) {
             ))}
           {option.preset?.startsWith("bitrate") &&
             (!option.implausible ? (
-              <div className="opacity-60 text-sm font-light">
+              <div className="text-slate-400 text-sm font-light">
                 {t("conversion.audio_quality.bitrate_details", option)}
               </div>
             ) : (

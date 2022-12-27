@@ -509,11 +509,11 @@ function DownloadPage({
         <title>{t("download.title", { name: file.name })}</title>
       </Head>
       <div
-        className="block w-full max-h-[80vh] min-w-full bg-slate-300"
+        className="block w-full max-h-[80vh] min-w-full bg-slate-200 dark:bg-neutral-900"
         style={{ aspectRatio }}
       >
         <Result
-          className="mx-auto h-full object-contain bg-slate-500 motion-safe:animate-fly-1"
+          className="mx-auto h-full object-contain motion-safe:animate-fly-1"
           file={file}
           src={src!}
         />

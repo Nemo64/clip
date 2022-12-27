@@ -11,7 +11,13 @@ const FLink = forwardRef(function FooterLink(
   props: Omit<Parameters<typeof Link>[0], "className">,
   ref: ForwardedRef<HTMLAnchorElement>
 ) {
-  return <Link {...props} className="hover:text-slate-800" ref={ref} />;
+  return (
+    <Link
+      {...props}
+      className="hover:text-neutral-800 dark:hover:text-neutral-200"
+      ref={ref}
+    />
+  );
 });
 
 export function Page_footer() {
@@ -19,7 +25,7 @@ export function Page_footer() {
   const [matomoEnabled, setMatomoEnabled] = useLocalStorage("matomo", true);
 
   return (
-    <div className="mt-16 min-h-[80vh] pb-8 bg-slate-50 print:min-h-0">
+    <div className="mt-16 min-h-[80vh] pb-8 bg-slate-50 dark:bg-neutral-900 print:min-h-0">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 1200 120"
@@ -28,10 +34,10 @@ export function Page_footer() {
       >
         <path
           d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
-          className="fill-white"
+          className="fill-white dark:fill-neutral-800"
         />
       </svg>
-      <footer className="max-w-lg mx-auto px-2 flex flex-row flex-wrap gap-2 text-slate-500 text-sm">
+      <footer className="max-w-lg mx-auto px-2 flex flex-row flex-wrap gap-2 text-neutral-500 text-sm">
         {Array.isArray(locales) && (
           <div className="flex w-full">
             <TranslateIcon className="mr-2" />

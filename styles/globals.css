@@ -32,3 +32,20 @@
     -moz-appearance: textfield;
   }
 }
+
+* {
+  @apply border-neutral-200 dark:border-neutral-700;
+  @apply ring-red-500 ring-offset-1 dark:ring-offset-neutral-900;
+}
+
+*:focus-visible:not([style*="outline:"]) {
+  @apply ring outline-none;
+}
+
+::selection {
+  @apply bg-red-100 dark:bg-red-900;
+}
+
+body {
+  @apply text-neutral-800 dark:bg-neutral-800 dark:text-white;
+}

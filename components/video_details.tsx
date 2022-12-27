@@ -147,7 +147,7 @@ function Comparison({
 }) {
   const columnClassName = "text-center px-2";
   const valueClassName = classNames(columnClassName, {
-    "text-red-700": source !== target,
+    "text-red-700 dark:text-red-300": source !== target,
   });
   return (
     <tr>

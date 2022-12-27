@@ -11,7 +11,10 @@ const components: Parameters<typeof ReactMarkdown>[0]["components"] = {
   ),
   a: ({ node, className, href, ...props }) => (
     <Link
-      className={classNames("my-4 text-red-800 hover:text-red-700", className)}
+      className={classNames(
+        "my-4 text-red-700 dark:text-red-300 hover:text-red-500",
+        className
+      )}
       href={href}
       {...props}
     />

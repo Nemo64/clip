@@ -41,7 +41,7 @@ export function VideoTimeline({
   width,
   height,
   className,
-  videoClassName = "object-contain bg-slate-100",
+  videoClassName = "object-contain bg-slate-200 dark:bg-neutral-900",
   limit,
   value,
   videoSrc,
@@ -152,7 +152,7 @@ export function VideoTimeline({
         >
           {playing ? <PauseIcon /> : <PlayIcon />}
         </Button>
-        <div className="flex-grow h-16 bg-black bg-slate-800 rounded-r-2xl relative select-none">
+        <div className="flex-grow h-16 bg-neutral-900 rounded-r-2xl relative select-none">
           <div className="absolute inset-0 flex flex-row rounded-r-2xl overflow-hidden">
             {pics.map((pic, index) => (
               // eslint-disable-next-line @next/next/no-img-element
