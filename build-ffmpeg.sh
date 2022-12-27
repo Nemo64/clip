@@ -47,6 +47,7 @@ FLAGS=(
   --enable-demuxer=mov # also mp4,m4a,3gp,3g2,mj2
   --enable-demuxer=mpeg*
   --enable-demuxer=ogg
+  --enable-demuxer=wmv*
 
   # video codecs
   --enable-decoder=av1
@@ -81,7 +82,7 @@ FLAGS=(
   # configure_output_video_filter https://github.com/FFmpeg/FFmpeg/blob/45ab5307a6e8c04b4ea91b1e1ccf71ba38195f7c/fftools/ffmpeg_filter.c#L428
   --enable-filter=buffersink,scale,format,fps
   # configure_output_audio_filter https://github.com/FFmpeg/FFmpeg/blob/45ab5307a6e8c04b4ea91b1e1ccf71ba38195f7c/fftools/ffmpeg_filter.c#L522
-  --enable-filter=abuffersink,aformat # might be incomplete
+  --enable-filter=abuffersink,aformat
   # configure_input_video_filter https://github.com/FFmpeg/FFmpeg/blob/45ab5307a6e8c04b4ea91b1e1ccf71ba38195f7c/fftools/ffmpeg_filter.c#L710
   --enable-filter=transpose,hflip,vflip
   # configure_input_audio_filter https://github.com/FFmpeg/FFmpeg/blob/45ab5307a6e8c04b4ea91b1e1ccf71ba38195f7c/fftools/ffmpeg_filter.c#L835
@@ -92,7 +93,7 @@ FLAGS=(
   # normal video encode
   --enable-encoder=libfdk_aac,libx264
   --enable-parser=aac,h264
-  --enable-muxer=mp4
+  --enable-muxer=mp4,null
   --enable-filter=fps,crop,scale,colorspace
   --enable-filter=amix,aresample
 
