@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import {
+import React, {
   MouseEvent,
   RefObject,
   useCallback,
@@ -55,7 +55,6 @@ export function VideoTimeline({
 }: TimelineProps) {
   const maxDuration = limit ? Math.min(limit, frame.duration) : frame.duration;
   const [initialPicsLength] = useState(pics?.length ?? 0);
-  const ref = useRef() as RefObject<HTMLElement>;
 
   const [cursor, setCursor] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -66,8 +65,9 @@ export function VideoTimeline({
 
   const minPlaybackLength = Math.min(1, value.duration);
 
-  const timeStampWidth = ref.current?.clientWidth ?? 0;
-  const timeStampArea = ref.current?.parentElement?.clientWidth ?? 1;
+  const timeStampRef = useRef() as RefObject<HTMLElement>;
+  const timeStampWidth = timeStampRef.current?.clientWidth ?? 0;
+  const timeStampArea = timeStampRef.current?.parentElement?.clientWidth ?? 1;
   const timeStampMoveFactor = timeStampArea / (timeStampArea - timeStampWidth);
 
   const playing =
@@ -75,14 +75,15 @@ export function VideoTimeline({
     cursor >= value.start - 1 / fps &&
     cursor <= value.start + value.duration - 1 / fps;
 
-  const updateCursor = ({ clientX, currentTarget }: MouseEvent) => {
+  const updateCursor = ({ clientX, currentTarget }: React.MouseEvent) => {
     const rect = currentTarget.parentElement?.getBoundingClientRect();
     if (rect) {
+      const moved = (clientX - rect.left) / rect.width;
       setCursor(
         clamp(
-          ((clientX - rect.left) / rect.width) * frame.duration + frame.start,
+          moved * frame.duration + frame.start,
           frame.start,
-          frame.duration
+          frame.start + frame.duration
         )
       );
     }
@@ -132,7 +133,7 @@ export function VideoTimeline({
         )}
         {cursor !== undefined && (
           <DurationInput
-            ref={ref as any}
+            ref={timeStampRef as any}
             value={cursor}
             onChange={setCursor}
             min={frame.start}
@@ -152,7 +153,7 @@ export function VideoTimeline({
         >
           {playing ? <PauseIcon /> : <PlayIcon />}
         </Button>
-        <div className="flex-grow h-16 bg-neutral-900 rounded-r-2xl relative select-none">
+        <div className="flex-grow h-16 bg-neutral-900 rounded-r-2xl relative select-none touch-none">
           <div className="absolute inset-0 flex flex-row rounded-r-2xl overflow-hidden">
             {pics.map((pic, index) => (
               // eslint-disable-next-line @next/next/no-img-element
@@ -174,18 +175,37 @@ export function VideoTimeline({
             className="h-full bg-red-800/0 absolute cursor-move"
             style={{ left: `${startPercent}%`, right: `${100 - endPercent}%` }}
             onMouseMove={updateCursor}
-            onMouseDown={createDragHandler(onChange, onBlur, ({ changeX }) => {
-              const limitedChange = clamp(
-                changeX * frame.duration + frame.start,
-                -value.start,
-                frame.duration - value.duration - value.start
-              );
-              setCursor(value.start + limitedChange);
-              return {
-                start: value.start + limitedChange,
-                duration: value.duration,
-              };
-            })}
+            onPointerDown={dragHandler(
+              onChange,
+              onBlur,
+              ({ changeX, pointerType }) => {
+                switch (pointerType) {
+                  case "mouse":
+                    const limitedChange = clamp(
+                      frame.start + changeX * frame.duration,
+                      frame.start - value.start,
+                      frame.start +
+                        frame.duration -
+                        value.duration -
+                        value.start
+                    );
+                    setCursor(value.start + limitedChange);
+                    return {
+                      start: value.start + limitedChange,
+                      duration: value.duration,
+                    };
+                  default:
+                    setCursor(
+                      clamp(
+                        cursor + changeX * frame.duration,
+                        frame.start,
+                        frame.start + frame.duration
+                      )
+                    );
+                    return value; // no change
+                }
+              }
+            )}
           />
           <div // left cut range ~ the part of the timeline before the body
             className="h-full bg-gradient-to-l from-red-800 bg-red-800/50 bg-[length:4rem_100%] bg-right bg-no-repeat absolute backdrop-contrast-200 backdrop-grayscale"
@@ -210,10 +230,13 @@ export function VideoTimeline({
             onMouseEnter={() => {
               setCursor(value.start);
             }}
-            onMouseDown={createDragHandler(onChange, onBlur, ({ changeX }) => {
+            onPointerDown={dragHandler(onChange, onBlur, ({ changeX }) => {
               const limitedChange = clamp(
-                changeX * frame.duration + frame.start,
-                Math.max(-value.start, value.duration - maxDuration),
+                frame.start + changeX * frame.duration,
+                Math.max(
+                  frame.start - value.start,
+                  value.duration - maxDuration
+                ),
                 value.duration
               );
               setCursor(value.start + limitedChange);
@@ -230,9 +253,9 @@ export function VideoTimeline({
             onMouseEnter={() => {
               setCursor(value.start + value.duration);
             }}
-            onMouseDown={createDragHandler(onChange, onBlur, ({ changeX }) => {
+            onPointerDown={dragHandler(onChange, onBlur, ({ changeX }) => {
               const limitedChange = clamp(
-                changeX * frame.duration + frame.start,
+                frame.start + changeX * frame.duration,
                 -value.duration,
                 Math.min(
                   maxDuration - value.duration,
@@ -245,7 +268,7 @@ export function VideoTimeline({
                 duration: value.duration + limitedChange,
               };
             })}
-            onMouseUp={() => {
+            onPointerUp={() => {
               const endSeekOffset = paused ? 0 : minPlaybackLength;
               setCursor(value.start + value.duration - endSeekOffset);
             }}
@@ -407,40 +430,53 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
-function createDragHandler<T>(
+function dragHandler<T>(
   onChange: ((value: T) => void) | undefined,
   onBlur: ((value: T) => void) | undefined,
-  handler: (event: { changeX: number; changeY: number }) => T
+  handler: (event: {
+    changeX: number;
+    changeY: number;
+    pointerType: string;
+  }) => T
 ) {
-  return ({ clientX, clientY, currentTarget }: MouseEvent) => {
-    const rect = currentTarget.parentElement?.getBoundingClientRect();
+  return (start: React.PointerEvent) => {
+    const target = start.currentTarget as HTMLElement;
+    const rect = target.parentElement?.getBoundingClientRect();
     if (!rect) {
       return;
     }
 
-    const initialX = (clientX - rect.left) / rect.width;
-    const initialY = (clientY - rect.top) / rect.height;
-    let value = handler({ changeX: 0, changeY: 0 });
+    const initialX = (start.clientX - rect.left) / rect.width;
+    const initialY = (start.clientY - rect.top) / rect.height;
 
-    const wrappedHandler = ({ clientX }: { clientX: number }) => {
-      const positionX = (clientX - rect.left) / rect.width;
-      const positionY = (clientY - rect.top) / rect.height;
+    let value = handler({
+      changeX: 0,
+      changeY: 0,
+      pointerType: start.pointerType,
+    });
+
+    const wrappedHandler = (current: PointerEvent) => {
+      const positionX = (current.clientX - rect.left) / rect.width;
+      const positionY = (start.clientY - rect.top) / rect.height;
       value = handler({
         changeX: positionX - initialX,
         changeY: positionY - initialY,
+        pointerType: start.pointerType,
       });
       onChange?.(value);
     };
 
-    const document = currentTarget.ownerDocument;
+    const document = target.ownerDocument;
+    console.log("start drag", { initialX, initialY, start });
+
     const detachHandler = () => {
-      document.removeEventListener("mousemove", wrappedHandler);
-      document.removeEventListener("mouseup", detachHandler);
+      document.removeEventListener("pointermove", wrappedHandler);
+      document.removeEventListener("pointerup", detachHandler);
       document.defaultView?.removeEventListener("blur", detachHandler);
       onBlur?.(value);
     };
-    document.addEventListener("mousemove", wrappedHandler);
-    document.addEventListener("mouseup", detachHandler);
+    document.addEventListener("pointermove", wrappedHandler);
+    document.addEventListener("pointerup", detachHandler);
     document.defaultView?.addEventListener("blur", detachHandler);
   };
 }

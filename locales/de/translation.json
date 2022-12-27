@@ -15,7 +15,7 @@
       "none": "Kein Ton",
       "none_details": "Entferne die Tonspur",
       "none_implausible": "",
-      "original": " (aus Quelldatei; schnell und verlustlos)"
+      "original": "Originalton übernehmen"
     },
     "button": {
       "change": "Andere Datei auswählen",
@@ -30,8 +30,6 @@
     },
     "title": "Konvertiere {{name}}.",
     "video_quality": {
-      "crf_1080p": "1080p full HD",
-      "crf_360p": "",
       "crf_480p": "SD Auflösung",
       "crf_720p": "HD Auflösung",
       "crf_details": "{{width}}x{{height}}@{{fps, number}} mit CRF {{crf}}",

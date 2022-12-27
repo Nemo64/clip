@@ -65,14 +65,10 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
       formatGroupLabel={(group) => <div className="sr-only">{group.label}</div>}
       formatOptionLabel={(option, { context }) => (
         <div className="leading-4 pt-1">
-          {option.preset === "crf_1080p" &&
-            t("conversion.video_quality.crf_1080p")}
           {option.preset === "crf_720p" &&
             t("conversion.video_quality.crf_720p")}
           {option.preset === "crf_480p" &&
             t("conversion.video_quality.crf_480p")}
-          {option.preset === "crf_360p" &&
-            t("conversion.video_quality.crf_360p")}
 
           {option.preset === "size_50mb" &&
             t("conversion.video_quality.size_50mb")}
@@ -133,11 +129,9 @@ export function AudioFormatSelect({ formats, ...props }: AudioProps) {
           {option.preset === "bitrate_low" &&
             t("conversion.audio_quality.bitrate_low")}
           {option.preset === "bitrate_high" &&
-            t("conversion.audio_quality.bitrate_high")}
-
-          <span className={context === "value" ? "text-green-700" : ""}>
-            {option.original && t("conversion.audio_quality.original")}
-          </span>
+            (option.original
+              ? t("conversion.audio_quality.original")
+              : t("conversion.audio_quality.bitrate_high"))}
 
           {option.preset?.startsWith("none") &&
             (!option.implausible ? (

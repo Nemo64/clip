@@ -15,7 +15,7 @@
       "none": "No audio",
       "none_details": "Remove the audio track",
       "none_implausible": "",
-      "original": " (copy from source; fast and lossless)"
+      "original": "Use original audio"
     },
     "button": {
       "change": "Select a different file",
@@ -30,11 +30,9 @@
     },
     "title": "Convert file {{name}}.",
     "video_quality": {
-      "crf_1080p": "1080p full HD",
-      "crf_360p": "",
       "crf_480p": "SD Resolution",
       "crf_720p": "HD Resolution",
-      "crf_details": "{{width}}x{{height}}@{{fps, number}}; CRF {{crf}}",
+      "crf_details": "{{width}}x{{height}}@{{fps, number}} with CRF {{crf}}",
       "crf_implausible": "Resolution not available for that source",
       "crf_label": "Resolution focus",
       "gif_600p": "Animated GIF",

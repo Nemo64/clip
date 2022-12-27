@@ -23,12 +23,11 @@ import {
   BrokenVideo,
   convertVideo,
   createCommands,
-  createPreviews,
   Format,
   KnownVideo,
   NewVideo,
-  possibleAudioFormats,
-  possibleVideoFormats,
+  getAudioFormats,
+  getVideoFormats,
   ProgressEvent,
   Video,
 } from "../src/video";
@@ -37,6 +36,7 @@ import { useObjectURL } from "../src/use_object_url";
 import { VideoConversionDetails } from "../components/video_details";
 import { FormattedCommand } from "../components/cli";
 import { Markdown } from "../components/markdown";
+import { useThumbnails } from "../src/use_thumbnails";
 
 export default function VideoPage() {
   const [video] = useContext(VideoContext);
@@ -216,61 +216,22 @@ function ErrorConvert({
 }
 
 function ConvertPage({
-  video,
+  video: source,
   start,
 }: {
   video: KnownVideo;
   start: (format: Format) => Promise<void>;
 }) {
-  const videoUrl = useObjectURL(video.file);
-  const picInt = Math.max(video.metadata.container.duration / 30, 0.5);
-  const [pics, setPics] = useState<string[]>([]);
-
-  useEffect(() => {
-    let canceled = false;
-    const pics: string[] = [];
-    (async () => {
-      const startTime = Date.now();
-      const formatStr = [
-        video.metadata.video.codec,
-        video.metadata.audio?.codec,
-        `${2 ** Math.round(Math.log2(video.metadata.container.duration))}s`,
-      ].join(":");
-      try {
-        trackEvent("thumbnail-start", "generate", formatStr);
-        for await (const preview of createPreviews(video, picInt)) {
-          if (canceled) break;
-          pics.push(URL.createObjectURL(preview));
-          setPics([...pics]); // copy over so react rerenders
-        }
-        if (!canceled) {
-          const convertDuration = (Date.now() - startTime) / 1000;
-          trackEvent(
-            "thumbnail-finish",
-            "generate",
-            formatStr,
-            convertDuration
-          );
-        }
-      } catch (e) {
-        const convertDuration = (Date.now() - startTime) / 1000;
-        trackEvent("thumbnail-error", "generate", String(e), convertDuration);
-        throw e;
-      }
-    })();
-    return () => {
-      canceled = true;
-      pics.forEach(URL.revokeObjectURL);
-      setPics([]);
-    };
-  }, [video, picInt]);
+  const videoUrl = useObjectURL(source.file);
+  const picInt = Math.max(source.metadata.container.duration / 30, 0.5);
+  const pics = useThumbnails(source, picInt);
 
   const { control, handleSubmit, watch, getValues, setValue } = useForm<Format>(
     {
       defaultValues: {
         container: {
-          start: video.metadata.container.start,
-          duration: Math.min(video.metadata.container.duration, 2 * 60),
+          start: source.metadata.container.start,
+          duration: Math.min(source.metadata.container.duration, 2 * 60),
         },
         video: undefined,
         audio: undefined,
@@ -278,51 +239,40 @@ function ConvertPage({
     }
   );
 
-  const currentContainer = watch("container");
+  const container = watch("container");
   const audioFormats = useMemo(() => {
-    const audioFormats = possibleAudioFormats({
-      ...video.metadata,
-      container: currentContainer,
-    });
-    const currentPreset = getValues("audio.preset") ?? "bitrate_high";
-    setValue(
-      "audio",
-      audioFormats.find((f) => f.preset === currentPreset) ?? audioFormats[0]
-    );
-    return audioFormats;
-  }, [video.metadata, currentContainer, getValues, setValue]);
+    // pass the new container
+    // this allows to choose formats based on the new video duration
+    const formats = getAudioFormats({ ...source.metadata, container });
+    const preset = getValues("audio.preset") ?? "bitrate_high";
+    setValue("audio", formats.find((f) => f.preset === preset) ?? formats[0]);
+    return formats;
+  }, [source.metadata, container, getValues, setValue]);
 
-  const currentAudio = watch("audio");
+  const audio = watch("audio");
   const videoFormats = useMemo(() => {
-    const videoFormats = possibleVideoFormats({
-      ...video.metadata,
-      container: currentContainer,
-      audio: currentAudio,
-    });
-    const currentPreset = getValues("video.preset") ?? "size_8mb";
-    setValue(
-      "video",
-      videoFormats.find((f) => f.preset === currentPreset) ?? videoFormats[0]
-    );
-    return videoFormats;
-  }, [video.metadata, currentContainer, currentAudio, getValues, setValue]);
+    // also pass the selected audio format
+    // this allows to limit adjust the video format based on the leftover space
+    const formats = getVideoFormats({ ...source.metadata, container, audio });
+    const preset = getValues("video.preset") ?? "size_8mb";
+    setValue("video", formats.find((f) => f.preset === preset) ?? formats[0]);
+    return formats;
+  }, [source.metadata, container, audio, getValues, setValue]);
+
+  const video = watch("video");
+  const targetFormat: Format = { container, video, audio };
 
   const formatRules = {
     required: true,
-    validate: (format?: { implausible?: boolean }): boolean =>
-      !format?.implausible,
-  };
-
-  const targetFormat: Format = {
-    container: watch("container"),
-    video: watch("video"),
-    audio: watch("audio"),
+    validate(format?: { implausible?: boolean }) {
+      return !format?.implausible;
+    },
   };
 
   return (
     <>
       <Head>
-        <title>{t("conversion.title", { name: video.file.name })}</title>
+        <title>{t("conversion.title", { name: source.file.name })}</title>
         <meta name="robots" content="noindex" />
       </Head>
       <div className="widescreen:min-h-screen container mx-auto flex flex-col justify-center">
@@ -337,10 +287,10 @@ function ConvertPage({
               render={({ field: { ref, ...field } }) => (
                 <VideoTimeline
                   className="max-h-[80vh] lg:max-h-screen py-2 lg:py-16 sticky top-0"
-                  frame={video.metadata.container}
-                  width={video.metadata.video.width}
-                  height={video.metadata.video.height}
-                  fps={video.metadata.video.fps}
+                  frame={source.metadata.container}
+                  width={source.metadata.video.width}
+                  height={source.metadata.video.height}
+                  fps={source.metadata.video.fps}
                   videoSrc={videoUrl}
                   pics={pics}
                   picInt={picInt}
@@ -350,9 +300,9 @@ function ConvertPage({
               )}
             />
           </div>
-          <div className="flex-auto p-2 lg:py-16 max-w-lg">
+          <div className="flex-auto p-2 lg:py-16 max-w-full lg:max-w-lg">
             <h1 className="text-2xl mb-4 motion-safe:animate-fly-1">
-              {t("conversion.title", { name: video.file.name })}
+              {t("conversion.title", { name: source.file.name })}
             </h1>
 
             <div className="mb-2 motion-safe:animate-fly-2">
@@ -415,14 +365,14 @@ function ConvertPage({
               <div className="overflow-auto flex-grow">
                 <Markdown>{t("conversion.details.params_intro")}</Markdown>
                 <VideoConversionDetails
-                  source={video.metadata}
+                  source={source.metadata}
                   target={targetFormat}
                 />
                 <Markdown>{t("conversion.details.command_intro")}</Markdown>
                 <div className="overflow-auto">
                   {(() => {
                     try {
-                      return createCommands(video, targetFormat).map(
+                      return createCommands(source, targetFormat).map(
                         ({ args }, i) => (
                           <FormattedCommand key={i}>
                             {["ffmpeg", ...args]}
@@ -453,6 +403,10 @@ function ProgressPage({
   progress: ProgressEvent;
   cancel: () => void;
 }) {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
   return (
     <>
       <Head>

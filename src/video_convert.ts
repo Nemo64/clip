@@ -118,7 +118,7 @@ export async function convertVideo(
   };
 }
 
-export function createPreviews(
+export function createThumbnails(
   { file, metadata }: KnownVideo,
   interval: number
 ): AsyncIterableIterator<File> {
@@ -127,6 +127,7 @@ export function createPreviews(
   // use some tricks to decode faster for the preview
   args.push("-skip_frame", interval >= 2 ? "nokey" : "default", "-vsync", "2");
   args.push("-flags2", "fast"); // https://stackoverflow.com/a/54873148
+
   const { width, height } = createResolution(metadata, 640, 360);
   args.push("-an"); // no audio
   args.push("-sn"); // no subtitles
@@ -134,7 +135,6 @@ export function createPreviews(
   args.push("-i", sanitizeFileName(file.name));
   args.push("-vf", `fps=1/${interval},scale=${width}:${height}:flags=bilinear`);
   args.push("-f", `image2`);
-  // args.push("-q:v", `10`); // 1-31, lower is better quality
   args.push("frame_%d.png");
 
   const run = ffmpeg({ file, args });

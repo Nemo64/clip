@@ -1,6 +1,6 @@
 import { AudioFormat, Format, VideoFormat } from "./video";
 
-export function possibleVideoFormats(source: Format): VideoFormat[] {
+export function getVideoFormats(source: Format): VideoFormat[] {
   const filterSensibleResolutions = (
     { width }: Resolution,
     index: number,
@@ -30,7 +30,7 @@ export function possibleVideoFormats(source: Format): VideoFormat[] {
   ];
 }
 
-export function possibleAudioFormats(source: Format): AudioFormat[] {
+export function getAudioFormats(source: Format): AudioFormat[] {
   const options: AudioFormat[] = [];
 
   options.push({
