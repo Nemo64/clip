@@ -2,10 +2,10 @@ import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 
 let running = false;
 let instancePromise: ReturnType<typeof createInstance>;
-let lastInputFile: [string, number] | undefined;
+let lastInputFiles: [string, number][] = [];
 
 export interface FfmpegProps {
-  file: File;
+  files: File[];
   args: string[];
   logger?: Parameters<ReturnType<typeof createFFmpeg>["setLogger"]>[0];
 }
@@ -15,26 +15,33 @@ export interface FfmpegProps {
  * It'll ensure that no other ffmpeg is running at the same time.
  * If there is another ffmpeg running, it'll be destroyed and a new one will be created.
  */
-export function ffmpeg({ file, logger, args }: FfmpegProps) {
+export function ffmpeg({ files, logger, args }: FfmpegProps) {
   ensureFreshFfmpegInstance();
   running = true;
 
   const isNewFile =
-    lastInputFile === undefined ||
-    lastInputFile[0] !== file.name ||
-    lastInputFile[1] !== file.size;
+    lastInputFiles === undefined ||
+    lastInputFiles.length !== files.length ||
+    files.some((file, i) => file.name !== lastInputFiles[i][0]) ||
+    files.some((file, i) => file.size !== lastInputFiles[i][1]);
+
   const promise = Promise.all([
     instancePromise,
-    isNewFile && fetchFile(file),
-  ]).then(async ([instance, blob]) => {
-    if (isNewFile && lastInputFile) {
-      instance.FS("unlink", lastInputFile[0]);
-    }
-
-    if (isNewFile && blob) {
-      const filename = sanitizeFileName(file.name);
-      instance.FS("writeFile", filename, blob);
-      lastInputFile = [filename, file.size];
+    ...(isNewFile ? files.map(fetchFile) : []),
+  ]).then(async ([instance, ...blobs]) => {
+    if (isNewFile) {
+      lastInputFiles.forEach(([name]) => {
+        try {
+          instance.FS("unlink", name);
+        } catch (e) {
+          console.error("cleanup error", e);
+        }
+      });
+      lastInputFiles = files.map((file, i) => {
+        const filename = sanitizeFileName(file.name);
+        instance.FS("writeFile", filename, blobs[i]);
+        return [file.name, file.size];
+      });
     }
 
     instance.setLogger(logger ?? (() => void 0));
@@ -62,7 +69,7 @@ export function ensureFreshFfmpegInstance(onError?: (error: any) => void) {
   if (running || !instancePromise) {
     console.log("create new ffmpeg instance");
     instancePromise = createInstance();
-    lastInputFile = undefined;
+    lastInputFiles = [];
     running = false;
   }
 
@@ -89,5 +96,5 @@ async function createInstance() {
 }
 
 export function sanitizeFileName(name: string) {
-  return name.replace(/[^\x00-\x7F]/g, "_");
+  return name.replace(/[^\w.]+/g, " ");
 }

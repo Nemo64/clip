@@ -20,6 +20,7 @@
     "button": {
       "change": "Select a different file",
       "change_parameters": "Try different parameters",
+      "report_issue": "Report issue",
       "start": "Start"
     },
     "details": {

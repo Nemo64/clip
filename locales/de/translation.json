@@ -20,6 +20,7 @@
     "button": {
       "change": "Andere Datei auswählen",
       "change_parameters": "Andere Parameter aus probieren",
+      "report_issue": "Fehler melden",
       "start": "Start"
     },
     "details": {

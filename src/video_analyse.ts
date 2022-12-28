@@ -20,7 +20,7 @@ export async function analyzeVideo({ file }: NewVideo): Promise<KnownVideo> {
   const strings = [] as string[];
 
   await ffmpeg({
-    file: file,
+    files: [file],
     args: ["-hide_banner", "-v", "info", "-i", sanitizeFileName(file.name)],
     logger: ({ message }) => {
       strings.push(message);
@@ -73,6 +73,7 @@ export function parseMetadata(message: any, metadata: Partial<Format>) {
       color: videoMatch.groups.color,
       width: parseFloat(videoMatch.groups.width),
       height: parseFloat(videoMatch.groups.height),
+      rotation: 0,
       bitrate: parseFloat(videoMatch.groups.bitrate),
       fps: Math.max(
         parseFloat(videoMatch.groups.fps),
@@ -103,15 +104,24 @@ export function parseMetadata(message: any, metadata: Partial<Format>) {
   // - https://github.com/FFmpeg/FFmpeg/blob/45ab5307a6e8c04b4ea91b1e1ccf71ba38195f7c/fftools/ffmpeg_filter.c#L710
   // but it reports none rotated dimensions, so i need to rotate them here
   const rotationMatch = message.match(
-    /displaymatrix: rotation of (?<rotation>-90|90|-270|270).00 degrees/
+    /displaymatrix: rotation of (?<rotation>-?90|-?180|-?270).00 degrees/
   );
-  if (rotationMatch && metadata.video) {
-    // noinspection JSSuspiciousNameCombination
-    metadata.video = {
-      ...metadata.video,
-      width: metadata.video.height,
-      height: metadata.video.width,
-    };
+  if (rotationMatch?.groups && metadata.video) {
+    const rotation = parseFloat(rotationMatch.groups.rotation);
+    if (Math.abs(rotation) % 180 === 0) {
+      metadata.video = {
+        ...metadata.video,
+        rotation: rotation as any,
+      };
+    } else {
+      // noinspection JSSuspiciousNameCombination
+      metadata.video = {
+        ...metadata.video,
+        width: metadata.video.height,
+        height: metadata.video.width,
+        rotation: rotation as any,
+      };
+    }
     return;
   }
 }

@@ -11,6 +11,12 @@ export function useThumbnails(video: KnownVideo, picInt: number) {
     const pics: string[] = [];
 
     (async () => {
+      // effects are triggered twice in dev mode so debounce this process
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      if (canceled) {
+        return;
+      }
+
       const startTime = Date.now();
       const formatStr = [
         video.metadata.video.codec,

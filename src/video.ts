@@ -46,6 +46,7 @@ export interface VideoFormat extends GenericStreamFormat {
   color: string; // eg. yuv420p
   width: number; // eg. 1920
   height: number; // eg. 1080
+  rotation: 0 | 90 | 180 | 270 | -90 | -180 | -270;
   bitrate?: number; // in kbit/s
   crf?: number; // constant rate factor ~ usually only available for encode
   fps: number; // average frames per second

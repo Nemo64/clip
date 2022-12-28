@@ -11,10 +11,12 @@ export function DemoTimeline({
   className,
   ...props
 }: Partial<Parameters<typeof VideoTimeline>[0]>) {
-  const [demoCrop, setDemoCrop] = useState<Crop>({
-    start: DEMO_TIMELINE.start,
-    duration: DEMO_TIMELINE.duration * 0.75,
-  });
+  const [demoCrop, setDemoCrop] = useState<Crop[]>([
+    {
+      start: DEMO_TIMELINE.start,
+      duration: DEMO_TIMELINE.duration * 0.75,
+    },
+  ]);
 
   return (
     <div className={className}>

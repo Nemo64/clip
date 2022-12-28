@@ -5,8 +5,14 @@ import {
   createResolution,
   Format,
   KnownVideo,
+  ContainerFormat,
 } from "./video";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
+import {
+  calculateDuration,
+  ConvertInstructions,
+  toTargetFormat,
+} from "./video_convert_format";
 
 export interface ProgressEvent {
   percent: number;
@@ -16,26 +22,28 @@ export interface ProgressEvent {
 /**
  * Create ffmpeg commands
  */
-export function createCommands({ file, metadata }: KnownVideo, format: Format) {
-  const fileName = sanitizeFileName(file.name);
+export function createCommands(
+  video: KnownVideo,
+  instructions: ConvertInstructions
+) {
+  const fileName = sanitizeFileName(video.file.name);
   const baseName = fileName.replace(/\.\w{2,4}$|$/, "");
-  const args: string[] = [];
 
-  args.push(...seekArguments(metadata, format));
+  const args: string[] = [];
   args.push("-sn"); // no subtitles
   args.push("-dn"); // no data streams
 
-  if (format.video.codec.startsWith("h264")) {
-    if (format.audio.codec.startsWith("none")) {
+  if (instructions.video.codec.startsWith("h264")) {
+    if (instructions.audio.codec.startsWith("none")) {
       args.push("-an"); // no audio
-      args.push("-i", fileName);
-      args.push(...h264Arguments(metadata, format));
-    } else if (format.audio.codec.startsWith("aac")) {
-      args.push("-i", fileName);
-      args.push(...h264Arguments(metadata, format));
-      args.push(...aacArguments(metadata, format));
+      args.push(...inputArguments(video, instructions));
+      args.push(...h264Arguments(video.metadata, instructions));
+    } else if (instructions.audio.codec.startsWith("aac")) {
+      args.push(...inputArguments(video, instructions));
+      args.push(...h264Arguments(video.metadata, instructions));
+      args.push(...aacArguments(video.metadata, instructions));
     } else {
-      throw new Error(`Unsupported audio codec: ${format.audio.codec}`);
+      throw new Error(`Unsupported audio codec: ${instructions.audio.codec}`);
     }
 
     args.push("-f", "mp4"); // use mp4 since it has the best compatibility as long as all streams are supported
@@ -45,15 +53,15 @@ export function createCommands({ file, metadata }: KnownVideo, format: Format) {
     return [{ args: args, file: `${baseName}.clip.mp4`, type: "video/mp4" }];
   }
 
-  if (format.video.codec.startsWith("gif")) {
+  if (instructions.video.codec.startsWith("gif")) {
     args.push("-an"); // no audio
 
     // phase1: create color palette
     const args1 = args.slice();
     args1.push("-skip_frame", "nokey"); // palette does not need all frames
-    args1.push("-i", fileName);
+    args1.push(...inputArguments(video, instructions));
     const palettegenFilters = [
-      `scale=${format.video.width}:${format.video.height}:flags=bilinear`,
+      ...cropScaleFilter(video.metadata, instructions),
       `palettegen=stats_mode=diff`,
     ];
     args1.push("-vf", palettegenFilters.join(","));
@@ -61,11 +69,11 @@ export function createCommands({ file, metadata }: KnownVideo, format: Format) {
 
     // phase2: create gif
     const args2 = args.slice();
-    args2.push("-i", fileName);
+    args2.push(...inputArguments(video, instructions));
     args2.push("-i", `${baseName}.palette.png`); // the palette
     const paletteuseFilters = [
       `fps=100/6`,
-      `scale=${format.video.width}:${format.video.height}:flags=bilinear`,
+      ...cropScaleFilter(video.metadata, instructions),
       `mpdecimate=lo=64:frac=0.1`,
       `paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle`,
     ];
@@ -78,7 +86,7 @@ export function createCommands({ file, metadata }: KnownVideo, format: Format) {
     ];
   }
 
-  throw new Error(`Unsupported video codec: ${format.video.codec}`);
+  throw new Error(`Unsupported video codec: ${instructions.video.codec}`);
 }
 
 /**
@@ -86,18 +94,20 @@ export function createCommands({ file, metadata }: KnownVideo, format: Format) {
  */
 export async function convertVideo(
   video: KnownVideo,
-  format: Format,
+  convertFormat: ConvertInstructions,
   onProgress: (progress: ProgressEvent) => void
 ): Promise<ConvertedVideo> {
-  const commands = createCommands(video, format);
+  const commands = createCommands(video, convertFormat);
+  const targetFormat = toTargetFormat(convertFormat);
+
   let instance: FFmpeg;
   for (let i = 0; i < commands.length; ++i) {
     instance = await ffmpeg({
-      file: video.file,
+      files: inputFiles(video, convertFormat),
       args: commands[i].args,
       logger: loggerToProgress(
-        format.container.duration * (0 - i),
-        format.container.duration * (commands.length - i),
+        targetFormat.container.duration * (0 - i),
+        targetFormat.container.duration * (commands.length - i),
         onProgress
       ),
     }).promise;
@@ -114,12 +124,12 @@ export async function convertVideo(
   return {
     status: "converted",
     file: file,
-    metadata: format,
+    metadata: targetFormat,
   };
 }
 
 export function createThumbnails(
-  { file, metadata }: KnownVideo,
+  video: KnownVideo,
   interval: number
 ): AsyncIterableIterator<File> {
   const args: string[] = [];
@@ -128,20 +138,20 @@ export function createThumbnails(
   args.push("-skip_frame", interval >= 2 ? "nokey" : "default", "-vsync", "2");
   args.push("-flags2", "fast"); // https://stackoverflow.com/a/54873148
 
-  const { width, height } = createResolution(metadata, 640, 360);
+  const { width, height } = createResolution(video.metadata, 640, 360);
   args.push("-an"); // no audio
   args.push("-sn"); // no subtitles
   args.push("-dn"); // no data streams
-  args.push("-i", sanitizeFileName(file.name));
+  args.push("-i", sanitizeFileName(video.file.name));
   args.push("-vf", `fps=1/${interval},scale=${width}:${height}:flags=bilinear`);
   args.push("-f", `image2`);
   args.push("frame_%d.png");
 
-  const run = ffmpeg({ file, args });
+  const run = ffmpeg({ files: [video.file], args });
 
   return (async function* () {
     const instance = await run.instance;
-    const frames = Math.ceil(metadata.container.duration / interval);
+    const frames = Math.ceil(video.metadata.container.duration / interval);
     let done = false;
     let lastFrame = Date.now();
     for (let i = 1; i <= frames; ) {
@@ -200,10 +210,50 @@ function loggerToProgress(
   };
 }
 
-function seekArguments(metadata: Format, format: Format) {
+function inputArguments(video: KnownVideo, target: ConvertInstructions) {
+  const fileName = sanitizeFileName(video.file.name);
   const args: string[] = [];
-  const source = metadata.container;
-  const target = format.container;
+
+  if (target.containers.length === 1) {
+    args.push(...seekArguments(video.metadata.container, target.containers[0]));
+    args.push("-i", fileName);
+    return args;
+  }
+
+  args.push("-safe", "0"); // allow unsafe file paths
+  args.push("-f", "concat");
+  args.push("-i", "concat.txt");
+  return args;
+}
+
+function inputFiles(video: KnownVideo, format: ConvertInstructions): File[] {
+  if (format.containers.length === 1) {
+    return [video.file];
+  }
+
+  const concatFile = new File([createConcatFile(video, format)], "concat.txt", {
+    type: "text/plain",
+  });
+
+  return [video.file, concatFile];
+}
+
+export function createConcatFile(
+  video: KnownVideo,
+  format: ConvertInstructions
+) {
+  const concat = ["ffconcat version 1.0"];
+  for (const container of format.containers) {
+    const end = container.start + container.duration;
+    concat.push(`\nfile '${sanitizeFileName(video.file.name)}'`);
+    concat.push(`inpoint ${container.start.toFixed(3)}`);
+    concat.push(`outpoint ${end.toFixed(3)}`);
+  }
+  return concat.join("\n");
+}
+
+function seekArguments(source: ContainerFormat, target: ContainerFormat) {
+  const args: string[] = [];
 
   // TODO: check what it means if the source video has a start time !== 0
   if (target.start > source.start) {
@@ -217,21 +267,50 @@ function seekArguments(metadata: Format, format: Format) {
   return args;
 }
 
-function h264Arguments(metadata: Format, format: Format) {
-  const args: string[] = [];
-  const source = metadata.video;
-  const target = format.video;
-  const isLargeTarget = target.width * target.height > 500_000;
+function cropScaleFilter(
+  source: Format,
+  target: ConvertInstructions
+): string[] {
+  const filters: string[] = [];
 
-  if (target.original) {
+  // autorotate does not work when using the concat source
+  // https://trac.ffmpeg.org/ticket/10000
+  if (target.containers.length !== 1) {
+    switch (target.video.rotation - source.video.rotation) {
+      case 90:
+      case -270:
+        filters.push("transpose=1");
+        break;
+      case 180:
+      case -180:
+        filters.push("hflip,vflip");
+        break;
+      case 270:
+      case -90:
+        filters.push("transpose=2");
+        break;
+    }
+  }
+
+  filters.push(
+    `scale=${target.video.width}:${target.video.height}:flags=bilinear`
+  );
+  return filters;
+}
+
+function h264Arguments(source: Format, target: ConvertInstructions) {
+  const args: string[] = [];
+  const isLargeTarget = target.video.width * target.video.height > 500_000;
+
+  if (target.video.original) {
     args.push("-c:v", "copy");
     return args;
   }
 
   const filter = [
-    `fps=${target.fps}`,
-    `scale=${target.width}:${target.height}:flags=bilinear`,
-    `format=${target.color}`,
+    `fps=${target.video.fps}`,
+    ...cropScaleFilter(source, target),
+    `format=${target.video.color}`,
   ];
 
   args.push("-vf", filter.join(","));
@@ -240,17 +319,19 @@ function h264Arguments(metadata: Format, format: Format) {
   // args.push('-level:v', '4.0'); // https://en.wikipedia.org/wiki/Advanced_Video_Coding#Levels
   args.push("-profile:v", "high");
 
-  const bufferDuration = Math.min(10, format.container.duration / 4);
-  if (target.crf) {
-    const bitrate = Math.floor(estimateH264Size(target, 8, target.crf - 5));
+  const bufferDuration = Math.min(10, calculateDuration(target) / 4);
+  if (target.video.crf) {
+    const bitrate = estimateH264Size(target.video, target.video.crf - 5);
     const bufsize = Math.floor(bitrate * bufferDuration);
-    args.push("-crf:v", target.crf.toString());
+    args.push("-crf:v", target.video.crf.toString());
     args.push("-maxrate:v", `${bitrate}k`);
     args.push("-bufsize:v", `${bufsize}k`);
-  } else if (target.bitrate) {
-    args.push("-b:v", `${target.bitrate}k`);
-    args.push("-maxrate:v", `${target.bitrate}k`);
-    args.push("-bufsize:v", `${Math.floor(target.bitrate * bufferDuration)}k`);
+  } else if (target.video.bitrate) {
+    const bitrate = target.video.bitrate;
+    const bufsize = Math.floor(bitrate * bufferDuration);
+    args.push("-b:v", `${bitrate}k`);
+    args.push("-maxrate:v", `${bitrate}k`);
+    args.push("-bufsize:v", `${bufsize}k`);
   } else {
     throw new Error("No video bitrate or crf specified");
   }
@@ -258,28 +339,26 @@ function h264Arguments(metadata: Format, format: Format) {
   return args;
 }
 
-function aacArguments(metadata: Format, format: Format) {
+function aacArguments(source: Format, target: ConvertInstructions) {
   const args: string[] = [];
-  const target = format.audio;
-
   args.push("-async", "1");
 
-  if (target.original) {
+  if (target.audio.original) {
     args.push("-c:a", "copy");
     return args;
   }
 
   const aformat = [
-    `sample_rates=${target.sampleRate}`,
-    `channel_layouts=${target.channelSetup}`,
+    `sample_rates=${target.audio.sampleRate}`,
+    `channel_layouts=${target.audio.channelSetup}`,
   ];
 
   args.push("-af", `aformat=${aformat.join(":")}`);
   args.push("-c:a", "libfdk_aac");
-  args.push("-b:a", `${target.bitrate}k`);
-  if (target.bitrate <= 48) {
+  args.push("-b:a", `${target.audio.bitrate}k`);
+  if (target.audio.bitrate <= 48) {
     args.push("-profile:a", "aac_he_v2");
-  } else if (target.bitrate <= 72) {
+  } else if (target.audio.bitrate <= 72) {
     args.push("-profile:a", "aac_he");
   }
 

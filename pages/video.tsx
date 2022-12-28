@@ -22,38 +22,40 @@ import { trackEvent } from "../src/tracker";
 import {
   BrokenVideo,
   convertVideo,
-  createCommands,
-  Format,
   KnownVideo,
   NewVideo,
   getAudioFormats,
   getVideoFormats,
   ProgressEvent,
-  Video,
 } from "../src/video";
 import { VideoContext } from "./_app";
 import { useObjectURL } from "../src/use_object_url";
-import { VideoConversionDetails } from "../components/video_details";
-import { FormattedCommand } from "../components/cli";
-import { Markdown } from "../components/markdown";
+import { VideoDetails } from "../components/video_details";
 import { useThumbnails } from "../src/use_thumbnails";
+import {
+  calculateDuration,
+  ConvertInstructions,
+  mergeContainers,
+} from "../src/video_convert_format";
 
 export default function VideoPage() {
   const [video] = useContext(VideoContext);
-  const [progress, setProgress] = useState<ProgressEvent | undefined>();
-  const [error, setError] = useState<string | undefined>();
+  const [progress, setProgress] = useState<ProgressEvent>();
+  const [lastFormat, setLastFormat] = useState<ConvertInstructions>();
+  const [error, setError] = useState<string>();
   const [result, setResult] = useState<File>();
 
   // reset result when video changes
   useEffect(() => {
     setProgress(undefined);
+    setLastFormat(undefined);
     setResult(undefined);
     if (!video) {
       Router.push("/").catch(console.error);
     }
   }, [video]);
 
-  const start = async (format: Format) => {
+  const start = async (format: ConvertInstructions) => {
     if (video?.status !== "known") {
       throw new Error("Video is not known");
     }
@@ -62,7 +64,7 @@ export default function VideoPage() {
     const presetStr = [
       format.video.original ? "original" : format.video.preset,
       format.audio?.original ? "original" : format.audio?.preset,
-      `${2 ** Math.round(Math.log2(format.container.duration))}s`,
+      `${2 ** Math.round(Math.log2(calculateDuration(format)))}s`,
     ].join(":");
     const formatStr = [
       video.metadata.video.codec,
@@ -73,6 +75,7 @@ export default function VideoPage() {
       console.log("convert using format", format);
       trackEvent("convert-start", presetStr, formatStr);
       setProgress({ percent: 0 });
+      setLastFormat(format);
       const convertedVideo = await convertVideo(video, format, setProgress);
       trackEvent(
         "convert-finish",
@@ -110,8 +113,15 @@ export default function VideoPage() {
     return <ErrorConvert video={video} error={error} reset={stop} />;
   }
 
-  if (progress && video) {
-    return <ProgressPage video={video} progress={progress} cancel={stop} />;
+  if (progress && video?.status === "known") {
+    return (
+      <ProgressPage
+        video={video}
+        progress={progress}
+        cancel={stop}
+        format={lastFormat}
+      />
+    );
   }
 
   if (video?.status === "new") {
@@ -123,7 +133,9 @@ export default function VideoPage() {
   }
 
   if (video?.status === "known") {
-    return <ConvertPage video={video} start={start} />;
+    return (
+      <ConvertPage video={video} start={start} defaultValues={lastFormat} />
+    );
   }
 
   return (
@@ -202,12 +214,30 @@ function ErrorConvert({
         <div className="motion-safe:animate-fly-2">
           {error && <p className="my-4 text-red-800">{error}</p>}
         </div>
-        <div className="text-center animate-fly-3">
+        <div className="text-center animate-fly-3 flex flex-row gap-2 flex-wrap">
           <Button
+            className="px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-400 text-white"
             onClick={reset}
-            className="table relative px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-400 text-white"
           >
             {t("conversion.button.change_parameters")}
+          </Button>
+          <Button
+            className="px-4 py-2 rounded-2xl bg-slate-500 hover:bg-slate-400 text-white"
+            href={`https://github.com/Nemo64/clip/issues/new?${new URLSearchParams(
+              {
+                title: "Error converting video",
+                body: [
+                  "I got the error:",
+                  "```\n" + error + "\n```",
+                  "While converting a video with these stats:",
+                  "```json\n" +
+                    JSON.stringify(video.metadata, null, 2) +
+                    "\n```",
+                ].join("\n\n"),
+              }
+            )}`}
+          >
+            {t("conversion.button.report_issue")}
           </Button>
         </div>
       </div>
@@ -218,49 +248,51 @@ function ErrorConvert({
 function ConvertPage({
   video: source,
   start,
+  defaultValues = {
+    containers: [
+      {
+        start: source.metadata.container.start,
+        duration: Math.min(source.metadata.container.duration, 2 * 60),
+      },
+    ],
+    video: undefined,
+    audio: undefined,
+  },
 }: {
   video: KnownVideo;
-  start: (format: Format) => Promise<void>;
+  start: (format: ConvertInstructions) => Promise<void>;
+  defaultValues?: Partial<ConvertInstructions>;
 }) {
   const videoUrl = useObjectURL(source.file);
   const picInt = Math.max(source.metadata.container.duration / 30, 0.5);
   const pics = useThumbnails(source, picInt);
 
-  const { control, handleSubmit, watch, getValues, setValue } = useForm<Format>(
-    {
-      defaultValues: {
-        container: {
-          start: source.metadata.container.start,
-          duration: Math.min(source.metadata.container.duration, 2 * 60),
-        },
-        video: undefined,
-        audio: undefined,
-      },
-    }
-  );
+  const { control, handleSubmit, watch, getValues, setValue } =
+    useForm<ConvertInstructions>({ defaultValues });
 
-  const container = watch("container");
+  const containers = watch("containers");
+  const container = mergeContainers(containers);
   const audioFormats = useMemo(() => {
-    // pass the new container
-    // this allows to choose formats based on the new video duration
-    const formats = getAudioFormats({ ...source.metadata, container });
+    const formats = getAudioFormats(source.metadata);
     const preset = getValues("audio.preset") ?? "bitrate_high";
     setValue("audio", formats.find((f) => f.preset === preset) ?? formats[0]);
     return formats;
-  }, [source.metadata, container, getValues, setValue]);
+  }, [source.metadata, getValues, setValue]);
 
   const audio = watch("audio");
   const videoFormats = useMemo(() => {
-    // also pass the selected audio format
-    // this allows to limit adjust the video format based on the leftover space
-    const formats = getVideoFormats({ ...source.metadata, container, audio });
+    const formats = getVideoFormats({
+      ...source.metadata,
+      container: { start: 0, duration: container.duration }, // choose formats based on video duration
+      audio, // pass audio format to adjust the video format based on the leftover space
+    });
     const preset = getValues("video.preset") ?? "size_8mb";
     setValue("video", formats.find((f) => f.preset === preset) ?? formats[0]);
     return formats;
-  }, [source.metadata, container, audio, getValues, setValue]);
+  }, [source.metadata, container.duration, audio, getValues, setValue]);
 
   const video = watch("video");
-  const targetFormat: Format = { container, video, audio };
+  const instructions: ConvertInstructions = { containers, video, audio };
 
   const formatRules = {
     required: true,
@@ -283,7 +315,8 @@ function ConvertPage({
           <div className="flex-grow px-2 motion-safe:animate-fly-5">
             <Controller
               control={control}
-              name="container"
+              name="containers"
+              rules={{ minLength: 1 }}
               render={({ field: { ref, ...field } }) => (
                 <VideoTimeline
                   className="max-h-[80vh] lg:max-h-screen py-2 lg:py-16 sticky top-0"
@@ -294,7 +327,6 @@ function ConvertPage({
                   videoSrc={videoUrl}
                   pics={pics}
                   picInt={picInt}
-                  limit={15 * 60}
                   {...field}
                 />
               )}
@@ -360,33 +392,11 @@ function ConvertPage({
               </Button>
             </div>
 
-            <details className="mt-4">
-              <summary>{t("conversion.details.headline")}</summary>
-              <div className="overflow-auto flex-grow">
-                <Markdown>{t("conversion.details.params_intro")}</Markdown>
-                <VideoConversionDetails
-                  source={source.metadata}
-                  target={targetFormat}
-                />
-                <Markdown>{t("conversion.details.command_intro")}</Markdown>
-                <div className="overflow-auto">
-                  {(() => {
-                    try {
-                      return createCommands(source, targetFormat).map(
-                        ({ args }, i) => (
-                          <FormattedCommand key={i}>
-                            {["ffmpeg", ...args]}
-                          </FormattedCommand>
-                        )
-                      );
-                    } catch {
-                      return [];
-                    }
-                  })()}
-                </div>
-                <Markdown>{t("conversion.details.command_outro")}</Markdown>
-              </div>
-            </details>
+            <VideoDetails
+              className="mt-4"
+              video={source}
+              instructions={instructions}
+            />
           </div>
         </form>
       </div>
@@ -397,10 +407,12 @@ function ConvertPage({
 function ProgressPage({
   video,
   progress,
+  format,
   cancel,
 }: {
-  video: Video;
+  video: KnownVideo;
   progress: ProgressEvent;
+  format?: ConvertInstructions;
   cancel: () => void;
 }) {
   useEffect(() => {
@@ -437,6 +449,9 @@ function ProgressPage({
             {t("progress.button.cancel")}
           </Button>
         </div>
+        {format !== undefined && (
+          <VideoDetails video={video} instructions={format} className="mt-4" />
+        )}
       </div>
     </>
   );

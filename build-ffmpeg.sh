@@ -90,6 +90,11 @@ FLAGS=(
   # negotiate_audio https://github.com/FFmpeg/FFmpeg/blob/41a558fea06cc0a23b8d2d0dfb03ef6a25cf5100/libavfilter/formats.c#L336
   --enable-filter=amix,aresample
 
+  # concat demuxer
+  --enable-demuxer=concat
+  # detect_stream_specific https://github.com/FFmpeg/FFmpeg/blob/63db6a02a78e6f1a3657d6287ea870ce10d54d9e/libavformat/concatdec.c#L201
+  --enable-bsf=h264_mp4toannexb
+
   # normal video encode
   --enable-encoder=libfdk_aac,libx264
   --enable-parser=aac,h264

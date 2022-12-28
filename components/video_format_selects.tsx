@@ -2,7 +2,6 @@ import Select, { ClassNamesConfig, Props } from "react-select";
 import { t } from "../src/intl";
 import { AudioFormat, VideoFormat } from "../src/video";
 import classNames from "classnames";
-import { PublicBaseSelectProps } from "react-select/base";
 
 export type VideoProps = { formats: VideoFormat[] } & Omit<
   Props<VideoFormat>,
@@ -23,7 +22,7 @@ const selectStyles = {
       ),
     menu: () =>
       "my-2 py-2 rounded-xl overflow-hidden border shadow-xl fly-in bg-white text-neutral-800 dark:bg-neutral-800 dark:text-white",
-    group: () => "pt-2 first:pt-0",
+    group: () => "pt-4 first:pt-0",
     option: ({ className, isSelected }) =>
       classNames(
         className,

@@ -1,6 +1,64 @@
-import { estimateH264Size, Format } from "../src/video";
+import {
+  createCommands,
+  createConcatFile,
+  estimateH264Size,
+  Format,
+  KnownVideo,
+} from "../src/video";
 import { t } from "../src/intl";
 import classNames from "classnames";
+import { Markdown } from "./markdown";
+import { FormattedCommand } from "./cli";
+import {
+  ConvertInstructions,
+  toTargetFormat,
+} from "../src/video_convert_format";
+
+export function VideoDetails({
+  video,
+  instructions,
+  ...props
+}: {
+  video: KnownVideo;
+  instructions: ConvertInstructions;
+} & React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <details {...props}>
+      <summary>{t("conversion.details.headline")}</summary>
+      <div className="overflow-auto flex-grow">
+        <Markdown>{t("conversion.details.params_intro")}</Markdown>
+        <VideoConversionDetails
+          source={video.metadata}
+          target={toTargetFormat(instructions)}
+        />
+        <Markdown>{t("conversion.details.command_intro")}</Markdown>
+        <div className="overflow-auto">
+          {instructions.containers.length !== 1 && (
+            <pre className="text-sm">
+              {`cat > concat.txt << EOF`}
+              <div className="ml-3">
+                {createConcatFile(video, instructions)}
+              </div>
+              {`EOF`}
+            </pre>
+          )}
+          {(() => {
+            try {
+              return createCommands(video, instructions).map(({ args }, i) => (
+                <FormattedCommand key={i}>
+                  {["ffmpeg", ...args]}
+                </FormattedCommand>
+              ));
+            } catch {
+              return [];
+            }
+          })()}
+        </div>
+        <Markdown>{t("conversion.details.command_outro")}</Markdown>
+      </div>
+    </details>
+  );
+}
 
 export function VideoConversionDetails({
   source,
@@ -82,9 +140,7 @@ export function VideoConversionDetails({
             target={
               target.video.crf
                 ? t("details.bitrate_value_crf", {
-                    value: Math.ceil(
-                      estimateH264Size(target.video, 8, target.video.crf - 5)
-                    ),
+                    value: estimateH264Size(target.video, target.video.crf - 5),
                   })
                 : t("details.bitrate_value", { value: target.video.bitrate })
             }

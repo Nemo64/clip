@@ -1,4 +1,4 @@
-import { AudioFormat, Format, VideoFormat } from "./video";
+import { AudioFormat, ContainerFormat, Format, VideoFormat } from "./video";
 
 export function getVideoFormats(source: Format): VideoFormat[] {
   const filterSensibleResolutions = (
@@ -89,7 +89,7 @@ export function videoFileSizeTargets(
     let bitrateTarget = (sizeTarget * 8) / container.duration - audioBitrate;
 
     const resolution = resolutions.find(
-      (res) => sizeTarget >= estimateH264Size(res, container.duration, 28)
+      (res) => sizeTarget >= estimateH264Size(res, 28, container.duration)
     );
     if (!resolution) {
       const worst = resolutions[resolutions.length - 1];
@@ -100,13 +100,14 @@ export function videoFileSizeTargets(
         color: "yuv420p",
         width: worst.width,
         height: worst.height,
+        rotation: 0,
         bitrate: Math.floor(bitrateTarget),
         fps: video.fps / Math.ceil(video.fps / worst.fps),
       });
       continue;
     }
 
-    const maxSize = estimateH264Size(resolution, container.duration, 12);
+    const maxSize = estimateH264Size(resolution, 12, container.duration);
     const maxBitrate = (maxSize * 8) / container.duration;
     if (maxBitrate < bitrateTarget) {
       sizeTarget = maxSize;
@@ -135,6 +136,7 @@ export function videoFileSizeTargets(
         color: "yuv420p",
         width: resolution.width,
         height: resolution.height,
+        rotation: 0,
         bitrate: Math.floor(bitrateTarget),
         fps: video.fps / Math.ceil(video.fps / resolution.fps),
       });
@@ -151,7 +153,7 @@ export function videoResolutionTargets(
   const options: VideoFormat[] = [];
 
   for (const resolution of resolutions.reverse()) {
-    const size = estimateH264Size(resolution, source.container.duration, 18);
+    const size = estimateH264Size(resolution, 18, source.container.duration);
 
     const originalSuitable =
       source.video.codec.startsWith("h264") &&
@@ -176,6 +178,7 @@ export function videoResolutionTargets(
         color: "yuv420p",
         width: resolution.width,
         height: resolution.height,
+        rotation: 0,
         crf: 21,
         fps: source.video.fps / Math.ceil(source.video.fps / resolution.fps),
       });
@@ -197,6 +200,7 @@ export function videoGifTargets(
       color: "bgra",
       width: resolution.width,
       height: resolution.height,
+      rotation: 0,
       fps: 100 / 6,
     });
   }
@@ -211,13 +215,18 @@ export function videoGifTargets(
  *
  * Sensible values for the crf are 18-28.
  * 18 is a pretty good quality while 28 is a very low quality.
+ *
+ * Tipp, a length of 8 seconds will directly output kbit/s.
  */
 export function estimateH264Size(
   res: { width: number; height: number; fps: number },
-  duration: number,
-  crf: number
+  crf: number,
+  duration: number = 8
 ) {
-  return (res.width * res.height * duration * Math.log2(res.fps)) / 512 / crf; // TODO better calculation
+  // TODO better calculation
+  return Math.floor(
+    (res.width * res.height * duration * Math.log2(res.fps)) / 512 / crf
+  );
 }
 
 export interface Resolution {
