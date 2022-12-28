@@ -221,6 +221,7 @@ function h264Arguments(metadata: Format, format: Format) {
   const args: string[] = [];
   const source = metadata.video;
   const target = format.video;
+  const isLargeTarget = target.width * target.height > 500_000;
 
   if (target.original) {
     args.push("-c:v", "copy");
@@ -235,24 +236,21 @@ function h264Arguments(metadata: Format, format: Format) {
 
   args.push("-vf", filter.join(","));
   args.push("-c:v", "libx264");
-  // args.push("-preset:v", "medium");
+  args.push("-preset:v", isLargeTarget ? "fast" : "medium");
   // args.push('-level:v', '4.0'); // https://en.wikipedia.org/wiki/Advanced_Video_Coding#Levels
   args.push("-profile:v", "high");
 
   const bufferDuration = Math.min(10, format.container.duration / 4);
   if (target.crf) {
-    const crf = target.crf;
-    const bitrate = Math.floor(estimateH264Size(target, 8, crf - 5));
+    const bitrate = Math.floor(estimateH264Size(target, 8, target.crf - 5));
     const bufsize = Math.floor(bitrate * bufferDuration);
-    args.push("-crf:v", crf.toString());
+    args.push("-crf:v", target.crf.toString());
     args.push("-maxrate:v", `${bitrate}k`);
     args.push("-bufsize:v", `${bufsize}k`);
   } else if (target.bitrate) {
-    const bitrate = target.bitrate;
-    const bufsize = Math.floor(bitrate * bufferDuration);
-    args.push("-b:v", `${bitrate}k`);
-    args.push("-maxrate:v", `${bitrate}k`);
-    args.push("-bufsize:v", `${bufsize}k`);
+    args.push("-b:v", `${target.bitrate}k`);
+    args.push("-maxrate:v", `${target.bitrate}k`);
+    args.push("-bufsize:v", `${Math.floor(target.bitrate * bufferDuration)}k`);
   } else {
     throw new Error("No video bitrate or crf specified");
   }
