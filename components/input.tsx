@@ -71,6 +71,7 @@ export const DurationInput = forwardRef(function DurationInput(
         className="text-right bg-transparent appearance-none no-arrows"
         style={{ width: `${mDigits}ch` }}
         onChange={handleChange}
+        onFocus={(e) => e.target.select()}
         min={min !== undefined ? Math.floor(min / 60) : undefined}
         max={max !== undefined ? Math.ceil(max / 60) : undefined}
         value={minutes}
@@ -83,6 +84,7 @@ export const DurationInput = forwardRef(function DurationInput(
         className="text-right bg-transparent appearance-none no-arrows"
         style={{ width: `${sDigits}ch` }}
         onChange={handleChange}
+        onFocus={(e) => e.target.select()}
         onBlur={({ currentTarget }) => {
           currentTarget.value = seconds.toString().padStart(2, "0");
         }}
@@ -105,6 +107,7 @@ export const DurationInput = forwardRef(function DurationInput(
             className="text-right bg-transparent appearance-none no-arrows"
             style={{ width: `${fDigits}ch` }}
             onChange={handleChange}
+            onFocus={(e) => e.target.select()}
             onBlur={({ currentTarget }) => {
               currentTarget.value = fractions.toString().padStart(fDigits, "0");
             }}
