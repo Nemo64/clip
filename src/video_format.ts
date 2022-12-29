@@ -107,7 +107,7 @@ export function videoFileSizeTargets(
       continue;
     }
 
-    const maxSize = estimateH264Size(resolution, 12, container.duration);
+    const maxSize = estimateH264Size(resolution, 18, container.duration);
     const maxBitrate = (maxSize * 8) / container.duration;
     if (maxBitrate < bitrateTarget) {
       sizeTarget = maxSize;
@@ -117,8 +117,8 @@ export function videoFileSizeTargets(
     const originalSuitable =
       video.codec.startsWith("h264") &&
       video.color === "yuv420p" &&
-      video.width <= resolution.width * 2 &&
-      video.height <= resolution.height * 2 &&
+      video.width <= resolution.width * 1.5 &&
+      video.height <= resolution.height * 1.5 &&
       video.fps <= resolution.fps &&
       video.bitrate !== undefined &&
       (video.bitrate * container.duration) / 8 <= sizeTarget;
@@ -158,8 +158,8 @@ export function videoResolutionTargets(
     const originalSuitable =
       source.video.codec.startsWith("h264") &&
       source.video.color === "yuv420p" &&
-      source.video.width <= resolution.width &&
-      source.video.height <= resolution.height &&
+      source.video.width <= resolution.width * 1.5 &&
+      source.video.height <= resolution.height * 1.5 &&
       source.video.fps <= resolution.fps &&
       source.video.bitrate !== undefined &&
       (source.video.bitrate * source.container.duration) / 8 <= size;
@@ -223,9 +223,8 @@ export function estimateH264Size(
   crf: number,
   duration: number = 8
 ) {
-  // TODO better calculation
   return Math.floor(
-    (res.width * res.height * duration * Math.log2(res.fps)) / 512 / crf
+    (res.width * res.height * duration * Math.log2(res.fps)) / 20 / crf ** 2
   );
 }
 

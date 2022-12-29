@@ -321,7 +321,7 @@ function h264Arguments(source: Format, target: ConvertInstructions) {
 
   const bufferDuration = Math.min(10, calculateDuration(target) / 4);
   if (target.video.crf) {
-    const bitrate = estimateH264Size(target.video, target.video.crf - 5);
+    const bitrate = estimateH264Size(target.video, target.video.crf);
     const bufsize = Math.floor(bitrate * bufferDuration);
     args.push("-crf:v", target.video.crf.toString());
     args.push("-maxrate:v", `${bitrate}k`);
@@ -329,7 +329,7 @@ function h264Arguments(source: Format, target: ConvertInstructions) {
   } else if (target.video.bitrate) {
     const bitrate = target.video.bitrate;
     const bufsize = Math.floor(bitrate * bufferDuration);
-    args.push("-b:v", `${bitrate}k`);
+    args.push("-crf:v", `18`);
     args.push("-maxrate:v", `${bitrate}k`);
     args.push("-bufsize:v", `${bufsize}k`);
   } else {

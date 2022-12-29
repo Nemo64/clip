@@ -252,7 +252,7 @@ function ConvertPage({
     containers: [
       {
         start: source.metadata.container.start,
-        duration: Math.min(source.metadata.container.duration, 2 * 60),
+        duration: Math.min(source.metadata.container.duration, 60),
       },
     ],
     video: undefined,

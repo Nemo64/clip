@@ -140,7 +140,7 @@ export function VideoConversionDetails({
             target={
               target.video.crf
                 ? t("details.bitrate_value_crf", {
-                    value: estimateH264Size(target.video, target.video.crf - 5),
+                    value: estimateH264Size(target.video, target.video.crf),
                   })
                 : t("details.bitrate_value", { value: target.video.bitrate })
             }
