@@ -91,7 +91,7 @@ export function videoFileSizeTargets(
     const resolution = resolutions.find(
       (res) => sizeTarget >= estimateH264Size(res, 28, container.duration)
     );
-    if (!resolution) {
+    if (!resolution || bitrateTarget < 100) {
       const worst = resolutions[resolutions.length - 1];
       options.push({
         preset: `size_${totalSizeTarget / 1000}mb`,
@@ -115,13 +115,18 @@ export function videoFileSizeTargets(
     }
 
     const originalSuitable =
+      // the codec must be our target, to ensure compatibility
       video.codec.startsWith("h264") &&
       video.color === "yuv420p" &&
-      video.width <= resolution.width * 1.5 &&
-      video.height <= resolution.height * 1.5 &&
-      video.fps <= resolution.fps &&
+      // since resolution isn't our target, just sanity check for compatibility
+      video.width <= 1920 &&
+      video.height <= 1080 &&
+      video.fps <= 60 &&
+      // the important part: the bitrate must be low enough
+      // since I only have the average bitrate,
+      // I use some leeway and divide by 6 instead of 8
       video.bitrate !== undefined &&
-      (video.bitrate * container.duration) / 8 <= sizeTarget;
+      (video.bitrate * container.duration) / 6 <= sizeTarget;
 
     if (originalSuitable) {
       options.push({
@@ -153,16 +158,21 @@ export function videoResolutionTargets(
   const options: VideoFormat[] = [];
 
   for (const resolution of resolutions.reverse()) {
-    const size = estimateH264Size(resolution, 18, source.container.duration);
-
     const originalSuitable =
+      // the codec must be our target, to ensure compatibility
       source.video.codec.startsWith("h264") &&
       source.video.color === "yuv420p" &&
+      // the resolution is our target, but I allow 50% leeway
+      // the "HD" target of 1280x720 can also accept 1920x1080
+      // the "SD" target of 640x480 can also accept 960x720
       source.video.width <= resolution.width * 1.5 &&
       source.video.height <= resolution.height * 1.5 &&
-      source.video.fps <= resolution.fps &&
+      // fps isn't part of the resolution target, just sanity check for compatibility
+      source.video.fps <= 60 &&
+      // bitrate isn't important here, but I still want to avoid huge files
       source.video.bitrate !== undefined &&
-      (source.video.bitrate * source.container.duration) / 8 <= size;
+      (source.video.bitrate * source.container.duration) / 8 <=
+        estimateH264Size(resolution, 18, source.container.duration);
 
     if (originalSuitable) {
       options.push({

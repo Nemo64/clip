@@ -54,7 +54,7 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
           options: formats.filter(isCrfOption),
         },
         {
-          label: t("conversion.video_quality.other"),
+          label: t("conversion.video_quality.other_label"),
           options: formats.filter(
             (formatOption) =>
               !isSizeTarget(formatOption) && !isCrfOption(formatOption)
@@ -79,36 +79,43 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
           {option.preset === "gif_600p" &&
             t("conversion.video_quality.gif_600p")}
 
-          {option.preset?.startsWith("crf") &&
-            (!option.implausible ? (
-              <div className="text-slate-400 text-sm font-light">
-                {t("conversion.video_quality.crf_details", option)}
-              </div>
-            ) : (
-              <div className="text-red-500 text-sm font-light">
-                {t("conversion.video_quality.crf_implausible", option)}
-              </div>
-            ))}
-          {option.preset?.startsWith("size") &&
-            (!option.implausible ? (
-              <div className="text-slate-400 text-sm font-light">
-                {t("conversion.video_quality.size_details", option)}
-              </div>
-            ) : (
-              <div className="text-red-500 text-sm font-light">
-                {t("conversion.video_quality.size_implausible", option)}
-              </div>
-            ))}
-          {option.preset?.startsWith("gif") &&
-            (!option.implausible ? (
-              <div className="text-slate-400 text-sm font-light">
-                {t("conversion.video_quality.gif_details", option)}
-              </div>
-            ) : (
-              <div className="text-red-500 text-sm font-light">
-                {t("conversion.video_quality.gif_implausible", option)}
-              </div>
-            ))}
+          {(() => {
+            if (option.implausible) {
+              return (
+                <div className="text-red-500 text-sm font-light">
+                  {t("conversion.video_quality.implausible", option)}
+                </div>
+              );
+            }
+            if (option.original) {
+              return (
+                <div className="text-lime-600 text-sm font-light">
+                  {t("conversion.video_quality.original_details", option)}
+                </div>
+              );
+            }
+            if (option.preset?.startsWith("crf")) {
+              return (
+                <div className="text-slate-400 text-sm font-light">
+                  {t("conversion.video_quality.crf_details", option)}
+                </div>
+              );
+            }
+            if (option.preset?.startsWith("size")) {
+              return (
+                <div className="text-slate-400 text-sm font-light">
+                  {t("conversion.video_quality.size_details", option)}
+                </div>
+              );
+            }
+            if (option.preset?.startsWith("gif")) {
+              return (
+                <div className="text-slate-400 text-sm font-light">
+                  {t("conversion.video_quality.gif_details", option)}
+                </div>
+              );
+            }
+          })()}
         </div>
       )}
     />
@@ -128,30 +135,38 @@ export function AudioFormatSelect({ formats, ...props }: AudioProps) {
           {option.preset === "bitrate_low" &&
             t("conversion.audio_quality.bitrate_low")}
           {option.preset === "bitrate_high" &&
-            (option.original
-              ? t("conversion.audio_quality.original")
-              : t("conversion.audio_quality.bitrate_high"))}
+            t("conversion.audio_quality.bitrate_high")}
 
-          {option.preset?.startsWith("none") &&
-            (!option.implausible ? (
-              <div className="text-slate-400 text-sm font-light">
-                {t("conversion.audio_quality.none_details")}
-              </div>
-            ) : (
-              <div className="text-red-500 text-sm font-light">
-                {t("conversion.audio_quality.none_implausible")}
-              </div>
-            ))}
-          {option.preset?.startsWith("bitrate") &&
-            (!option.implausible ? (
-              <div className="text-slate-400 text-sm font-light">
-                {t("conversion.audio_quality.bitrate_details", option)}
-              </div>
-            ) : (
-              <div className="text-red-500 text-sm font-light">
-                {t("conversion.audio_quality.bitrate_implausible")}
-              </div>
-            ))}
+          {(() => {
+            if (option.implausible) {
+              return (
+                <div className="text-red-500 text-sm font-light">
+                  {t("conversion.audio_quality.implausible", option)}
+                </div>
+              );
+            }
+            if (option.original) {
+              return (
+                <div className="text-lime-600 text-sm font-light">
+                  {t("conversion.audio_quality.original_details", option)}
+                </div>
+              );
+            }
+            if (option.preset?.startsWith("none")) {
+              return (
+                <div className="text-slate-400 text-sm font-light">
+                  {t("conversion.audio_quality.none_details", option)}
+                </div>
+              );
+            }
+            if (option.preset?.startsWith("bitrate")) {
+              return (
+                <div className="text-slate-400 text-sm font-light">
+                  {t("conversion.audio_quality.bitrate_details", option)}
+                </div>
+              );
+            }
+          })()}
         </div>
       )}
     />

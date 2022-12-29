@@ -9,13 +9,13 @@
     "audio_quality": {
       "bitrate_details": "{{codec}} at {{bitrate, number}} kbit/s",
       "bitrate_high": "High quality",
-      "bitrate_implausible": "",
       "bitrate_low": "Low quality (enough for speech and sound effects)",
+      "implausible": "???",
       "label": "Audio",
       "none": "No audio",
       "none_details": "Remove the audio track",
       "none_implausible": "",
-      "original": "Use original audio"
+      "original_details": "Original {{codec}} audio track with {{bitrate, number}} kbit/s"
     },
     "button": {
       "change": "Select a different file",
@@ -24,7 +24,7 @@
       "start": "Start"
     },
     "details": {
-      "command_intro": "If you want to delve a little deeper into the subject, you should look into [ffmpeg](https://ffmpeg.org/). This tool is the basis for this application. In fact, the only command executed in the background is the following:",
+      "command_intro": "If you want to dive a little deeper into the subject, you should look into [ffmpeg](https://ffmpeg.org/). This tool is the basis for this application. In fact, the only command executed in the background is the following:",
       "command_outro": "The command changes live, so feel free to play around with different quality settings and video lengths.",
       "headline": "What will happen to my video?",
       "params_intro": "Your video will be cropped and compressed if necessary. Here's a list of the video properties and how they change during the process."
@@ -34,18 +34,17 @@
       "crf_480p": "SD Resolution",
       "crf_720p": "HD Resolution",
       "crf_details": "{{width}}x{{height}}@{{fps, number}} with CRF {{crf}}",
-      "crf_implausible": "Resolution not available for that source",
       "crf_label": "Resolution focus",
       "gif_600p": "Animated GIF",
       "gif_details": "{{width}}x{{height}}@{{fps, number}}",
-      "gif_implausible": "",
+      "implausible": "Video too long for this quality ({{bitrate,number}} kbit/s)",
       "label": "Quality",
-      "other": "",
+      "original_details": "Original {{width}}x{{height}}@{{fps, number}} with ~{{bitrate,number}} kbit/s",
+      "other_label": "Special",
       "size_16mb": "16 Mb Filesize (e.g. for WhatApp)",
       "size_50mb": "50 Mb Filesize (e.g. for Discord Nitro)",
       "size_8mb": "8 Mb Filesize (e.g. for Discord, Email…)",
       "size_details": "{{width}}x{{height}}@{{fps, number}} at ~{{bitrate, number}} kbit/s",
-      "size_implausible": "Video too long for that file size ({{bitrate,number}} kbit/s)",
       "size_label": "File size focus"
     }
   },

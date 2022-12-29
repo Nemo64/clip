@@ -2,6 +2,11 @@ import { expect, test } from "@jest/globals";
 import { estimateH264Size } from "./video_format";
 
 const testCases = [
+  { width: 1920, height: 1080, fps: 30, crf: 28, expectedBitrate: 5190 },
+  { width: 1920, height: 1080, fps: 30, crf: 21, expectedBitrate: 9230 },
+  { width: 1920, height: 1080, fps: 30, crf: 18, expectedBitrate: 12560 },
+  { width: 1920, height: 1080, fps: 30, crf: 12, expectedBitrate: 28260 },
+
   { width: 1280, height: 720, fps: 30, crf: 28, expectedBitrate: 2310 },
   { width: 1280, height: 720, fps: 30, crf: 21, expectedBitrate: 4100 },
   { width: 1280, height: 720, fps: 30, crf: 18, expectedBitrate: 5580 },

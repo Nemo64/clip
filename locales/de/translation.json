@@ -9,13 +9,12 @@
     "audio_quality": {
       "bitrate_details": "{{codec}} mit {{bitrate, number}} kbit/s",
       "bitrate_high": "Hohe Qualität",
-      "bitrate_implausible": "",
       "bitrate_low": "Niedrige Qualität (reicht für Sprache und Soundeffekte)",
+      "implausible": "???",
       "label": "Ton",
       "none": "Kein Ton",
       "none_details": "Entferne die Tonspur",
-      "none_implausible": "",
-      "original": "Originalton übernehmen"
+      "original_details": "Originale {{codec}} Tonspur mit {{bitrate, number}} kbit/s"
     },
     "button": {
       "change": "Andere Datei auswählen",
@@ -34,18 +33,17 @@
       "crf_480p": "SD Auflösung",
       "crf_720p": "HD Auflösung",
       "crf_details": "{{width}}x{{height}}@{{fps, number}} mit CRF {{crf}}",
-      "crf_implausible": "Auflösung mit dem Ursprungsvideo nicht verfügbar",
       "crf_label": "Auflösungsorientiert",
       "gif_600p": "Animiertes GIF",
       "gif_details": "{{width}}x{{height}}@{{fps, number}}",
-      "gif_implausible": "",
+      "implausible": "Video zu lang für diese Qualität ({{bitrate,number}} kbit/s)",
       "label": "Qualität",
-      "other": "",
+      "original_details": "Originale {{width}}x{{height}}@{{fps, number}} mit ~{{bitrate,number}} kbit/s",
+      "other_label": "Besondere",
       "size_16mb": "16 Mb Dateigröße (bspw. für WhatApp)",
       "size_50mb": "50 Mb Dateigröße (bspw. für Discord Nitro)",
       "size_8mb": "8 Mb Dateigröße (bspw. für Discord, E-Mail…)",
       "size_details": "{{width}}x{{height}}@{{fps, number}} mit ~{{bitrate, number}} kbit/s",
-      "size_implausible": "Video zu lang für diese Dateigröße ({{bitrate,number}} kbit/s)",
       "size_label": "Dateigrößenorientiert"
     }
   },
