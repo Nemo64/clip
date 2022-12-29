@@ -100,7 +100,7 @@ export function Page_footer() {
               {")"}
             </li>
             <li>
-              <Link href="https://matomo.org/">Matomo Analytics</Link>
+              <FLink href="https://matomo.org/">Matomo Analytics</FLink>
               <label className="inline-block align-middle m-1 relative pr-3">
                 <input
                   type="checkbox"
@@ -132,14 +132,14 @@ export function Page_footer() {
           <h2>{t("footer.contribute.headline")}</h2>
           <ul className="list-disc pl-6">
             <li>
-              <Link href="https://github.com/Nemo64/clip">
+              <FLink href="https://github.com/Nemo64/clip">
                 {t("footer.contribute.check")}
-              </Link>
+              </FLink>
             </li>
             <li>
-              <Link href="https://github.com/Nemo64/clip/issues">
+              <FLink href="https://github.com/Nemo64/clip/issues">
                 {t("footer.contribute.issues")}
-              </Link>
+              </FLink>
             </li>
           </ul>
 
@@ -148,19 +148,19 @@ export function Page_footer() {
           </h2>
           <ul className="list-disc pl-6">
             <li>
-              <Link href="https://www.marco.zone/">
+              <FLink href="https://www.marco.zone/">
                 {t("footer.author.website")}
-              </Link>
+              </FLink>
             </li>
             <li>
-              <Link href="https://twitter.com/TheTrueNemo">
+              <FLink href="https://twitter.com/TheTrueNemo">
                 {t("footer.author.twitter")}
-              </Link>
+              </FLink>
             </li>
             <li>
-              <Link href="https://github.com/Nemo64">
+              <FLink href="https://github.com/Nemo64">
                 {t("footer.author.github")}
-              </Link>
+              </FLink>
             </li>
           </ul>
         </div>
