@@ -14,7 +14,11 @@ export function DemoTimeline({
   const [demoCrop, setDemoCrop] = useState<Crop[]>([
     {
       start: DEMO_TIMELINE.start,
-      duration: DEMO_TIMELINE.duration * 0.75,
+      duration: DEMO_TIMELINE.duration * 0.3,
+    },
+    {
+      start: DEMO_TIMELINE.duration * 0.5,
+      duration: DEMO_TIMELINE.duration * 0.25,
     },
   ]);
 
