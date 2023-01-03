@@ -286,7 +286,10 @@ function ConvertPage({
       container: { start: 0, duration: container.duration }, // choose formats based on video duration
       audio, // pass audio format to adjust the video format based on the leftover space
     });
-    const preset = getValues("video.preset") ?? "size_8mb";
+    const preset =
+      getValues("video.preset") ??
+      localStorage?.getItem("video.preset") ??
+      "size_8mb";
     setValue("video", formats.find((f) => f.preset === preset) ?? formats[0]);
     return formats;
   }, [source.metadata, container.duration, audio, getValues, setValue]);
@@ -327,6 +330,7 @@ function ConvertPage({
                   videoSrc={videoUrl}
                   pics={pics}
                   picInt={picInt}
+                  muted={audio?.preset === "none"}
                   {...field}
                 />
               )}
@@ -345,10 +349,16 @@ function ConvertPage({
                 control={control}
                 name="video"
                 rules={formatRules}
-                render={({ field: { ref, ...field } }) => (
+                render={({ field: { ref, onChange, ...field } }) => (
                   <VideoFormatSelect
                     formats={videoFormats}
                     id="video_format"
+                    onChange={(newValue) => {
+                      onChange(newValue);
+                      if (newValue && "preset" in newValue && newValue.preset) {
+                        localStorage.setItem("video.preset", newValue.preset);
+                      }
+                    }}
                     {...field}
                   />
                 )}
