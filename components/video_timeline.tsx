@@ -53,6 +53,7 @@ export function VideoTimeline({
 }: TimelineProps) {
   const [cursor, setCursor] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [tmpPaused, setTmpPaused] = useState(false);
 
   const timeStampRef = useRef() as RefObject<HTMLElement>;
   const timeStampWidth = timeStampRef.current?.clientWidth ?? 0;
@@ -61,6 +62,7 @@ export function VideoTimeline({
 
   const playing =
     !paused &&
+    !tmpPaused &&
     values.some(
       (value) =>
         cursor >= value.start - 1 / fps &&
@@ -106,7 +108,7 @@ export function VideoTimeline({
             cursor={cursor}
             setCursor={(cursor) => {
               for (const { start, duration } of values) {
-                if (cursor >= start && cursor < start + duration) {
+                if (cursor >= start && cursor < start + duration - 1 / fps) {
                   setCursor(cursor);
                   return;
                 }
@@ -117,8 +119,13 @@ export function VideoTimeline({
                 }
               }
 
-              // fallback
-              setCursor(cursor);
+              // the video is past everything so set it to the end
+              const lastCrop = values[values.length - 1];
+              if (lastCrop) {
+                setCursor(lastCrop.start + lastCrop.duration);
+              } else {
+                setCursor(cursor); // fallback
+              }
             }}
             onClick={togglePlay}
             className={classNames("absolute w-full h-full", videoClassName)}
@@ -156,8 +163,14 @@ export function VideoTimeline({
           cursor={cursor}
           setCursor={setCursor}
           paused={paused}
-          onChange={onChange}
-          onBlur={onBlur}
+          onChange={(values) => {
+            onChange(values);
+            setTmpPaused(true);
+          }}
+          onBlur={(values) => {
+            onChange(values);
+            setTmpPaused(false);
+          }}
         />
       </div>
       {values.map((value, index) => (
@@ -470,8 +483,7 @@ function Timeline({
               />
             )}
 
-            <button // left drag handler ~ on the left side of the body
-              type="button"
+            <div // left drag handler ~ on the left side of the body
               className="w-4 px-1.5 -mx-2 -inset-y-1 bg-clip-content bg-red-800 absolute cursor-col-resize"
               style={{ left: `${startPercent}%` }}
               onMouseEnter={() => {
@@ -495,8 +507,7 @@ function Timeline({
               })}
             />
 
-            <button // right drag handler ~ on the right side of the body
-              type="button"
+            <div // right drag handler ~ on the right side of the body
               className="w-4 px-1.5 -mx-2 -inset-y-1 bg-clip-content bg-red-800 absolute cursor-col-resize"
               style={{ right: `${100 - endPercent}%` }}
               onMouseEnter={() => {

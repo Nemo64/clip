@@ -32,6 +32,7 @@
     "video_quality": {
       "crf_480p": "SD Auflösung",
       "crf_720p": "HD Auflösung",
+      "crf_1080p": "Bestmögliche Qualität",
       "crf_details": "{{width}}x{{height}}@{{fps, number}} mit CRF {{crf}}",
       "crf_label": "Auflösungsorientiert",
       "gif_600p": "Animiertes GIF",

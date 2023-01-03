@@ -2,13 +2,18 @@ import { AudioFormat, ContainerFormat, Format, VideoFormat } from "./video";
 
 export function getVideoFormats(source: Format): VideoFormat[] {
   const filterSensibleResolutions = (
-    { width }: Resolution,
+    { width, height, fps }: Resolution,
     index: number,
     list: Resolution[]
-  ) => list[index + 1]?.width !== width;
+  ) =>
+    list[index + 1] === undefined ||
+    list[index + 1].width !== width ||
+    list[index + 1].height !== height ||
+    list[index + 1].fps !== fps;
 
   // these resolutions are for the user to select from
   const roughResolutions = [
+    createResolution(source, 1920, 1080, 60), // 16:9 full HD resolution
     createResolution(source, 1280, 720), // 16:9 small HD resolution
     createResolution(source, 640, 480), // 4:3 PAL resolution
   ].filter(filterSensibleResolutions);
@@ -115,16 +120,9 @@ export function videoFileSizeTargets(
     }
 
     const originalSuitable =
-      // the codec must be our target, to ensure compatibility
-      video.codec.startsWith("h264") &&
-      video.color === "yuv420p" &&
-      // since resolution isn't our target, just sanity check for compatibility
-      video.width <= 1920 &&
-      video.height <= 1080 &&
-      video.fps <= 60 &&
-      // the important part: the bitrate must be low enough
-      // since I only have the average bitrate,
-      // I use some leeway and divide by 6 instead of 8
+      h264Level42Compatible(video) &&
+      // the important part: the final video must fit the size constraint
+      // I only have the average bitrate, so I divide by 6 instead of 8
       video.bitrate !== undefined &&
       (video.bitrate * container.duration) / 6 <= sizeTarget;
 
@@ -159,16 +157,13 @@ export function videoResolutionTargets(
 
   for (const resolution of resolutions.reverse()) {
     const originalSuitable =
-      // the codec must be our target, to ensure compatibility
-      source.video.codec.startsWith("h264") &&
-      source.video.color === "yuv420p" &&
+      h264Level42Compatible(source.video) &&
       // the resolution is our target, but I allow 50% leeway
+      // the "best" target of 1920x1080 can also accept 2880x1620
       // the "HD" target of 1280x720 can also accept 1920x1080
       // the "SD" target of 640x480 can also accept 960x720
       source.video.width <= resolution.width * 1.5 &&
       source.video.height <= resolution.height * 1.5 &&
-      // fps isn't part of the resolution target, just sanity check for compatibility
-      source.video.fps <= 60 &&
       // bitrate isn't important here, but I still want to avoid huge files
       source.video.bitrate !== undefined &&
       (source.video.bitrate * source.container.duration) / 8 <=
@@ -189,7 +184,7 @@ export function videoResolutionTargets(
         width: resolution.width,
         height: resolution.height,
         rotation: 0,
-        crf: 21,
+        crf: resolution.expectedHeight === 1080 ? 18 : 21,
         fps: source.video.fps / Math.ceil(source.video.fps / resolution.fps),
       });
     }
@@ -216,6 +211,18 @@ export function videoGifTargets(
   }
 
   return options;
+}
+
+function h264Level42Compatible(video: VideoFormat) {
+  return (
+    video.codec.startsWith("h264") &&
+    video.color === "yuv420p" &&
+    // I count the 16x16 macroblocks here, which 4.2 allows 8704 of.
+    Math.ceil(video.width / 16) * Math.ceil(video.height / 16) <= 8704 &&
+    // while you can technically have more fps if you have fewer macroblocks,
+    // I don't allow more than 60 since I don't know how compatible that is
+    video.fps <= 60
+  );
 }
 
 /**
@@ -252,7 +259,13 @@ export function createResolution(
   height: number,
   fps = 30
 ): Resolution {
-  const scaleFactor = Math.min(1.0, width / video.width, height / video.height);
+  // I want to support vertical orientations
+  // so width and height are irrelevant for the scaling calculation
+  const scaleFactor = Math.min(
+    Math.min(width, height) / Math.min(video.width, video.height),
+    Math.max(width, height) / Math.max(video.width, video.height),
+    1.0 // never scale up
+  );
   return {
     width: Math.round((video.width * scaleFactor) / 2) * 2, // divisible by 2 for yuv420p colorspace
     height: Math.round((video.height * scaleFactor) / 2) * 2, // divisible by 2 for yuv420p colorspace

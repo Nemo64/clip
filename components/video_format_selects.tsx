@@ -36,7 +36,8 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
   const isSizeTarget = (formatOption: VideoFormat) =>
     formatOption.preset?.startsWith("size");
   const isCrfOption = (formatOption: VideoFormat) =>
-    formatOption.preset?.startsWith("crf");
+    formatOption.preset?.startsWith("crf") &&
+    formatOption.preset !== "crf_1080p";
 
   return (
     <Select
@@ -64,6 +65,8 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
       formatGroupLabel={(group) => <div className="sr-only">{group.label}</div>}
       formatOptionLabel={(option, { context }) => (
         <div className="leading-4 pt-1">
+          {option.preset === "crf_1080p" &&
+            t("conversion.video_quality.crf_1080p")}
           {option.preset === "crf_720p" &&
             t("conversion.video_quality.crf_720p")}
           {option.preset === "crf_480p" &&
