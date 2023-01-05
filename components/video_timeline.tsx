@@ -176,7 +176,14 @@ export function VideoTimeline({
       {values.map((value, index) => (
         <SegmentInputs
           key={index}
-          frame={frame}
+          frame={{
+            start: values[index - 1]
+              ? values[index - 1].start + values[index - 1].duration
+              : frame.start,
+            duration: values[index + 1]
+              ? values[index + 1].start
+              : frame.duration - value.start,
+          }}
           value={value}
           fps={fps}
           setCursor={setCursor}
