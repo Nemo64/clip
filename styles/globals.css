@@ -43,7 +43,7 @@
 }
 
 ::selection {
-  @apply bg-red-100 dark:bg-red-900;
+  @apply bg-red-100 text-neutral-800 dark:bg-red-900 dark:text-white;
 }
 
 body {
