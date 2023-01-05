@@ -355,8 +355,21 @@ function ConvertPage({
                     id="video_format"
                     onChange={(newValue) => {
                       onChange(newValue);
-                      if (newValue && "preset" in newValue && newValue.preset) {
-                        localStorage.setItem("video.preset", newValue.preset);
+                      if (newValue && "preset" in newValue) {
+                        // remember the preset for the default value
+                        if (newValue.preset) {
+                          localStorage.setItem("video.preset", newValue.preset);
+                        }
+                        // gifs don't have audio
+                        if (newValue.codec.startsWith("gif")) {
+                          setValue("audio", {
+                            preset: "none",
+                            codec: "none",
+                            sampleRate: 0,
+                            channelSetup: "none",
+                            bitrate: 0,
+                          });
+                        }
                       }
                     }}
                     {...field}
