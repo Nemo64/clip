@@ -35,8 +35,8 @@ import { useThumbnails } from "../src/use_thumbnails";
 import {
   calculateDuration,
   ConvertInstructions,
-  mergeContainers,
-} from "../src/video_convert_format";
+  calculateContainer,
+} from "../src/video_convert_instructions";
 
 export default function VideoPage() {
   const [video] = useContext(VideoContext);
@@ -64,7 +64,7 @@ export default function VideoPage() {
     const presetStr = [
       format.video.original ? "original" : format.video.preset,
       format.audio?.original ? "original" : format.audio?.preset,
-      `${2 ** Math.round(Math.log2(calculateDuration(format)))}s`,
+      `${2 ** Math.round(Math.log2(calculateDuration(format.modification)))}s`,
     ].join(":");
     const formatStr = [
       video.metadata.video.codec,
@@ -249,12 +249,15 @@ function ConvertPage({
   video: source,
   start,
   defaultValues = {
-    containers: [
-      {
-        start: source.metadata.container.start,
-        duration: Math.min(source.metadata.container.duration, 60),
-      },
-    ],
+    modification: {
+      cuts: [
+        {
+          start: source.metadata.container.start,
+          duration: Math.min(source.metadata.container.duration, 60),
+        },
+      ],
+      crop: { top: 0, right: 1, bottom: 1, left: 0 },
+    },
     video: undefined,
     audio: undefined,
   },
@@ -270,8 +273,8 @@ function ConvertPage({
   const { control, handleSubmit, watch, getValues, setValue } =
     useForm<ConvertInstructions>({ defaultValues });
 
-  const containers = watch("containers");
-  const container = mergeContainers(containers);
+  const modification = watch("modification");
+  const container = calculateContainer(modification);
   const audioFormats = useMemo(() => {
     const formats = getAudioFormats(source.metadata);
     const preset = getValues("audio.preset") ?? "bitrate_high";
@@ -295,7 +298,7 @@ function ConvertPage({
   }, [source.metadata, container.duration, audio, getValues, setValue]);
 
   const video = watch("video");
-  const instructions: ConvertInstructions = { containers, video, audio };
+  const instructions: ConvertInstructions = { modification, video, audio };
 
   const formatRules = {
     required: true,
@@ -318,7 +321,7 @@ function ConvertPage({
           <div className="flex-grow px-2 motion-safe:animate-fly-5">
             <Controller
               control={control}
-              name="containers"
+              name="modification"
               rules={{ minLength: 1 }}
               render={({ field: { ref, ...field } }) => (
                 <VideoTimeline
@@ -445,10 +448,7 @@ function ProgressPage({
   return (
     <>
       <Head>
-        <title>
-          {"".padEnd(Math.round(progress.percent / 10), "▇").padEnd(10, "▁")}{" "}
-          {t("progress.value", progress)}
-        </title>
+        <title>{t("progress.value", progress)}</title>
         <meta name="robots" content="noindex" />
       </Head>
       <div className="max-w-lg mx-auto p-2">

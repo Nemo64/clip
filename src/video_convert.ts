@@ -11,8 +11,9 @@ import { FFmpeg } from "@ffmpeg/ffmpeg";
 import {
   calculateDuration,
   ConvertInstructions,
+  Cut,
   toTargetFormat,
-} from "./video_convert_format";
+} from "./video_convert_instructions";
 
 export interface ProgressEvent {
   percent: number;
@@ -214,8 +215,10 @@ function inputArguments(video: KnownVideo, target: ConvertInstructions) {
   const fileName = sanitizeFileName(video.file.name);
   const args: string[] = [];
 
-  if (target.containers.length === 1) {
-    args.push(...seekArguments(video.metadata.container, target.containers[0]));
+  if (target.modification.cuts.length === 1) {
+    args.push(
+      ...seekArguments(video.metadata.container, target.modification.cuts[0])
+    );
     args.push("-i", fileName);
     return args;
   }
@@ -227,7 +230,7 @@ function inputArguments(video: KnownVideo, target: ConvertInstructions) {
 }
 
 function inputFiles(video: KnownVideo, format: ConvertInstructions): File[] {
-  if (format.containers.length === 1) {
+  if (format.modification.cuts.length === 1) {
     return [video.file];
   }
 
@@ -243,16 +246,16 @@ export function createConcatFile(
   format: ConvertInstructions
 ) {
   const concat = ["ffconcat version 1.0"];
-  for (const container of format.containers) {
-    const end = container.start + container.duration;
+  for (const cut of format.modification.cuts) {
+    const end = cut.start + cut.duration;
     concat.push(`\nfile '${sanitizeFileName(video.file.name)}'`);
-    concat.push(`inpoint ${container.start.toFixed(3)}`);
+    concat.push(`inpoint ${cut.start.toFixed(3)}`);
     concat.push(`outpoint ${end.toFixed(3)}`);
   }
   return concat.join("\n");
 }
 
-function seekArguments(source: ContainerFormat, target: ContainerFormat) {
+function seekArguments(source: ContainerFormat, target: Cut) {
   const args: string[] = [];
 
   // TODO: check what it means if the source video has a start time !== 0
@@ -275,7 +278,7 @@ function cropScaleFilter(
 
   // autorotate does not work when using the concat source
   // https://trac.ffmpeg.org/ticket/10000
-  if (target.containers.length !== 1) {
+  if (target.modification.cuts.length !== 1) {
     switch (target.video.rotation - source.video.rotation) {
       case 90:
       case -270:
@@ -319,7 +322,8 @@ function h264Arguments(source: Format, target: ConvertInstructions) {
   // args.push('-level:v', '4.0'); // https://en.wikipedia.org/wiki/Advanced_Video_Coding#Levels
   args.push("-profile:v", "high");
 
-  const bufferDuration = Math.min(10, calculateDuration(target) / 4);
+  const videoDuration = calculateDuration(target.modification);
+  const bufferDuration = Math.min(10, videoDuration / 4);
   if (target.video.crf) {
     const bitrate = estimateH264Size(target.video, target.video.crf);
     const bufsize = Math.floor(bitrate * bufferDuration);

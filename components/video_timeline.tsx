@@ -12,23 +12,19 @@ import { DurationInput } from "./input";
 import { Button } from "./button";
 import { PauseIcon, PlayIcon } from "./icons";
 import { useHotkeys } from "react-hotkeys-hook";
-
-export interface Crop {
-  start: number;
-  duration: number;
-}
+import { Crop, Cut, Modification } from "../src/video_convert_instructions";
 
 export interface TimelineProps {
-  frame: Crop;
+  frame: Cut;
   width: number;
   height: number;
   className?: string;
   videoClassName?: string;
-  value: Crop[];
+  value: Modification;
   videoSrc?: string;
   fps: number;
-  onChange?: (crop: Crop[]) => void;
-  onBlur?: (crop: Crop[]) => void;
+  onChange?: (modification: Modification) => void;
+  onBlur?: (modification: Modification) => void;
   disabled?: boolean;
   muted?: boolean;
   pics?: string[];
@@ -41,7 +37,7 @@ export function VideoTimeline({
   height,
   className,
   videoClassName = "object-contain bg-slate-200 dark:bg-neutral-900",
-  value: values,
+  value,
   videoSrc,
   fps,
   onChange = () => void 0,
@@ -63,10 +59,10 @@ export function VideoTimeline({
   const playing =
     !paused &&
     !tmpPaused &&
-    values.some(
-      (value) =>
-        cursor >= value.start - 1 / fps &&
-        cursor <= value.start + value.duration - 1 / fps
+    value.cuts.some(
+      (cut) =>
+        cursor >= cut.start - 1 / fps &&
+        cursor <= cut.start + cut.duration - 1 / fps
     );
 
   const togglePlay = useCallback(
@@ -78,15 +74,15 @@ export function VideoTimeline({
         setPaused(false);
 
         // ensure playing is even possible
-        const isInsideRanges = values.some(({ start, duration }) => {
+        const isInsideRanges = value.cuts.some(({ start, duration }) => {
           return cursor >= start && cursor <= start + duration - 1;
         });
         if (!isInsideRanges) {
-          setCursor(values[0].start);
+          setCursor(value.cuts[0].start);
         }
       }
     },
-    [cursor, playing, values]
+    [cursor, playing, value.cuts]
   );
 
   useHotkeys("space", togglePlay, [togglePlay]);
@@ -107,7 +103,7 @@ export function VideoTimeline({
             muted={muted}
             cursor={cursor}
             setCursor={(cursor) => {
-              for (const { start, duration } of values) {
+              for (const { start, duration } of value.cuts) {
                 if (cursor >= start && cursor < start + duration - 1 / fps) {
                   setCursor(cursor);
                   return;
@@ -120,7 +116,7 @@ export function VideoTimeline({
               }
 
               // the video is past everything so set it to the end
-              const lastCrop = values[values.length - 1];
+              const lastCrop = value.cuts[value.cuts.length - 1];
               if (lastCrop) {
                 setCursor(lastCrop.start + lastCrop.duration);
               } else {
@@ -156,43 +152,44 @@ export function VideoTimeline({
           {playing ? <PauseIcon /> : <PlayIcon />}
         </Button>
         <Timeline
-          value={values}
+          value={value.cuts}
           frame={frame}
           pics={pics}
           picInt={picInt}
           cursor={cursor}
           setCursor={setCursor}
           paused={paused}
-          onChange={(values) => {
-            onChange(values);
+          onChange={(cuts) => {
+            onChange({ ...value, cuts });
             setTmpPaused(true);
           }}
-          onBlur={(values) => {
-            onChange(values);
+          onBlur={(cuts) => {
+            onChange({ ...value, cuts });
             setTmpPaused(false);
           }}
         />
       </div>
-      {values.map((value, index) => (
+      {value.cuts.map((cut, index) => (
         <SegmentInputs
           key={index}
           frame={{
-            start: values[index - 1]
-              ? values[index - 1].start + values[index - 1].duration
+            start: value.cuts[index - 1]
+              ? value.cuts[index - 1].start + value.cuts[index - 1].duration
               : frame.start,
-            duration: values[index + 1]
-              ? values[index + 1].start
-              : frame.duration - value.start,
+            duration: value.cuts[index + 1]
+              ? value.cuts[index + 1].start
+              : frame.duration - frame.start,
           }}
-          value={value}
+          value={cut}
           fps={fps}
           setCursor={setCursor}
           onChange={(newValue) => {
-            onChange([
-              ...values.slice(0, index),
+            const cuts = [
+              ...value.cuts.slice(0, index),
               newValue,
-              ...values.slice(index + 1),
-            ]);
+              ...value.cuts.slice(index + 1),
+            ];
+            onChange({ ...value, cuts });
           }}
         />
       ))}
@@ -207,11 +204,11 @@ function SegmentInputs({
   setCursor,
   onChange,
 }: {
-  frame: Crop;
-  value: Crop;
+  frame: Cut;
+  value: Cut;
   fps: number;
   setCursor: (cursor: number) => void;
-  onChange: (value: Crop) => void;
+  onChange: (value: Cut) => void;
 }) {
   return (
     <div className="flex flex-row justify-between">
@@ -290,18 +287,19 @@ function Timeline({
   setCursor,
   value: values,
   paused,
-  onChange,
-  onBlur,
+  onChange: publicOnChange,
+  onBlur: publicOnBlur,
 }: {
+  frame: Cut;
+  pics: string[];
+  picInt: number;
+  value: Cut[];
+  onChange: (values: Cut[]) => void;
+  onBlur: (values: Cut[]) => void;
   cursor: number;
   setCursor: (cursor: number) => void;
   paused: boolean;
-} & Required<
-  Pick<
-    TimelineProps,
-    "frame" | "pics" | "picInt" | "value" | "onChange" | "onBlur"
-  >
->) {
+}) {
   const updateCursor = ({ clientX, currentTarget }: React.MouseEvent) => {
     const rect = currentTarget.parentElement?.getBoundingClientRect();
     if (rect) {
@@ -317,15 +315,15 @@ function Timeline({
   };
 
   const updateHandlers = {
-    onChange: onChange,
-    onBlur: (newValues: Crop[]) => {
-      newValues = normalizeCrops(newValues);
+    onChange: publicOnBlur,
+    onBlur: (newValues: Cut[]) => {
+      newValues = normalizeCuts(newValues);
 
       if (newValues.length < values.length) {
-        onChange(newValues);
+        publicOnChange(newValues);
       }
 
-      onBlur(newValues);
+      publicOnBlur(newValues);
     },
   };
 
@@ -447,12 +445,14 @@ function Timeline({
                 const p1 =
                   ((start.clientX - rect.left) / rect.width) * frame.duration;
                 const p2 = p1 + (frame.duration / rect.width) * 10;
-                onChange([
+                const cuts = [
                   ...values.slice(0, index),
                   { start: value.start, duration: p1 - value.start },
                   { start: p2, duration: value.start + value.duration - p2 },
                   ...values.slice(index + 1),
-                ]);
+                ];
+                updateHandlers.onChange(cuts);
+                updateHandlers.onBlur(cuts);
               }}
               onPointerDown={dragHandler(
                 updateHandlers,
@@ -551,17 +551,17 @@ function Timeline({
   );
 }
 
-function normalizeCrops(crops: Crop[]): Crop[] {
-  const normalized: Crop[] = [];
+function normalizeCuts(cuts: Cut[]) {
+  const normalized: Cut[] = [];
 
-  for (let i = 0; i < crops.length; i++) {
-    const curr = crops[i];
+  for (let i = 0; i < cuts.length; i++) {
+    const curr = cuts[i];
     if (curr.duration <= 0) {
       continue;
     }
 
     if (i > 0) {
-      const prev = crops[i - 1];
+      const prev = cuts[i - 1];
       if (prev.start + prev.duration >= curr.start) {
         prev.duration += curr.duration;
         continue;

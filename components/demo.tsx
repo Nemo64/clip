@@ -1,8 +1,9 @@
-import { Crop, VideoTimeline } from "./video_timeline";
+import { VideoTimeline } from "./video_timeline";
 import { useState } from "react";
 import { Link } from "./link";
+import { Cut, Modification } from "../src/video_convert_instructions";
 
-const DEMO_TIMELINE: Crop = { start: 0, duration: 60 };
+const DEMO_TIMELINE: Cut = { start: 0, duration: 60 };
 const DEMO_IMAGES = [...Array(28)].map(
   (_, i) => `/demo/frame_${(i + 1).toString()}.jpg`
 );
@@ -11,16 +12,19 @@ export function DemoTimeline({
   className,
   ...props
 }: Partial<Parameters<typeof VideoTimeline>[0]>) {
-  const [demoCrop, setDemoCrop] = useState<Crop[]>([
-    {
-      start: DEMO_TIMELINE.start,
-      duration: DEMO_TIMELINE.duration * 0.3,
-    },
-    {
-      start: DEMO_TIMELINE.duration * 0.5,
-      duration: DEMO_TIMELINE.duration * 0.25,
-    },
-  ]);
+  const [demoCrop, setDemoCrop] = useState<Modification>({
+    cuts: [
+      {
+        start: DEMO_TIMELINE.start,
+        duration: DEMO_TIMELINE.duration * 0.3,
+      },
+      {
+        start: DEMO_TIMELINE.duration * 0.5,
+        duration: DEMO_TIMELINE.duration * 0.25,
+      },
+    ],
+    crop: { top: 0, right: 1, bottom: 1, left: 0 },
+  });
 
   return (
     <div className={className}>

@@ -12,7 +12,7 @@ import { FormattedCommand } from "./cli";
 import {
   ConvertInstructions,
   toTargetFormat,
-} from "../src/video_convert_format";
+} from "../src/video_convert_instructions";
 
 export function VideoDetails({
   video,
@@ -33,7 +33,7 @@ export function VideoDetails({
         />
         <Markdown>{t("conversion.details.command_intro")}</Markdown>
         <div className="overflow-auto">
-          {instructions.containers.length !== 1 && (
+          {instructions.modification.cuts.length !== 1 && (
             <pre className="text-sm">
               {`cat > concat.txt << EOF`}
               <div className="ml-3">
