@@ -9,7 +9,7 @@
     "audio_quality": {
       "bitrate_details": "{{codec}} at {{bitrate, number}} kbit/s",
       "bitrate_high": "High quality",
-      "bitrate_low": "Low quality (enough for speech and sound effects)",
+      "bitrate_low": "Low quality (for speech and sound effects)",
       "implausible": "???",
       "label": "Audio",
       "none": "No audio",
@@ -31,9 +31,9 @@
     },
     "title": "Convert file {{name}}.",
     "video_quality": {
-      "crf_480p": "SD Resolution",
-      "crf_720p": "HD Resolution",
-      "crf_1080p": "Best quality",
+      "crf_480p": "SD Resolution (for animated images)",
+      "crf_720p": "HD Resolution (for online video distribution)",
+      "crf_1080p": "Best quality (for platforms like YouTube)",
       "crf_details": "{{width}}x{{height}}@{{fps, number}} with CRF {{crf}}",
       "crf_label": "Resolution focus",
       "gif_600p": "Animated GIF",
@@ -43,8 +43,8 @@
       "original_details": "Original {{width}}x{{height}}@{{fps, number}} with ~{{bitrate,number}} kbit/s",
       "other_label": "Special",
       "size_16mb": "16 Mb Filesize (e.g. for WhatApp)",
-      "size_50mb": "50 Mb Filesize (e.g. for Discord Nitro)",
-      "size_8mb": "8 Mb Filesize (e.g. for Discord, Email…)",
+      "size_25mb": "25 Mb Filesize (e.g. for Discord)",
+      "size_8mb": "8 Mb Filesize (e.g. for Email)",
       "size_details": "{{width}}x{{height}}@{{fps, number}} at ~{{bitrate, number}} kbit/s",
       "size_label": "File size focus"
     }

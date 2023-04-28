@@ -36,8 +36,7 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
   const isSizeTarget = (formatOption: VideoFormat) =>
     formatOption.preset?.startsWith("size");
   const isCrfOption = (formatOption: VideoFormat) =>
-    formatOption.preset?.startsWith("crf") &&
-    formatOption.preset !== "crf_1080p";
+    formatOption.preset?.startsWith("crf");
 
   return (
     <Select
@@ -66,23 +65,26 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
       formatOptionLabel={(option, { context }) => (
         <div className="leading-4 pt-1">
           {option.preset === "crf_1080p" &&
-            t("conversion.video_quality.crf_1080p")}
+            colorizeBraces(t("conversion.video_quality.crf_1080p"))}
           {option.preset === "crf_720p" &&
-            t("conversion.video_quality.crf_720p")}
+            colorizeBraces(t("conversion.video_quality.crf_720p"))}
           {option.preset === "crf_480p" &&
-            t("conversion.video_quality.crf_480p")}
+            colorizeBraces(t("conversion.video_quality.crf_480p"))}
 
-          {option.preset === "size_50mb" &&
-            t("conversion.video_quality.size_50mb")}
+          {option.preset === "size_25mb" &&
+            colorizeBraces(t("conversion.video_quality.size_25mb"))}
           {option.preset === "size_16mb" &&
-            t("conversion.video_quality.size_16mb")}
+            colorizeBraces(t("conversion.video_quality.size_16mb"))}
           {option.preset === "size_8mb" &&
-            t("conversion.video_quality.size_8mb")}
+            colorizeBraces(t("conversion.video_quality.size_8mb"))}
 
           {option.preset === "gif_600p" &&
-            t("conversion.video_quality.gif_600p")}
+            colorizeBraces(t("conversion.video_quality.gif_600p"))}
 
           {(() => {
+            if (context === "menu") {
+              return;
+            }
             if (option.implausible) {
               return (
                 <div className="text-red-500 text-sm font-light">
@@ -134,13 +136,17 @@ export function AudioFormatSelect({ formats, ...props }: AudioProps) {
       options={formats}
       formatOptionLabel={(option, { context }) => (
         <div className="leading-4 pt-1">
-          {option.preset === "none" && t("conversion.audio_quality.none")}
+          {option.preset === "none" &&
+            colorizeBraces(t("conversion.audio_quality.none"))}
           {option.preset === "bitrate_low" &&
-            t("conversion.audio_quality.bitrate_low")}
+            colorizeBraces(t("conversion.audio_quality.bitrate_low"))}
           {option.preset === "bitrate_high" &&
-            t("conversion.audio_quality.bitrate_high")}
+            colorizeBraces(t("conversion.audio_quality.bitrate_high"))}
 
           {(() => {
+            if (context === "menu") {
+              return;
+            }
             if (option.implausible) {
               return (
                 <div className="text-red-500 text-sm font-light">
@@ -173,5 +179,21 @@ export function AudioFormatSelect({ formats, ...props }: AudioProps) {
         </div>
       )}
     />
+  );
+}
+
+function colorizeBraces(input: string) {
+  const openBrace = input.indexOf("(");
+  if (openBrace === -1) {
+    return input;
+  }
+
+  return (
+    <>
+      {input.slice(0, openBrace)}
+      <span className="text-slate-400 font-light">
+        {input.slice(openBrace).replace(/^\(|\)$/g, "")}
+      </span>
+    </>
   );
 }

@@ -9,7 +9,7 @@
     "audio_quality": {
       "bitrate_details": "{{codec}} mit {{bitrate, number}} kbit/s",
       "bitrate_high": "Hohe Qualität",
-      "bitrate_low": "Niedrige Qualität (reicht für Sprache und Soundeffekte)",
+      "bitrate_low": "Niedrige Qualität (für Sprache und Soundeffekte)",
       "implausible": "???",
       "label": "Ton",
       "none": "Kein Ton",
@@ -30,9 +30,9 @@
     },
     "title": "Konvertiere {{name}}.",
     "video_quality": {
-      "crf_480p": "SD Auflösung",
-      "crf_720p": "HD Auflösung",
-      "crf_1080p": "Bestmögliche Qualität",
+      "crf_480p": "SD Auflösung (für animierte Bilder)",
+      "crf_720p": "HD Auflösung (für Online-Videovertrieb)",
+      "crf_1080p": "Bestmögliche Qualität (für Platformen wie YouTube)",
       "crf_details": "{{width}}x{{height}}@{{fps, number}} mit CRF {{crf}}",
       "crf_label": "Auflösungsorientiert",
       "gif_600p": "Animiertes GIF",
@@ -42,8 +42,8 @@
       "original_details": "Originale {{width}}x{{height}}@{{fps, number}} mit ~{{bitrate,number}} kbit/s",
       "other_label": "Besondere",
       "size_16mb": "16 Mb Dateigröße (bspw. für WhatApp)",
-      "size_50mb": "50 Mb Dateigröße (bspw. für Discord Nitro)",
-      "size_8mb": "8 Mb Dateigröße (bspw. für Discord, E-Mail…)",
+      "size_25mb": "25 Mb Dateigröße (bspw. für Discord)",
+      "size_8mb": "8 Mb Dateigröße (bspw. für E-Mail)",
       "size_details": "{{width}}x{{height}}@{{fps, number}} mit ~{{bitrate, number}} kbit/s",
       "size_label": "Dateigrößenorientiert"
     }

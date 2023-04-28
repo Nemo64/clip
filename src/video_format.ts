@@ -87,7 +87,7 @@ export function videoFileSizeTargets(
 ): VideoFormat[] {
   const options: VideoFormat[] = [];
 
-  for (const totalSizeTarget of [8000, 16000, 50000]) {
+  for (const totalSizeTarget of [8000, 16000, 25000]) {
     // we have to undershoot the file size target to account for overheads and average bitrate variance
     // 0.88 is just a guess, but it seems to work well
     const audioBitrate = audio?.bitrate || 0;
