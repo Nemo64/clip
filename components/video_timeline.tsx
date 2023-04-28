@@ -12,7 +12,12 @@ import { DurationInput } from "./input";
 import { Button } from "./button";
 import { PauseIcon, PlayIcon } from "./icons";
 import { useHotkeys } from "react-hotkeys-hook";
-import { Crop, Cut, Modification } from "../src/video_convert_instructions";
+import {
+  Crop,
+  Cut,
+  isCropped,
+  Modification,
+} from "../src/video_convert_instructions";
 
 export interface TimelineProps {
   frame: Cut;
@@ -25,7 +30,6 @@ export interface TimelineProps {
   fps: number;
   onChange?: (modification: Modification) => void;
   onBlur?: (modification: Modification) => void;
-  disabled?: boolean;
   muted?: boolean;
   pics?: string[];
   picInt?: number;
@@ -42,7 +46,6 @@ export function VideoTimeline({
   fps,
   onChange = () => void 0,
   onBlur = () => void 0,
-  disabled,
   muted,
   pics = [],
   picInt = frame.duration / pics.length,
@@ -90,59 +93,71 @@ export function VideoTimeline({
   return (
     <div className={classNames("flex flex-col font-mono", className)}>
       <div
-        className="w-full rounded-2xl overflow-hidden relative"
+        className="w-full overflow-hidden relative"
         style={{ aspectRatio: `${width} / ${height}` }}
       >
-        {pics?.length && picInt ? (
-          <VideoWithFallback
-            videoSrc={videoSrc}
-            pics={pics}
-            picInt={picInt}
-            fps={fps}
-            play={playing}
-            muted={muted}
-            cursor={cursor}
-            setCursor={(cursor) => {
-              for (const { start, duration } of value.cuts) {
-                if (cursor >= start && cursor < start + duration - 1 / fps) {
-                  setCursor(cursor);
-                  return;
+        <CropArea
+          value={value.crop}
+          aspectRatio={width / height}
+          onChange={(crop) => onChange({ ...value, crop })}
+          onBlur={(crop) => onChange({ ...value, crop })}
+        >
+          {pics?.length && picInt ? (
+            <VideoWithFallback
+              className={classNames(
+                "absolute w-full h-full rounded-2xl",
+                videoClassName
+              )}
+              videoSrc={videoSrc}
+              pics={pics}
+              picInt={picInt}
+              fps={fps}
+              play={playing}
+              muted={muted}
+              position={cursor}
+              setPosition={(cursor) => {
+                for (const { start, duration } of value.cuts) {
+                  if (cursor >= start && cursor < start + duration - 1 / fps) {
+                    setCursor(cursor);
+                    return;
+                  }
+
+                  if (cursor < start) {
+                    setCursor(start);
+                    return;
+                  }
                 }
 
-                if (cursor < start) {
-                  setCursor(start);
-                  return;
+                // the video is past everything so set it to the end
+                const lastCrop = value.cuts[value.cuts.length - 1];
+                if (lastCrop) {
+                  setCursor(lastCrop.start + lastCrop.duration);
+                } else {
+                  setCursor(cursor); // fallback
                 }
-              }
-
-              // the video is past everything so set it to the end
-              const lastCrop = value.cuts[value.cuts.length - 1];
-              if (lastCrop) {
-                setCursor(lastCrop.start + lastCrop.duration);
-              } else {
-                setCursor(cursor); // fallback
-              }
-            }}
-            onClick={togglePlay}
-            className={classNames("absolute w-full h-full", videoClassName)}
-          />
-        ) : (
-          <div className="p-4 text-center">{t("timeline.no_preview")}</div>
-        )}
-        {cursor !== undefined && (
-          <DurationInput
-            ref={timeStampRef as any}
-            value={cursor}
-            onChange={setCursor}
-            min={frame.start}
-            max={frame.duration}
-            divisor={Math.floor(fps)}
-            className="absolute px-2 bottom-0 rounded-t-2xl bg-black/50 text-white"
-            style={{
-              left: `${(cursor / frame.duration / timeStampMoveFactor) * 100}%`,
-            }}
-          />
-        )}
+              }}
+              onClick={togglePlay}
+            />
+          ) : (
+            <div className="p-4 text-center">{t("timeline.no_preview")}</div>
+          )}
+          {cursor !== undefined && (
+            <DurationInput
+              ref={timeStampRef as any}
+              value={cursor}
+              onChange={setCursor}
+              min={frame.start}
+              max={frame.duration}
+              divisor={Math.floor(fps)}
+              className="absolute px-2 bottom-0 rounded-t-2xl bg-black/50 text-white"
+              style={{
+                left: `${
+                  (cursor / frame.duration / timeStampMoveFactor) * 100
+                }%`,
+              }}
+            />
+          )}
+        </CropArea>
       </div>
       <div className="flex flex-row my-2 gap-2">
         <Button
@@ -193,6 +208,266 @@ export function VideoTimeline({
           }}
         />
       ))}
+    </div>
+  );
+}
+
+function CropArea({
+  value,
+  aspectRatio,
+  onChange,
+  onBlur,
+  children,
+}: {
+  value: Crop;
+  aspectRatio: number;
+  onChange: (crop: Crop) => void;
+  onBlur: (crop: Crop) => void;
+  children: React.ReactNode;
+}) {
+  const selectAspectRatio = (targetRatio: number) => {
+    targetRatio = targetRatio / aspectRatio;
+    const widthFactor = Math.min(1, targetRatio) - 1;
+    const heightFactor = Math.min(1, 1 / targetRatio) - 1;
+    const crop: Crop = {
+      top: heightFactor / -2,
+      right: widthFactor / -2,
+      bottom: heightFactor / -2,
+      left: widthFactor / -2,
+    };
+    onChange(crop);
+    onBlur(crop);
+  };
+
+  const currentAspectRatio =
+    ((1 - value.left - value.right) / (1 - value.top - value.bottom)) *
+    aspectRatio;
+
+  function isAspectRatio(targetAspectRatio: number) {
+    return Math.abs(currentAspectRatio - targetAspectRatio) < 0.0001;
+  }
+
+  return (
+    <div
+      className="relative max-w-full max-h-full mx-auto touch-none select-none group"
+      style={{ aspectRatio: `${aspectRatio} / 1` }}
+    >
+      {children}
+      <div className="absolute left-0 top-0 z-10 flex flex-row justify-center gap-2 m-2 opacity-0 group-hover:opacity-80 transition">
+        <button
+          className={classNames({
+            "px-2 text-white rounded-xl": true,
+            "bg-slate-500 hover:bg-slate-400": isCropped({ crop: value }),
+            "bg-red-800": !isCropped({ crop: value }),
+          })}
+          type="button"
+          onClick={() => {
+            const crop: Crop = { top: 0, right: 0, bottom: 0, left: 0 };
+            onChange(crop);
+            onBlur(crop);
+          }}
+        >
+          reset
+        </button>
+        <button
+          className={classNames({
+            "px-2 text-white rounded-xl": true,
+            "bg-slate-500 hover:bg-slate-400": !isAspectRatio(16 / 9),
+            "bg-red-800": isAspectRatio(16 / 9),
+          })}
+          type="button"
+          onClick={() => selectAspectRatio(16 / 9)}
+        >
+          16:9
+        </button>
+        <button
+          className={classNames({
+            "px-2 text-white rounded-xl": true,
+            "bg-slate-500 hover:bg-slate-400": !isAspectRatio(4 / 3),
+            "bg-red-800": isAspectRatio(4 / 3),
+          })}
+          type="button"
+          onClick={() => selectAspectRatio(4 / 3)}
+        >
+          4:3
+        </button>
+        <button
+          className={classNames({
+            "px-2 text-white rounded-xl": true,
+            "bg-slate-500 hover:bg-slate-400": !isAspectRatio(3 / 4),
+            "bg-red-800": isAspectRatio(3 / 4),
+          })}
+          type="button"
+          onClick={() => selectAspectRatio(3 / 4)}
+        >
+          3:4
+        </button>
+        <button
+          className={classNames({
+            "px-2 text-white rounded-xl": true,
+            "bg-slate-500 hover:bg-slate-400": !isAspectRatio(9 / 16),
+            "bg-red-800": isAspectRatio(9 / 16),
+          })}
+          type="button"
+          onClick={() => selectAspectRatio(9 / 16)}
+        >
+          9:16
+        </button>
+      </div>
+      {value.top > 0 && (
+        <div // top
+          className="absolute inset-0 bg-neutral-800/90 backdrop-contrast-200 backdrop-grayscale backdrop-blur-sm"
+          style={{
+            bottom: `${100 - value.top * 100}%`,
+            left: `${value.left * 100}%`,
+            right: `${value.right * 100}%`,
+          }}
+        />
+      )}
+      {value.top > 0 && value.right > 0 && (
+        <div // top right
+          className="absolute inset-0 bg-neutral-800/90 backdrop-contrast-200 backdrop-grayscale backdrop-blur-sm"
+          style={{
+            bottom: `${100 - value.top * 100}%`,
+            left: `${100 - value.right * 100}%`,
+          }}
+        />
+      )}
+      {value.right > 0 && (
+        <div // right
+          className="absolute inset-0 bg-neutral-800/90 backdrop-contrast-200 backdrop-grayscale backdrop-blur-sm"
+          style={{
+            left: `${100 - value.right * 100}%`,
+            top: `${value.top * 100}%`,
+            bottom: `${value.bottom * 100}%`,
+          }}
+        />
+      )}
+      {value.right > 0 && value.bottom > 0 && (
+        <div // right bottom
+          className="absolute inset-0 bg-neutral-800/90 backdrop-contrast-200 backdrop-grayscale backdrop-blur-sm"
+          style={{
+            top: `${100 - value.bottom * 100}%`,
+            left: `${100 - value.right * 100}%`,
+          }}
+        />
+      )}
+      {value.bottom > 0 && (
+        <div // bottom
+          className="absolute inset-0 bg-neutral-800/90 backdrop-contrast-200 backdrop-grayscale backdrop-blur-sm"
+          style={{
+            top: `${100 - value.bottom * 100}%`,
+            left: `${value.left * 100}%`,
+            right: `${value.right * 100}%`,
+          }}
+        />
+      )}
+      {value.bottom > 0 && value.left > 0 && (
+        <div // bottom left
+          className="absolute inset-0 bg-neutral-800/90 backdrop-contrast-200 backdrop-grayscale backdrop-blur-sm"
+          style={{
+            top: `${100 - value.bottom * 100}%`,
+            right: `${100 - value.left * 100}%`,
+          }}
+        />
+      )}
+      {value.left > 0 && (
+        <div // left
+          className="absolute inset-0 bg-neutral-800/90 backdrop-contrast-200 backdrop-grayscale backdrop-blur-sm"
+          style={{
+            right: `${100 - value.left * 100}%`,
+            top: `${value.top * 100}%`,
+            bottom: `${value.bottom * 100}%`,
+          }}
+        />
+      )}
+      {value.left > 0 && value.top > 0 && (
+        <div // left top
+          className="absolute inset-0 bg-neutral-800/90 backdrop-contrast-200 backdrop-grayscale backdrop-blur-sm"
+          style={{
+            bottom: `${100 - value.top * 100}%`,
+            right: `${100 - value.left * 100}%`,
+          }}
+        />
+      )}
+      <div // center
+        className="absolute cursor-move"
+        style={{
+          top: `${value.top * 100}%`,
+          right: `${value.right * 100}%`,
+          bottom: `${value.bottom * 100}%`,
+          left: `${value.left * 100}%`,
+        }}
+        onPointerDown={dragHandler(
+          { onChange, onBlur },
+          ({ changeX, changeY }) => ({
+            top: clamp(value.top + changeY, 0, value.top + value.bottom),
+            right: clamp(value.right - changeX, 0, value.left + value.right),
+            bottom: clamp(value.bottom - changeY, 0, value.top + value.bottom),
+            left: clamp(value.left + changeX, 0, value.left + value.right),
+          })
+        )}
+      />
+      <div // top left
+        className="absolute border-t-2 border-l-2 w-4 h-4 cursor-nwse-resize opacity-0 group-hover:opacity-100 transition"
+        style={{
+          left: `${value.left * 100}%`,
+          top: `${value.top * 100}%`,
+        }}
+        onPointerDown={dragHandler(
+          { onChange, onBlur },
+          ({ changeX, changeY }) => ({
+            ...value,
+            left: clamp(value.left + changeX, 0, 1 - value.right),
+            top: clamp(value.top + changeY, 0, 1 - value.bottom),
+          })
+        )}
+      />
+      <div // top right
+        className="absolute border-t-2 border-r-2 w-4 h-4 cursor-nesw-resize opacity-0 group-hover:opacity-100 transition"
+        style={{
+          right: `${value.right * 100}%`,
+          top: `${value.top * 100}%`,
+        }}
+        onPointerDown={dragHandler(
+          { onChange, onBlur },
+          ({ changeX, changeY }) => ({
+            ...value,
+            right: clamp(value.right - changeX, 0, 1 - value.left),
+            top: clamp(value.top + changeY, 0, 1 - value.bottom),
+          })
+        )}
+      />
+      <div // bottom right
+        className="absolute border-b-2 border-r-2 w-4 h-4 cursor-nwse-resize opacity-0 group-hover:opacity-100 transition"
+        style={{
+          right: `${value.right * 100}%`,
+          bottom: `${value.bottom * 100}%`,
+        }}
+        onPointerDown={dragHandler(
+          { onChange, onBlur },
+          ({ changeX, changeY }) => ({
+            ...value,
+            right: clamp(value.right - changeX, 0, 1 - value.left),
+            bottom: clamp(value.bottom - changeY, 0, 1 - value.top),
+          })
+        )}
+      />
+      <div // bottom left
+        className="absolute border-b-2 border-l-2 w-4 h-4 cursor-nesw-resize opacity-0 group-hover:opacity-100 transition"
+        style={{
+          left: `${value.left * 100}%`,
+          bottom: `${value.bottom * 100}%`,
+        }}
+        onPointerDown={dragHandler(
+          { onChange, onBlur },
+          ({ changeX, changeY }) => ({
+            ...value,
+            left: clamp(value.left + changeX, 0, 1 - value.right),
+            bottom: clamp(value.bottom - changeY, 0, 1 - value.top),
+          })
+        )}
+      />
     </div>
   );
 }
@@ -315,7 +590,7 @@ function Timeline({
   };
 
   const updateHandlers = {
-    onChange: publicOnBlur,
+    onChange: publicOnChange,
     onBlur: (newValues: Cut[]) => {
       newValues = normalizeCuts(newValues);
 
@@ -576,8 +851,8 @@ function normalizeCuts(cuts: Cut[]) {
 
 interface VideoWithFallbackProps
   extends Pick<TimelineProps, "videoSrc" | "pics" | "picInt" | "fps"> {
-  cursor: number;
-  setCursor: (cursor: number) => void;
+  position: number;
+  setPosition: (position: number) => void;
   className: string;
   play?: boolean;
   muted?: boolean;
@@ -589,8 +864,8 @@ function VideoWithFallback({
   pics,
   picInt,
   fps,
-  cursor,
-  setCursor,
+  position,
+  setPosition,
   className,
   play,
   muted,
@@ -600,12 +875,12 @@ function VideoWithFallback({
 
   useEffect(() => {
     if (videoRef.current) {
-      const delta = Math.abs(videoRef.current.currentTime - cursor);
+      const delta = Math.abs(videoRef.current.currentTime - position);
       if (delta > 1 / fps) {
-        videoRef.current.currentTime = cursor;
+        videoRef.current.currentTime = position;
       }
     }
-  }, [cursor, fps]);
+  }, [position, fps]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -622,7 +897,7 @@ function VideoWithFallback({
   }, [play]);
 
   const poster =
-    pics && picInt ? pics[Math.floor(cursor / picInt)] || pics[0] : undefined;
+    pics && picInt ? pics[Math.floor(position / picInt)] || pics[0] : undefined;
 
   if (!videoSrc) {
     // eslint-disable-next-line @next/next/no-img-element
@@ -647,7 +922,7 @@ function VideoWithFallback({
       ref={videoRef}
       onTimeUpdate={({ currentTarget }) => {
         if (play) {
-          setCursor(currentTarget.currentTime);
+          setPosition(currentTarget.currentTime);
         }
       }}
       {...additionalProps}
@@ -692,7 +967,7 @@ function dragHandler<T>(
 
     const wrappedHandler = (current: PointerEvent) => {
       const positionX = (current.clientX - rect.left) / rect.width;
-      const positionY = (start.clientY - rect.top) / rect.height;
+      const positionY = (current.clientY - rect.top) / rect.height;
       value = handler({
         initialX,
         initialY,

@@ -59,6 +59,7 @@ export function getAudioFormats(source: Format): AudioFormat[] {
   });
 
   const originalSuitable =
+    source.audio.original &&
     source.audio.codec.startsWith("aac") &&
     source.audio.bitrate < 260; /* ~256 */
 
@@ -120,6 +121,7 @@ export function videoFileSizeTargets(
     }
 
     const originalSuitable =
+      video.original &&
       h264Level42Compatible(video) &&
       // the important part: the final video must fit the size constraint
       // I only have the average bitrate, so I divide by 6 instead of 8
@@ -130,7 +132,6 @@ export function videoFileSizeTargets(
       options.push({
         ...video,
         preset: `size_${totalSizeTarget / 1000}mb`,
-        original: true,
       });
     } else {
       options.push({
@@ -157,6 +158,7 @@ export function videoResolutionTargets(
 
   for (const resolution of resolutions.reverse()) {
     const originalSuitable =
+      source.video.original &&
       h264Level42Compatible(source.video) &&
       // the resolution is our target, but I allow 50% leeway
       // the "best" target of 1920x1080 can also accept 2880x1620
@@ -173,12 +175,10 @@ export function videoResolutionTargets(
       options.push({
         ...source.video,
         preset: `crf_${resolution.expectedHeight}p`,
-        original: originalSuitable,
       });
     } else {
       options.push({
         preset: `crf_${resolution.expectedHeight}p`,
-        original: originalSuitable,
         codec: "h264 (High)",
         color: "yuv420p",
         width: resolution.width,

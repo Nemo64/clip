@@ -36,6 +36,7 @@ import {
   calculateDuration,
   ConvertInstructions,
   calculateContainer,
+  calculateCroppedVideo,
 } from "../src/video_convert_instructions";
 
 export default function VideoPage() {
@@ -256,7 +257,7 @@ function ConvertPage({
           duration: Math.min(source.metadata.container.duration, 60),
         },
       ],
-      crop: { top: 0, right: 1, bottom: 1, left: 0 },
+      crop: { top: 0, right: 0, bottom: 0, left: 0 },
     },
     video: undefined,
     audio: undefined,
@@ -274,7 +275,6 @@ function ConvertPage({
     useForm<ConvertInstructions>({ defaultValues });
 
   const modification = watch("modification");
-  const container = calculateContainer(modification);
   const audioFormats = useMemo(() => {
     const formats = getAudioFormats(source.metadata);
     const preset = getValues("audio.preset") ?? "bitrate_high";
@@ -285,9 +285,9 @@ function ConvertPage({
   const audio = watch("audio");
   const videoFormats = useMemo(() => {
     const formats = getVideoFormats({
-      ...source.metadata,
-      container: { start: 0, duration: container.duration }, // choose formats based on video duration
+      container: calculateContainer(modification), // choose formats based on video duration
       audio, // pass audio format to adjust the video format based on the leftover space
+      video: calculateCroppedVideo(source.metadata.video, modification),
     });
     const preset =
       getValues("video.preset") ??
@@ -295,7 +295,7 @@ function ConvertPage({
       "size_8mb";
     setValue("video", formats.find((f) => f.preset === preset) ?? formats[0]);
     return formats;
-  }, [source.metadata, container.duration, audio, getValues, setValue]);
+  }, [source.metadata.video, modification, audio, getValues, setValue]);
 
   const video = watch("video");
   const instructions: ConvertInstructions = { modification, video, audio };
@@ -325,7 +325,7 @@ function ConvertPage({
               rules={{ minLength: 1 }}
               render={({ field: { ref, ...field } }) => (
                 <VideoTimeline
-                  className="max-h-[80vh] lg:max-h-screen py-2 lg:py-16 sticky top-0"
+                  className="max-h-[80vh] lg:h-screen py-2 lg:py-16 sticky top-0"
                   frame={source.metadata.container}
                   width={source.metadata.video.width}
                   height={source.metadata.video.height}

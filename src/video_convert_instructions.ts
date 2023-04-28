@@ -40,6 +40,28 @@ export function calculateContainer(
   };
 }
 
-export function calculateDuration(modification: Modification): number {
+export function calculateCroppedVideo(
+  video: VideoFormat,
+  modification: Modification
+): VideoFormat {
+  if (!isCropped(modification)) {
+    return video;
+  }
+
+  const crop = modification.crop;
+  return {
+    ...video,
+    width: video.width * (1 - crop.left - crop.right),
+    height: video.height * (1 - crop.top - crop.bottom),
+    original: false, // this is no longer the original video
+  };
+}
+
+export function isCropped(modification: { crop: Crop }) {
+  const { bottom, left, right, top } = modification.crop;
+  return top !== 0 || right !== 0 || bottom !== 0 || left !== 0;
+}
+
+export function calculateDuration(modification: { cuts: Cut[] }): number {
   return modification.cuts.reduce((sum, c) => sum + c.duration, 0);
 }

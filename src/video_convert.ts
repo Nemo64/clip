@@ -12,6 +12,7 @@ import {
   calculateDuration,
   ConvertInstructions,
   Cut,
+  isCropped,
   toTargetFormat,
 } from "./video_convert_instructions";
 
@@ -293,6 +294,20 @@ function cropScaleFilter(
         filters.push("transpose=2");
         break;
     }
+  }
+
+  if (isCropped(target.modification)) {
+    const crop = target.modification.crop;
+    filters.push(
+      `crop=${[
+        source.video.width * (1 - crop.left - crop.right),
+        source.video.height * (1 - crop.top - crop.bottom),
+        source.video.width * crop.left,
+        source.video.height * crop.top,
+      ]
+        .map(Math.round)
+        .join(":")}`
+    );
   }
 
   filters.push(

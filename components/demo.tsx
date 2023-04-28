@@ -23,7 +23,7 @@ export function DemoTimeline({
         duration: DEMO_TIMELINE.duration * 0.25,
       },
     ],
-    crop: { top: 0, right: 1, bottom: 1, left: 0 },
+    crop: { top: 0, right: 0, bottom: 0, left: 0 },
   });
 
   return (
