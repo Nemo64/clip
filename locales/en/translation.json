@@ -31,9 +31,9 @@
     },
     "title": "Convert file {{name}}.",
     "video_quality": {
+      "crf_1080p": "Best quality (for platforms like YouTube)",
       "crf_480p": "SD Resolution (for animated images)",
       "crf_720p": "HD Resolution (for online video distribution)",
-      "crf_1080p": "Best quality (for platforms like YouTube)",
       "crf_details": "{{width}}x{{height}}@{{fps, number}} with CRF {{crf}}",
       "crf_label": "Resolution focus",
       "gif_600p": "Animated GIF",
@@ -104,6 +104,11 @@
     "headline": "Processing {{name}}",
     "value": "{{percent, number(maximumFractionDigits: 1)}}%"
   },
+  "screen_recording": {
+    "cancel_recording": "Cancel",
+    "in_progress": "Screen Recording...",
+    "use_recording": "Use Recording"
+  },
   "timeline": {
     "duration": "duration",
     "end_time": "end",
@@ -111,8 +116,10 @@
     "start_time": "start"
   },
   "upload": {
-    "button": "Select video",
-    "description": "The easiest way to optimize videos.  \nNo software installation necessary.",
+    "button": "Select Video",
+    "button_capture": "Record Screen",
+    "button_capture_hint": "(experimental)",
+    "description": "The easiest way to cut and optimize videos.  \nNo software installation necessary.",
     "disclaimer": "The video will be processed within your browser  \nand will never be transmitted to a server. ",
     "drop_hint": "(or drop a video here)",
     "text": {

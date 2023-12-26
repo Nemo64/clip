@@ -1,6 +1,8 @@
 import { ffmpeg, sanitizeFileName } from "./ffmpeg";
 import { Format, KnownVideo, NewVideo } from "./video";
 
+export const DEFAULT_FPS = 30;
+
 /**
  * This function reads the metadata of a video file.
  *
@@ -8,7 +10,10 @@ import { Format, KnownVideo, NewVideo } from "./video";
  * There is no FFPROBE included in {@see https://github.com/ffmpegwasm/ffmpeg.wasm},
  * so abuse ffmpeg for that. {@see https://github.com/ffmpegwasm/ffmpeg.wasm/issues/121}
  */
-export async function analyzeVideo({ file }: NewVideo): Promise<KnownVideo> {
+export async function analyzeVideo({
+  file,
+  metadata: captureMetadata,
+}: NewVideo): Promise<KnownVideo> {
   const metadata: Partial<Format> = {
     audio: {
       codec: "none",
@@ -16,6 +21,7 @@ export async function analyzeVideo({ file }: NewVideo): Promise<KnownVideo> {
       sampleRate: 0,
       bitrate: 0,
     },
+    ...captureMetadata,
   };
   const strings = [] as string[];
 
@@ -64,9 +70,13 @@ export function parseMetadata(message: any, metadata: Partial<Format>) {
   }
 
   const videoMatch = message.match(
-    /Stream #[^:,]+:[^:,]+: Video: (?<codec>[^(),]+(\(\S+\))?).*?, (?<color>[^(),]+).*?, (?<width>\d+)x(?<height>\d+).*?(, (?<bitrate>[\d.]+) kb\/s)?,.* (?<fps>[\d.]+) fps, (?<tbr>[\d.]+) tbr/
+    /Stream #[^:,]+:[^:,]+: Video: (?<codec>[^(),]+(\(\S+\))?).*?, (?<color>[^(),]+).*?, (?<width>\d+)x(?<height>\d+).*?(, (?<bitrate>[\d.]+) kb\/s)?(,.* (?<fps>[\d.]+) fps|,.* (?<tbr>[\d.]+) tbr)*/
   );
   if (videoMatch?.groups && metadata.container) {
+    const possibleFps = [videoMatch.groups.fps, videoMatch.groups.tbr]
+      .map(parseFloat)
+      .filter((x) => !isNaN(x));
+
     metadata.video = {
       original: true,
       codec: videoMatch.groups.codec,
@@ -75,16 +85,13 @@ export function parseMetadata(message: any, metadata: Partial<Format>) {
       height: parseFloat(videoMatch.groups.height),
       rotation: 0,
       bitrate: parseFloat(videoMatch.groups.bitrate),
-      fps: Math.max(
-        parseFloat(videoMatch.groups.fps),
-        parseFloat(videoMatch.groups.tbr)
-      ),
+      fps: possibleFps.length === 0 ? DEFAULT_FPS : Math.max(...possibleFps),
     };
     return;
   }
 
   const audioMatch = message.match(
-    /Stream #[^:,]+:[^:,]+: Audio: (?<codec>[^(),]+(\(\S+\))?).*, (?<sampleRate>\d+) Hz, (?<channelSetup>[^,]+), [^,]+, (?<bitrate>[\d.]+) kb\/s/
+    /Stream #[^:,]+:[^:,]+: Audio: (?<codec>[^(),]*(\(\S+\))?).*, (?<sampleRate>\d+) Hz, (?<channelSetup>[^,]+), [^,]+(, (?<bitrate>[\d.]+) kb\/s)?/
   );
   if (audioMatch?.groups && metadata.container) {
     metadata.audio = {

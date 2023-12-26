@@ -32,8 +32,8 @@ export function createCommands(
   const baseName = fileName.replace(/\.\w{2,4}$|$/, "");
 
   const args: string[] = [];
-  args.push("-sn"); // no subtitles
-  args.push("-dn"); // no data streams
+  // args.push("-sn"); // no subtitles
+  // args.push("-dn"); // no data streams
 
   if (instructions.video.codec.startsWith("h264")) {
     if (instructions.audio.codec.startsWith("none")) {
@@ -50,6 +50,7 @@ export function createCommands(
 
     args.push("-f", "mp4"); // use mp4 since it has the best compatibility as long as all streams are supported
     args.push("-movflags", "+faststart"); // moves metadata to the beginning of the mp4 container ~ useful for streaming
+    args.push("-movflags", "use_metadata_tags"); // keep metadata tags (most importantly hdr10) https://superuser.com/a/1208277
     args.push(`${baseName}.clip.mp4`);
 
     return [{ args: args, file: `${baseName}.clip.mp4`, type: "video/mp4" }];

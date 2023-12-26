@@ -3,6 +3,7 @@ export type Video = NewVideo | KnownVideo | BrokenVideo;
 export interface NewVideo {
   status: "new";
   file: File;
+  metadata?: Partial<Format>;
 }
 
 export interface KnownVideo {
@@ -26,8 +27,11 @@ export interface ConvertedVideo {
 /**
  * Creates a new video object and starts its dedicated worker.
  */
-export async function createVideo(file: File): Promise<NewVideo> {
-  return { status: "new", file };
+export async function createVideo(
+  file: File,
+  captureMetadata?: Partial<Format>
+): Promise<NewVideo> {
+  return { status: "new", file, metadata: captureMetadata };
 }
 
 export interface ContainerFormat {

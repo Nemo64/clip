@@ -30,9 +30,9 @@
     },
     "title": "Konvertiere {{name}}.",
     "video_quality": {
+      "crf_1080p": "Bestmögliche Qualität (für Platformen wie YouTube)",
       "crf_480p": "SD Auflösung (für animierte Bilder)",
       "crf_720p": "HD Auflösung (für Online-Videovertrieb)",
-      "crf_1080p": "Bestmögliche Qualität (für Platformen wie YouTube)",
       "crf_details": "{{width}}x{{height}}@{{fps, number}} mit CRF {{crf}}",
       "crf_label": "Auflösungsorientiert",
       "gif_600p": "Animiertes GIF",
@@ -103,6 +103,11 @@
     "headline": "Verarbeite {{name}}...",
     "value": "{{percent, number(maximumFractionDigits: 1)}}%"
   },
+  "screen_recording": {
+    "cancel_recording": "Abbrechen",
+    "in_progress": "Bildschirmaufnahme...",
+    "use_recording": "Aufnahme Verwenden"
+  },
   "timeline": {
     "duration": "Laufzeit",
     "end_time": "Ende",
@@ -110,8 +115,10 @@
     "start_time": "Start"
   },
   "upload": {
-    "button": "Video auswählen",
-    "description": "Die einfachste Art Videos zu optimieren.  \nKeine Software installation notwendig.",
+    "button": "Video Auswählen",
+    "button_capture": "Bildschirm Aufnehmen",
+    "button_capture_hint": "(Experimental)",
+    "description": "Die einfachste Art Videos zu schneiden und optimieren.  \nKeine Software installation notwendig.",
     "disclaimer": "Das Video wird im Browser verarbeitet  \nund niemals an einen Server übertragen. ",
     "drop_hint": "(oder Ziehe ein Video hier hin)",
     "text": {

@@ -11,6 +11,8 @@ const videoStrings = [
   "Stream #0:0: Video: gif, bgra, 600x338, 16.67 fps, 16.67 tbr, 100 tbn, 100 tbc",
   "Stream #0:0(eng): Video: vp9, none, 512x288, SAR 1:1 DAR 16:9, 25 fps, 25 tbr, 1k tbn, 1k tbc (default)",
   "Stream #0:0(und): Video: hevc (Main) (hvc1 / 0x31637668), yuvj420p(pc, smpte170m/smpte432/bt709), 1920x1440, 9924 kb/s, 30 fps, 30 tbr, 600 tbn, 600 tbc (default)",
+  "Stream #0:0(eng): Video: vp8, yuv420p(tv, bt709), 3840x1600, SAR 1:1 DAR 12:5, 29.33 tbr, 1k tbn, 1k tbc (default)",
+  "Stream #0:0(eng): Video: h264 (Baseline), yuv420p(tv, bt709, progressive), 2190x1574, SAR 1:1 DAR 1095:787, 1k tbr, 1k tbn, 2k tbc (default)",
 ];
 
 for (let i = 0; i < videoStrings.length; ++i) {
@@ -33,6 +35,7 @@ for (let i = 0; i < videoStrings.length; ++i) {
 const audioStrings = [
   "Stream #0:1(und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 128 kb/s (default)",
   "Stream #0:1(und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, stereo, fltp, 194 kb/s (default)",
+  "Stream #0:0(eng): Audio: opus, 48000 Hz, mono, fltp (default)",
 ];
 
 for (let i = 0; i < audioStrings.length; ++i) {
@@ -42,6 +45,10 @@ for (let i = 0; i < audioStrings.length; ++i) {
     };
     parseMetadata(audioStrings[i], metadata);
     expect(metadata.audio).toBeDefined();
-    expect(metadata.audio?.codec).toBe("aac (LC)");
+    if (audioStrings[i].includes("opus")) {
+      expect(metadata.audio?.codec).toBe("opus");
+    } else {
+      expect(metadata.audio?.codec).toBe("aac (LC)");
+    }
   });
 }

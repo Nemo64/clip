@@ -4,13 +4,17 @@ import Head from "next/head";
 import { createContext, useCallback, useEffect, useState } from "react";
 import { Page_footer } from "../components/page_footer";
 import { trackEvent, trackPageView } from "../src/tracker";
-import { analyzeVideo, createVideo, Video } from "../src/video";
+import { analyzeVideo, createVideo, Format, Video } from "../src/video";
 import "../styles/globals.css";
 import { setLocale } from "../src/intl";
 
 export type VideoState = [
   Video | undefined,
-  (file: File | undefined, action?: string) => void
+  (
+    file: File | undefined,
+    action?: string,
+    captureMetadata?: Partial<Format>
+  ) => void
 ];
 export const VideoContext = createContext<VideoState>([
   undefined,
@@ -26,8 +30,8 @@ export default function MyApp({ Component, pageProps, router }: AppProps) {
   }, [canonicalUrl]);
 
   const [video, setVideo] = useState<Video | undefined>(undefined);
-  const setVideoFile = useCallback(
-    async (file: File | undefined, action?: string) => {
+  const setVideoFile = useCallback<VideoState[1]>(
+    async (file, action, captureMetadata) => {
       if (!file) {
         setVideo(undefined);
         return;
@@ -36,7 +40,7 @@ export default function MyApp({ Component, pageProps, router }: AppProps) {
       try {
         let fileExtension = file.name.match(/\.\w{2,5}$/)?.[0].toLowerCase();
         trackEvent("upload", action ?? "unknown", fileExtension, file.size);
-        const newVideo = await createVideo(file);
+        const newVideo = await createVideo(file, captureMetadata);
         setVideo(newVideo);
 
         const identifiedVideo = await analyzeVideo(newVideo);
@@ -132,8 +136,8 @@ function DragArea({ setVideo }: { setVideo: VideoState[1] }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-500/50 flex items-center justify-around">
-      <div className="flex bg-white text-neutral-800 rounded-2xl p-4 shadow-xl text-2xl animate-pulse">
+    <div className="fixed z-50 inset-0 bg-slate-500/50 flex items-center justify-around">
+      <div className="flex bg-white text-neutral-800 rounded-3xl p-4 shadow-xl text-2xl animate-pulse">
         {i18next.t("drop_video")}
       </div>
     </div>

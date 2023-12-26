@@ -30,7 +30,7 @@ export function DemoTimeline({
     <div className={className}>
       <VideoTimeline
         {...props}
-        videoSrc={"/demo/sintel-2048-surround.clip.mp4"}
+        videoSrc={"/demo/Sintel.low.mp4"}
         frame={DEMO_TIMELINE}
         width={640}
         height={272}
