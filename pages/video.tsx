@@ -271,6 +271,11 @@ function ConvertPage({
   const picInt = Math.max(source.metadata.container.duration / 30, 0.5);
   const pics = useThumbnails(source, picInt);
 
+  const [customSizeMb, setCustomSizeMb] = useState<number>(() => {
+    const stored = localStorage?.getItem("video.customSizeMb");
+    return stored ? parseFloat(stored) : 10;
+  });
+
   const { control, handleSubmit, watch, getValues, setValue } =
     useForm<ConvertInstructions>({ defaultValues });
 
@@ -288,14 +293,14 @@ function ConvertPage({
       container: calculateContainer(modification), // choose formats based on video duration
       audio, // pass audio format to adjust the video format based on the leftover space
       video: calculateCroppedVideo(source.metadata.video, modification),
-    });
+    }, customSizeMb);
     const preset =
       getValues("video.preset") ??
       localStorage?.getItem("video.preset") ??
       "size_8mb";
     setValue("video", formats.find((f) => f.preset === preset) ?? formats[0]);
     return formats;
-  }, [source.metadata.video, modification, audio, getValues, setValue]);
+  }, [source.metadata.video, modification, audio, customSizeMb, getValues, setValue]);
 
   const video = watch("video");
   const instructions: ConvertInstructions = { modification, video, audio };
@@ -355,8 +360,30 @@ function ConvertPage({
                 render={({ field: { ref, onChange, ...field } }) => (
                   <VideoFormatSelect
                     formats={videoFormats}
+                    customSizeMb={customSizeMb}
                     id="video_format"
                     onChange={(newValue) => {
+                      // Handle custom size selection
+                      if (newValue && "preset" in newValue && newValue.preset === "size_custom") {
+                        const input = prompt(
+                          t("conversion.video_quality.size_custom_prompt"),
+                          String(customSizeMb)
+                        );
+                        if (input !== null) {
+                          const parsed = parseFloat(input);
+                          if (!isNaN(parsed) && parsed >= 1 && parsed <= 100) {
+                            setCustomSizeMb(parsed);
+                            localStorage.setItem("video.customSizeMb", String(parsed));
+                            localStorage.setItem("video.preset", "size_custom");
+                          } else {
+                            alert(t("conversion.video_quality.size_custom_invalid"));
+                            return; // Don't change the selection
+                          }
+                        } else {
+                          return; // User cancelled, don't change the selection
+                        }
+                      }
+
                       onChange(newValue);
                       if (newValue && "preset" in newValue) {
                         // remember the preset for the default value

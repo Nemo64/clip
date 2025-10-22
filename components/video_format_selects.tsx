@@ -3,7 +3,7 @@ import { t } from "../src/intl";
 import { AudioFormat, VideoFormat } from "../src/video";
 import classNames from "classnames";
 
-export type VideoProps = { formats: VideoFormat[] } & Omit<
+export type VideoProps = { formats: VideoFormat[]; customSizeMb?: number } & Omit<
   Props<VideoFormat>,
   "options" | "getOptionValue" | "formatOptionLabel"
 >;
@@ -32,7 +32,7 @@ const selectStyles = {
   } as ClassNamesConfig<any>,
 } as const;
 
-export function VideoFormatSelect({ formats, ...props }: VideoProps) {
+export function VideoFormatSelect({ formats, customSizeMb, ...props }: VideoProps) {
   const isSizeTarget = (formatOption: VideoFormat) =>
     formatOption.preset?.startsWith("size");
   const isCrfOption = (formatOption: VideoFormat) =>
@@ -77,6 +77,9 @@ export function VideoFormatSelect({ formats, ...props }: VideoProps) {
             colorizeBraces(t("conversion.video_quality.size_16mb"))}
           {option.preset === "size_8mb" &&
             colorizeBraces(t("conversion.video_quality.size_8mb"))}
+
+          {option.preset === "size_custom" &&
+            colorizeBraces(t("conversion.video_quality.size_custom", { size: customSizeMb }))}
 
           {option.preset === "gif_600p" &&
             colorizeBraces(t("conversion.video_quality.gif_600p"))}

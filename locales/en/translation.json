@@ -45,6 +45,9 @@
       "size_16mb": "16 Mb Filesize (e.g. for WhatApp)",
       "size_25mb": "25 Mb Filesize (e.g. for Discord)",
       "size_8mb": "8 Mb Filesize (e.g. for Email)",
+      "size_custom": "Custom ({{size}} MB)",
+      "size_custom_prompt": "Enter target file size in MB (1-100):",
+      "size_custom_invalid": "Invalid file size. Please enter a number between 1 and 100.",
       "size_details": "{{width}}x{{height}}@{{fps, number}} at ~{{bitrate, number}} kbit/s",
       "size_label": "File size focus"
     }
